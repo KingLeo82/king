@@ -944,15 +944,33 @@
     </div>
     <div style="position:relative;">
         <button class="natr-icon-btn" style="width:auto;padding:0 10px;gap:6px;" onclick="natrToggleTigerSettings()" title="Настройки подключения Tiger.com Terminal — на какой бирже открывать тикер"><span style="font-size:0.8rem;">Настройки</span></button>
-        <div id="natrTigerSettings" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:240px;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-            <div style="font-size:12px;color:var(--muted);font-weight:600;">Кнопка «Tiger» в «Действиях» откроет тикер именно на этой бирже в вашем терминале — независимо от того, что данные скринера идут с Binance.</div>
-            <div>
-                <label class="natr-tool-label" for="natrTigerExchangeSelect" style="display:block;margin-bottom:4px;">Биржа в Tiger:</label>
-                <select class="sec-select" id="natrTigerExchangeSelect" onchange="natrChangeTigerExchange(this.value)" style="width:100%;"></select>
+        <div id="natrTigerSettings" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:480px;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:8px;">Кнопка «Tiger» откроет тикер на выбранной бирже и в выбранной группе линковки.</div>
+            <div style="display:flex;gap:20px;">
+                <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:13px;font-weight:700;color:var(--fg);">NATR Scanner</div>
+                    <div>
+                        <label class="natr-tool-label" for="natrTigerExchangeSelect" style="display:block;margin-bottom:4px;">Биржа в Tiger:</label>
+                        <select class="sec-select" id="natrTigerExchangeSelect" onchange="natrChangeTigerExchange(this.value)" style="width:100%;"></select>
+                    </div>
+                    <div>
+                        <label class="natr-tool-label" for="natrTigerLinkGroupSelect" style="display:block;margin-bottom:4px;">Группа линковки:</label>
+                        <select class="sec-select" id="natrTigerLinkGroupSelect" onchange="natrChangeTigerLinkGroup(this.value)" style="width:100%;"></select>
+                    </div>
+                </div>
+                <div style="width:1px;background:var(--border);"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:13px;font-weight:700;color:var(--fg);">Продолжение</div>
+                    <div>
+                        <label class="natr-tool-label" for="contTigerExchangeSelect" style="display:block;margin-bottom:4px;">Биржа в Tiger:</label>
+                        <select class="sec-select" id="contTigerExchangeSelect" onchange="contChangeTigerExchange(this.value)" style="width:100%;"></select>
+                    </div>
+                    <div>
+                        <label class="natr-tool-label" for="contTigerLinkGroupSelect" style="display:block;margin-bottom:4px;">Группа линковки:</label>
+                        <select class="sec-select" id="contTigerLinkGroupSelect" onchange="contChangeTigerLinkGroup(this.value)" style="width:100%;"></select>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="natr-tool-label" for="natrTigerLinkGroupSelect" style="display:block;margin-bottom:4px;">Группа линковки:</label>
-                <select class="sec-select" id="natrTigerLinkGroupSelect" onchange="natrChangeTigerLinkGroup(this.value)" style="width:100%;"></select>
             </div>
         </div>
     </div>
@@ -1098,76 +1116,68 @@
         </div>
     </div>
     <p style="color:var(--muted);font-size:13px;margin:-14px 0 18px;max-width:640px;">
-        Логика: если вчера пара сильно выросла или упала — сегодня ищем повышенный объём (RVOL) на коротких свечах с движением цены в ту же сторону. Это может говорить о продолжении вчерашнего хайпа или слива.
+        Логика: вчерашняя дневная свеча сравнивается с предыдущими N днями — насколько её тело (|закрытие−открытие|) и объём больше среднего за это окно. Плюс проверка, что перед пампом была тихая проторговка.
     </p>
-    <div class="natr-tabs">
-        <button class="natr-tab active" data-mode="5m" onclick="contSwitchMode('5m')" title="RVOL и цена по 5-минуткам">5м</button>
-        <button class="natr-tab" data-mode="1m" onclick="contSwitchMode('1m')" title="RVOL и цена по 1-минуткам">1м</button>
-    </div>
     <div class="natr-tools-card">
     <div class="natr-tools" id="contTools">
-        <div class="natr-tool-group">
-            <label class="natr-tool-label" for="contYestThreshold">Дневной порог, %:</label>
-            <select class="sec-select" id="contYestOp" onchange="contChangeFilters()" style="width:56px;">
-                <option value="gte">&gt;</option>
-                <option value="lte">&lt;</option>
-            </select>
-            <input type="number" class="natr-alert-input" id="contYestThreshold" value="40" min="1" step="1" style="width:64px;" oninput="contChangeFilters()">
-        </div>
-        <div class="natr-tool-group">
-            <label class="natr-tool-label" for="contQuietThreshold">Порог тишины, %:</label>
-            <input type="number" class="natr-alert-input" id="contQuietThreshold" value="10" min="0" step="1" style="width:56px;" title="Насколько тихим должен быть день, чтобы считаться проторговкой (независимо от «Дневного порога» — раньше они были одним и тем же числом, из-за чего проторговкой засчитывался почти любой день)" oninput="contChangeFilters()">
-        </div>
-        <div class="natr-tool-group">
-            <label class="natr-tool-label" for="contLookbackDays">Дней проторговки:</label>
-            <input type="number" class="natr-alert-input" id="contLookbackDays" value="5" min="0" max="30" step="1" placeholder="0" style="width:56px;" title="Сколько дней подряд ПЕРЕД пампом цена должна была стоять тихо (движение дня ниже «Порога тишины»). 0 или пусто — не проверять историю, смотреть только на сегодняшнее движение. Требует нового сканирования.">
-        </div>
-        <div class="natr-tool-group">
-            <button class="natr-tool-btn active" id="contBreakoutBtn" onclick="contToggleBreakout()" title="Памп должен закрыться ЗА пределами диапазона проторговки (не просто большим % внутри него) — иначе не считается пробоем базы">Требовать пробой базы</button>
-            <input type="number" class="natr-alert-input" id="contBreakoutMargin" value="0" min="0" step="0.5" style="width:52px;" title="Запас сверх границы диапазона, %. 0 — достаточно просто закрыться за пределами базы" oninput="contChangeFilters()">
-        </div>
-        <div class="natr-tool-group">
-            <label class="natr-tool-label" for="contRvolThreshold">RVOL, x:</label>
-            <select class="sec-select" id="contRvolOp" onchange="contChangeFilters()" style="width:56px;">
-                <option value="gte">&gt;</option>
-                <option value="lte">&lt;</option>
-            </select>
-            <input type="number" class="natr-alert-input" id="contRvolThreshold" value="2" min="0" step="0.1" placeholder="0" style="width:64px;" title="0 или пусто — фильтр выключен" oninput="contChangeFilters()">
-        </div>
-        <div class="natr-tool-group">
-            <label class="natr-tool-label" for="contOiMin">ΔOI, %:</label>
-            <select class="sec-select" id="contOiOp" onchange="contChangeFilters()" style="width:56px;">
-                <option value="gte">&gt;</option>
-                <option value="lte">&lt;</option>
-            </select>
-            <input type="number" class="natr-alert-input" id="contOiMin" min="0" step="1" placeholder="0" style="width:64px;" title="0 или пусто — фильтр выключен. Когда включён, требует ещё и совпадения знака ΔOI с направлением пампа (растёт вместе с ценой = новые позиции = реальное подтверждение; движется в другую сторону = закрытие позиций = отсекается)" oninput="contChangeFilters()">
-        </div>
         <div class="natr-tool-group">
             <label class="natr-tool-label">Показывать:</label>
             <button class="natr-tool-btn active" id="contDirAllBtn" onclick="contSetDirection('all')">Всё</button>
             <button class="natr-tool-btn" id="contDirUpBtn" onclick="contSetDirection('up')">🔥 Рост</button>
             <button class="natr-tool-btn" id="contDirDownBtn" onclick="contSetDirection('down')">🩸 Падение</button>
         </div>
-        <div class="natr-tool-group">
-            <button class="natr-tool-btn active" id="contDirBtn" onclick="contToggleDirFilter()" title="Показывать только пары, где сегодняшнее движение совпадает по направлению со вчерашним И не меньше «Мин. продолжения»">Только совпадение направления</button>
-            <label class="natr-tool-label" for="contMinContinuation">Мин. продолжения, %:</label>
-            <input type="number" class="natr-alert-input" id="contMinContinuation" value="3" min="0" step="0.5" style="width:56px;" title="Сегодняшнее движение должно быть не только в ту же сторону, что и вчерашний памп, но и не меньше этого значения — иначе +0.01% тоже засчитывался бы как «продолжение»" oninput="contChangeFilters()">
-        </div>
+        <button class="natr-tool-btn" id="contAlertBtn" onclick="contToggleAlerts()" title="Уведомлять (звук + пуш) о новых тикерах, проходящих текущие фильтры">🔔</button>
         <button class="natr-tool-btn" id="contWatchlistBtn" onclick="contToggleWatchlistOnly()" title="Показывать только избранное (своё для Продолжения тренда)">★ Избранное</button>
-        <div class="natr-tool-group">
-            <button class="natr-tool-btn" id="contAlertBtn" onclick="contToggleAlerts()" title="Уведомлять (звук + пуш) о новых тикерах, проходящих текущие фильтры">🔔</button>
-            <span class="natr-tool-label">Автообновление: раз в 5 мин</span>
-        </div>
     </div>
-    <div class="natr-tools" id="contToolsRow2">
+    <div class="natr-tools" id="contToolsFilters">
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="contBodyRatioFrom">R коэфф.:</label>
+            <input type="number" class="natr-range-input" id="contBodyRatioFrom" placeholder="от" min="0" step="0.1" style="width:64px;" oninput="contChangeFilters()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="contBodyRatioTo" placeholder="до" min="0" step="0.1" style="width:64px;" oninput="contChangeFilters()">
+        </div>
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="contLookbackDays">Окно N дней:</label>
+            <input type="number" class="natr-alert-input" id="contLookbackDays" value="5" min="0" max="30" step="1" placeholder="0" style="width:56px;" title="Общее окно сравнения: (1) сколько дней подряд ПЕРЕД пампом должны быть тихими (проторговка), и (2) база для сравнения тела свечи и объёма — «R коэфф.» и «RVOL» считаются как вчера / среднее за эти N дней. 0 или пусто — не проверять историю, смотреть только на сегодняшнее движение. Требует нового сканирования.">
+        </div>
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="contYestFrom">Дневной порог %:</label>
+            <input type="number" class="natr-range-input" id="contYestFrom" placeholder="от" min="0" step="1" style="width:64px;" oninput="contChangeFilters()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="contYestTo" placeholder="до" min="0" step="1" style="width:64px;" oninput="contChangeFilters()">
+            <button class="natr-tool-btn" id="contYestFilterBtn" onclick="contToggleYestFilter()" title="Включить фильтр (иначе значения в диапазоне просто подсвечиваются)">Фильтр</button>
+        </div>
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="contTodayFrom">Сегодня %:</label>
+            <input type="number" class="natr-range-input" id="contTodayFrom" placeholder="от" step="0.1" style="width:64px;" oninput="contChangeFilters()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="contTodayTo" placeholder="до" step="0.1" style="width:64px;" oninput="contChangeFilters()">
+            <button class="natr-tool-btn" id="contTodayFilterBtn" onclick="contToggleTodayFilter()" title="Включить фильтр (иначе значения в диапазоне просто подсвечиваются)">Фильтр</button>
+        </div>
         <div class="natr-tool-group">
             <label class="natr-tool-label" for="contVolFrom">Объём 24ч:</label>
             <input type="text" inputmode="decimal" class="natr-range-input" id="contVolFrom" placeholder="от, напр. 10к" oninput="contChangeVolRange()">
             <span class="natr-range-sep">—</span>
             <input type="text" inputmode="decimal" class="natr-range-input" id="contVolTo" placeholder="до, напр. 1м" oninput="contChangeVolRange()">
-            <button class="natr-tool-btn" id="contVolFilterBtn" onclick="contToggleVolFilter()" title="Включить фильтр (иначе значения просто не проверяются)">Фильтр</button>
+            <button class="natr-tool-btn" id="contVolFilterBtn" onclick="contToggleVolFilter()" title="Включить фильтр (иначе значения в диапазоне просто подсвечиваются)">Фильтр</button>
         </div>
-        <span class="natr-tool-hint" id="contRescanHint" title="«Дней проторговки» и таймфрейм (1м/5м) меняют то, что запрашивается у Binance — после их изменения нажмите «Сканировать» ещё раз">ⓘ Все фильтры кроме «Дней проторговки» и таймфрейма применяются сразу</span>
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="contRvolFrom">RVOL x:</label>
+            <input type="number" class="natr-range-input" id="contRvolFrom" placeholder="от" min="0" step="0.1" style="width:64px;" oninput="contChangeFilters()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="contRvolTo" placeholder="до" min="0" step="0.1" style="width:64px;" oninput="contChangeFilters()">
+            <button class="natr-tool-btn" id="contRvolFilterBtn" onclick="contToggleRvolFilter()" title="Включить фильтр (иначе значения в диапазоне просто подсвечиваются)">Фильтр</button>
+        </div>
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="contOiFrom">ΔOI %:</label>
+            <input type="number" class="natr-range-input" id="contOiFrom" placeholder="от" min="0" step="1" style="width:64px;" oninput="contChangeFilters()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="contOiTo" placeholder="до" min="0" step="1" style="width:64px;" oninput="contChangeFilters()">
+            <button class="natr-tool-btn" id="contOiFilterBtn" onclick="contToggleOiFilter()" title="Включить фильтр (иначе значения в диапазоне просто подсвечиваются)">Фильтр</button>
+        </div>
+    </div>
+    <div class="natr-tools" id="contToolsRow2">
+        <span class="natr-tool-hint" id="contRescanHint" title="Окно N дней меняет то, что запрашивается у Binance — после его изменения нажмите «Сканировать» ещё раз">ⓘ Все фильтры кроме «Окно N дней» применяются сразу</span>
     </div>
     </div>
     <div class="natr-stats" id="contStatsBar" style="display:none;">
@@ -1180,14 +1190,12 @@
             <thead><tr>
                 <th style="width:78px;text-align:center;" title="Закреп и избранное">📌 ★</th>
                 <th>Тикер</th>
-                <th style="width:100px;">Вчера, %</th>
-                <th style="width:80px;">RVOL</th>
-                <th style="width:100px;">Сегодня, %</th>
-                <th style="width:112px;" title="Знак ΔOI относительно направления пампа: «нов.» = новые позиции (подтверждение), «закр.» = закрытие позиций (слабее)">ΔOI, %</th>
-                <th style="width:100px;">VWAP откл.</th>
-                <th style="width:90px;">В дне, %</th>
-                <th style="width:90px;">vs BTC</th>
-                <th style="width:112px;" title="Низ диапазона проторговки для лонга / верх для шорта — естественный уровень инвалидации сетапа, и % риска от текущей цены">Стоп (база)</th>
+                <th style="width:100px;" title="Тело вчерашней свечи (|закрытие-открытие|) ÷ среднее тело свечи за N предыдущих дней">R коэфф.</th>
+                <th style="width:100px;">Вчера %</th>
+                <th style="width:100px;">Сегодня %</th>
+                <th style="width:100px;">Объём 24ч</th>
+                <th style="width:80px;" title="Объём вчерашней дневной свечи ÷ средний объём за N предыдущих дней">RVOL</th>
+                <th style="width:112px;" title="Знак ΔOI относительно направления пампа: «нов.» = новые позиции (подтверждение), «закр.» = закрытие позиций (слабее)">ΔOI %</th>
                 <th style="width:90px;text-align:center;">Действия</th>
             </tr></thead>
             <tbody id="contTableBody"></tbody>
@@ -2088,9 +2096,13 @@ let natrTigerLinkGroup = 'A';
 // OWN native ticker code, so natrConvertSymbolForTiger below maps Binance's "BTCUSDT" to
 // that exchange's format where the convention is known; see NATR_TIGER_EXCHANGES.
 let natrTigerExchange = 'BYBIT';
+let contTigerExchange = 'BYBIT';
+let contTigerLinkGroup = 'B';
 try {
     const savedGroup = localStorage.getItem('natr_tiger_link_group'); if (savedGroup) natrTigerLinkGroup = savedGroup;
     const savedExch = localStorage.getItem('natr_tiger_exchange'); if (savedExch) natrTigerExchange = savedExch;
+    const savedContExch = localStorage.getItem('cont_tiger_exchange'); if (savedContExch) contTigerExchange = savedContExch;
+    const savedContGroup = localStorage.getItem('cont_tiger_link_group'); if (savedContGroup) contTigerLinkGroup = savedContGroup;
 } catch(e) { /* non-fatal */ }
 // Full exchange list Tiger's local API accepts for "e" (case-insensitive on their end).
 // convert: how to turn a Binance USDT-M perpetual code like "BTCUSDT" into that exchange's
@@ -2166,6 +2178,34 @@ function natrChangeTigerLinkGroup(v) {
     natrTigerLinkGroup = v;
     ctSafeSetItem('natr_tiger_link_group', v);
 }
+function contChangeTigerExchange(v) {
+    contTigerExchange = v;
+    ctSafeSetItem('cont_tiger_exchange', v);
+}
+function contChangeTigerLinkGroup(v) {
+    contTigerLinkGroup = v;
+    ctSafeSetItem('cont_tiger_link_group', v);
+}
+function contOpenInTiger(symbol) {
+    const exchange = contTigerExchange;
+    const targetSymbol = natrConvertSymbolForTiger(symbol, exchange);
+    natrGetTigerSocket().then(ws => {
+        const onMsg = (ev) => {
+            ws.removeEventListener('message', onMsg);
+            let data = null;
+            try { data = JSON.parse(ev.data); } catch(e) { /* non-JSON, ignore */ }
+            if (data && data.response && data.response.type === 'successfully') {
+                showToast('Открыто в Tiger.com (' + exchange + '): ' + targetSymbol);
+            } else {
+                showToast((data && data.message) || ('Tiger.com не распознал тикер ' + targetSymbol + ' на ' + exchange));
+            }
+        };
+        ws.addEventListener('message', onMsg);
+        ws.send(JSON.stringify({ type: 'setLinkSymbol', e: exchange, m: 'FUTURES', symbol: targetSymbol, linkGroup: contTigerLinkGroup }));
+    }).catch(() => {
+        showToast('Нет связи с Tiger.com Terminal — включите Settings → Local Signal Server (порт 7819)');
+    });
+}
 function natrToggleTigerSettings() {
     const el = document.getElementById('natrTigerSettings');
     if (!el) return;
@@ -2173,6 +2213,7 @@ function natrToggleTigerSettings() {
     el.style.display = show ? 'flex' : 'none';
 }
 function natrInitTigerSettingsUI() {
+    // NATR Scanner selects
     const exchSel = document.getElementById('natrTigerExchangeSelect');
     if (exchSel && !exchSel.options.length) {
         NATR_TIGER_EXCHANGES.forEach(x => {
@@ -2190,6 +2231,29 @@ function natrInitTigerSettingsUI() {
             const opt = document.createElement('option'); opt.value = String(n); opt.textContent = 'Группа ' + n; groupSel.appendChild(opt);
         }
     }
+    // Продолжение тренда selects (same options, separate elements)
+    const cExchSel = document.getElementById('contTigerExchangeSelect');
+    if (cExchSel && !cExchSel.options.length) {
+        NATR_TIGER_EXCHANGES.forEach(x => {
+            const opt = document.createElement('option');
+            opt.value = x.value; opt.textContent = x.label;
+            cExchSel.appendChild(opt);
+        });
+    }
+    const cGroupSel = document.getElementById('contTigerLinkGroupSelect');
+    if (cGroupSel && !cGroupSel.options.length) {
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
+            const opt = document.createElement('option'); opt.value = l; opt.textContent = 'Группа ' + l; cGroupSel.appendChild(opt);
+        });
+        for (let n = 0; n <= 11; n++) {
+            const opt = document.createElement('option'); opt.value = String(n); opt.textContent = 'Группа ' + n; cGroupSel.appendChild(opt);
+        }
+    }
+    // Restore selected values
+    if (exchSel) exchSel.value = natrTigerExchange;
+    if (groupSel) groupSel.value = natrTigerLinkGroup;
+    if (cExchSel) cExchSel.value = contTigerExchange;
+    if (cGroupSel) cGroupSel.value = contTigerLinkGroup;
 }
 // Closes the Tiger settings popover on any click outside it, so it doesn't stay open
 // while the person interacts with the rest of the page.
@@ -2468,32 +2532,24 @@ async function natrStartScan() {
 // ============================================================
 //  SECTION: СКРИНЕР ПРОДОЛЖЕНИЯ
 // ============================================================
-// Idea: if a pair moved hard yesterday (pump or dump), check today for elevated
-// relative volume (RVOL) on short candles moving in the SAME direction — a signal
-// that yesterday's move may be continuing rather than having exhausted itself.
-const CONT_MODES = {
-    // oiLimit/oiPeriod are chosen so the ΔOI window matches the RVOL window
-    // ((baseN+shortN)*interval) as closely as Binance's OI endpoint allows — it has no
-    // granularity finer than 5m, so the '1m' mode's ~2h RVOL window is approximated with
-    // 24 five-minute OI points instead of true 1-minute ones.
-    '5m': { interval: '5m', shortN: 3, baseN: 96, limit: 100, oiPeriod: '5m', oiLimit: 99 },   // short = last 15m, baseline = preceding ~8h, ΔOI ~8.25h to match
-    '1m': { interval: '1m', shortN: 5, baseN: 115, limit: 120, oiPeriod: '5m', oiLimit: 24 },  // short = last 5m, baseline = preceding ~2h, ΔOI ~2h to match
-};
-let contMode = '5m';
-let contDirFilterOnly = true;
+// Idea: compare yesterday's DAILY candle against the average of the N preceding daily
+// candles — how much bigger its body (|close-open|) and volume were. A big relative body
+// (R коэфф.) plus elevated relative volume (RVOL, now daily-based) after a quiet
+// проторговка stretch is the core signal; everything else confirms or ranks it.
+// Everything here now comes from ONE daily-klines fetch (+ OI) per symbol — no separate
+// intraday timeframe/mode needed anymore, which also roughly halves the request count per
+// scan compared to the old 5m/1m-intraday version (helps stay under Binance's rate limit).
 let contDirection = 'all'; // 'all' | 'up' (yesterday's pumps) | 'down' (yesterday's dumps)
-let contYestOp = 'gte'; // 'gte' = найти движения БОЛЬШЕ порога, 'lte' = МЕНЬШЕ порога
-let contRvolOp = 'gte';
-let contOiOp = 'gte';
 let contPinned = new Set(); // own закреп set for this screener, separate from NATR Scanner's
 let contFavorites = new Set(); // own избранное set for this screener, separate from NATR Scanner's
 let contWatchlistOnly = false; // "show favorites only" toggle (uses contFavorites, not shared)
 let contVolFrom = null;
 let contVolTo = null;
 let contVolFilterActive = false;
-let contBreakoutActive = true;
-let contBtcToday = null; // BTCUSDT's own todayChange from the same scan — "market" reference for relative strength, at zero extra API cost since BTCUSDT is already one of the scanned pairs
-let contBtcRef = null;
+let contRvolFilterActive = false;
+let contTodayFilterActive = false;
+let contOiFilterActive = false;
+let contYestFilterActive = false;
 let contAlertsEnabled = false;
 let contAlertedSymbols = new Set(); // tracks who we've already notified about, mirrors natrAlertedSymbols
 let contIsBgUpdating = false;
@@ -2504,18 +2560,8 @@ let contIsScanning = false;
 let contAbortCtrl = null;
 let contRawResults = []; // everything the last scan fetched, unfiltered — filters below re-slice this live, no rescan needed
 try {
-    const savedContMode = localStorage.getItem('cont_mode');
-    if (CONT_MODES[savedContMode]) contMode = savedContMode;
-    const savedDirOnly = localStorage.getItem('cont_dir_only');
-    if (savedDirOnly === '0') contDirFilterOnly = false;
     const savedDirection = localStorage.getItem('cont_direction');
     if (savedDirection === 'up' || savedDirection === 'down') contDirection = savedDirection;
-    const savedYestOp = localStorage.getItem('cont_yest_op');
-    if (savedYestOp === 'gte' || savedYestOp === 'lte') contYestOp = savedYestOp;
-    const savedRvolOp = localStorage.getItem('cont_rvol_op');
-    if (savedRvolOp === 'gte' || savedRvolOp === 'lte') contRvolOp = savedRvolOp;
-    const savedOiOp = localStorage.getItem('cont_oi_op');
-    if (savedOiOp === 'gte' || savedOiOp === 'lte') contOiOp = savedOiOp;
     contWatchlistOnly = localStorage.getItem('cont_watchlist_only') === '1';
     contPinned = new Set(ctSafeGetJSON('cont_pinned', []));
     contFavorites = new Set(ctSafeGetJSON('cont_favorites', []));
@@ -2524,20 +2570,16 @@ try {
     const cVolTo = parseFloat(localStorage.getItem('cont_vol_to'));
     if (!isNaN(cVolTo)) contVolTo = cVolTo;
     contVolFilterActive = localStorage.getItem('cont_vol_filter_active') === '1';
-    const savedBreakout = localStorage.getItem('cont_breakout_active');
-    if (savedBreakout !== null) contBreakoutActive = savedBreakout === '1';
+    contRvolFilterActive = localStorage.getItem('cont_rvol_filter_active') === '1';
+    contTodayFilterActive = localStorage.getItem('cont_today_filter_active') === '1';
+    contOiFilterActive = localStorage.getItem('cont_oi_filter_active') === '1';
+    contYestFilterActive = localStorage.getItem('cont_yest_filter_active') === '1';
     contAlertsEnabled = localStorage.getItem('cont_alerts_enabled') === '1';
 } catch(e) { /* storage unavailable — defaults are fine */ }
 function contApplyRestoredUI() {
-    document.querySelectorAll('#section-cont .natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === contMode));
-    const dirBtn = document.getElementById('contDirBtn');
-    if (dirBtn) dirBtn.classList.toggle('active', contDirFilterOnly);
     document.getElementById('contDirAllBtn').classList.toggle('active', contDirection === 'all');
     document.getElementById('contDirUpBtn').classList.toggle('active', contDirection === 'up');
     document.getElementById('contDirDownBtn').classList.toggle('active', contDirection === 'down');
-    document.getElementById('contYestOp').value = contYestOp;
-    document.getElementById('contRvolOp').value = contRvolOp;
-    document.getElementById('contOiOp').value = contOiOp;
     document.getElementById('contWatchlistBtn').classList.toggle('active', contWatchlistOnly);
     const volFromEl = document.getElementById('contVolFrom');
     if (volFromEl && contVolFrom !== null) volFromEl.value = contVolFrom;
@@ -2545,23 +2587,37 @@ function contApplyRestoredUI() {
     if (volToEl && contVolTo !== null) volToEl.value = contVolTo;
     const volBtn = document.getElementById('contVolFilterBtn');
     if (volBtn) volBtn.classList.toggle('active', contVolFilterActive);
-    const breakoutBtn = document.getElementById('contBreakoutBtn');
-    if (breakoutBtn) breakoutBtn.classList.toggle('active', contBreakoutActive);
+    const rvolBtn = document.getElementById('contRvolFilterBtn');
+    if (rvolBtn) rvolBtn.classList.toggle('active', contRvolFilterActive);
+    const todayBtn = document.getElementById('contTodayFilterBtn');
+    if (todayBtn) todayBtn.classList.toggle('active', contTodayFilterActive);
+    const oiBtn = document.getElementById('contOiFilterBtn');
+    if (oiBtn) oiBtn.classList.toggle('active', contOiFilterActive);
+    const yestBtn = document.getElementById('contYestFilterBtn');
+    if (yestBtn) yestBtn.classList.toggle('active', contYestFilterActive);
     const alertBtn = document.getElementById('contAlertBtn');
     if (alertBtn && contAlertsEnabled) alertBtn.classList.add('active');
     try {
-        const y = localStorage.getItem('cont_yest_threshold');
-        if (y) document.getElementById('contYestThreshold').value = y;
-        const q = localStorage.getItem('cont_quiet_threshold');
-        if (q) document.getElementById('contQuietThreshold').value = q;
-        const mc = localStorage.getItem('cont_min_continuation');
-        if (mc) document.getElementById('contMinContinuation').value = mc;
-        const bm = localStorage.getItem('cont_breakout_margin');
-        if (bm) document.getElementById('contBreakoutMargin').value = bm;
-        const rv = localStorage.getItem('cont_rvol_threshold');
-        if (rv) document.getElementById('contRvolThreshold').value = rv;
-        const oim = localStorage.getItem('cont_oi_min');
-        if (oim) document.getElementById('contOiMin').value = oim;
+        const yf = localStorage.getItem('cont_yest_from');
+        if (yf) document.getElementById('contYestFrom').value = yf;
+        const yt = localStorage.getItem('cont_yest_to');
+        if (yt) document.getElementById('contYestTo').value = yt;
+        const brf = localStorage.getItem('cont_body_ratio_from');
+        if (brf) document.getElementById('contBodyRatioFrom').value = brf;
+        const brt = localStorage.getItem('cont_body_ratio_to');
+        if (brt) document.getElementById('contBodyRatioTo').value = brt;
+        const rvf = localStorage.getItem('cont_rvol_from');
+        if (rvf) document.getElementById('contRvolFrom').value = rvf;
+        const rvt = localStorage.getItem('cont_rvol_to');
+        if (rvt) document.getElementById('contRvolTo').value = rvt;
+        const tdf = localStorage.getItem('cont_today_from');
+        if (tdf) document.getElementById('contTodayFrom').value = tdf;
+        const tdt = localStorage.getItem('cont_today_to');
+        if (tdt) document.getElementById('contTodayTo').value = tdt;
+        const oif = localStorage.getItem('cont_oi_from');
+        if (oif) document.getElementById('contOiFrom').value = oif;
+        const oit = localStorage.getItem('cont_oi_to');
+        if (oit) document.getElementById('contOiTo').value = oit;
         const lb = localStorage.getItem('cont_lookback_days');
         if (lb) document.getElementById('contLookbackDays').value = lb;
     } catch(e) { /* non-fatal */ }
@@ -2575,25 +2631,6 @@ function contSetDirection(dir) {
     if (contRawResults.length) contReFilterAndRender();
 }
 
-function contSwitchMode(m) {
-    if (!CONT_MODES[m] || contIsScanning) return;
-    contMode = m;
-    document.querySelectorAll('#section-cont .natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
-    try { ctSafeSetItem('cont_mode', m); } catch(e) { /* non-fatal */ }
-}
-function contToggleDirFilter() {
-    contDirFilterOnly = !contDirFilterOnly;
-    document.getElementById('contDirBtn').classList.toggle('active', contDirFilterOnly);
-    try { ctSafeSetItem('cont_dir_only', contDirFilterOnly ? '1' : '0'); } catch(e) { /* non-fatal */ }
-    if (contRawResults.length) contReFilterAndRender();
-}
-function contToggleBreakout() {
-    const btn = document.getElementById('contBreakoutBtn');
-    const active = !btn.classList.contains('active');
-    btn.classList.toggle('active', active);
-    ctSafeSetItem('cont_breakout_active', active ? '1' : '0');
-    if (contRawResults.length) contReFilterAndRender();
-}
 function contToggleWatchlistOnly() {
     contWatchlistOnly = !contWatchlistOnly;
     document.getElementById('contWatchlistBtn').classList.toggle('active', contWatchlistOnly);
@@ -2630,6 +2667,34 @@ function contToggleVolFilter() {
     const btn = document.getElementById('contVolFilterBtn');
     if (btn) btn.classList.toggle('active', contVolFilterActive);
     ctSafeSetItem('cont_vol_filter_active', contVolFilterActive ? '1' : '0');
+    if (contRawResults.length) contReFilterAndRender();
+}
+function contToggleRvolFilter() {
+    contRvolFilterActive = !contRvolFilterActive;
+    const btn = document.getElementById('contRvolFilterBtn');
+    if (btn) btn.classList.toggle('active', contRvolFilterActive);
+    ctSafeSetItem('cont_rvol_filter_active', contRvolFilterActive ? '1' : '0');
+    if (contRawResults.length) contReFilterAndRender();
+}
+function contToggleTodayFilter() {
+    contTodayFilterActive = !contTodayFilterActive;
+    const btn = document.getElementById('contTodayFilterBtn');
+    if (btn) btn.classList.toggle('active', contTodayFilterActive);
+    ctSafeSetItem('cont_today_filter_active', contTodayFilterActive ? '1' : '0');
+    if (contRawResults.length) contReFilterAndRender();
+}
+function contToggleOiFilter() {
+    contOiFilterActive = !contOiFilterActive;
+    const btn = document.getElementById('contOiFilterBtn');
+    if (btn) btn.classList.toggle('active', contOiFilterActive);
+    ctSafeSetItem('cont_oi_filter_active', contOiFilterActive ? '1' : '0');
+    if (contRawResults.length) contReFilterAndRender();
+}
+function contToggleYestFilter() {
+    contYestFilterActive = !contYestFilterActive;
+    const btn = document.getElementById('contYestFilterBtn');
+    if (btn) btn.classList.toggle('active', contYestFilterActive);
+    ctSafeSetItem('cont_yest_filter_active', contYestFilterActive ? '1' : '0');
     if (contRawResults.length) contReFilterAndRender();
 }
 // Alert bell — mirrors natrToggleAlerts/natrCheckAlerts: fires once when a symbol NEWLY
@@ -2706,19 +2771,17 @@ function contStopAutoRefresh() {
 // live, no network request needed. Only the timeframe tabs and "Дней проторговки" actually
 // change what gets fetched, so those still require pressing Сканировать again.
 function contChangeFilters() {
-    contYestOp = document.getElementById('contYestOp').value === 'lte' ? 'lte' : 'gte';
-    contRvolOp = document.getElementById('contRvolOp').value === 'lte' ? 'lte' : 'gte';
-    contOiOp = document.getElementById('contOiOp').value === 'lte' ? 'lte' : 'gte';
     try {
-        ctSafeSetItem('cont_yest_op', contYestOp);
-        ctSafeSetItem('cont_rvol_op', contRvolOp);
-        ctSafeSetItem('cont_oi_op', contOiOp);
-        ctSafeSetItem('cont_yest_threshold', document.getElementById('contYestThreshold').value || '40');
-        ctSafeSetItem('cont_quiet_threshold', document.getElementById('contQuietThreshold').value || '10');
-        ctSafeSetItem('cont_min_continuation', document.getElementById('contMinContinuation').value || '3');
-        ctSafeSetItem('cont_breakout_margin', document.getElementById('contBreakoutMargin').value || '0');
-        ctSafeSetItem('cont_rvol_threshold', document.getElementById('contRvolThreshold').value);
-        ctSafeSetItem('cont_oi_min', document.getElementById('contOiMin').value);
+        ctSafeSetItem('cont_yest_from', document.getElementById('contYestFrom').value);
+        ctSafeSetItem('cont_yest_to', document.getElementById('contYestTo').value);
+        ctSafeSetItem('cont_body_ratio_from', document.getElementById('contBodyRatioFrom').value);
+        ctSafeSetItem('cont_body_ratio_to', document.getElementById('contBodyRatioTo').value);
+        ctSafeSetItem('cont_rvol_from', document.getElementById('contRvolFrom').value);
+        ctSafeSetItem('cont_rvol_to', document.getElementById('contRvolTo').value);
+        ctSafeSetItem('cont_today_from', document.getElementById('contTodayFrom').value);
+        ctSafeSetItem('cont_today_to', document.getElementById('contTodayTo').value);
+        ctSafeSetItem('cont_oi_from', document.getElementById('contOiFrom').value);
+        ctSafeSetItem('cont_oi_to', document.getElementById('contOiTo').value);
     } catch(e) { /* non-fatal */ }
     if (contRawResults.length) contReFilterAndRender();
 }
@@ -2746,45 +2809,6 @@ async function contFetchKlines(symbol, interval, limit) {
         return await resp.json();
     } catch(e) { return null; }
 }
-// RVOL = average volume of the most recent `shortN` candles divided by the average
-// volume of the candles right before that. The baseline window shrinks to whatever
-// history is actually available (down to a small minimum) so freshly-listed pairs
-// still get a reading instead of being dropped for lacking a full baseN history.
-function contCalcRVOL(klines, shortN, baseN) {
-    if (!klines || klines.length <= shortN) return null;
-    const len = klines.length;
-    const effectiveBaseN = Math.min(baseN, len - shortN);
-    if (effectiveBaseN < 5) return null; // too little history to call it a baseline at all
-    const avgVol = (start, end) => {
-        let sum = 0;
-        for (let i = start; i < end; i++) sum += parseFloat(klines[i][5]) || 0;
-        return sum / (end - start);
-    };
-    const shortAvg = avgVol(len - shortN, len);
-    const baseAvg = avgVol(len - shortN - effectiveBaseN, len - shortN);
-    if (!baseAvg) return null;
-    return shortAvg / baseAvg;
-}
-// Rolling VWAP over the same intraday candle window used for RVOL: Σ(typical price × volume)
-// ÷ Σ(volume), typical price = (high+low+close)/3. Tells you how far price has stretched
-// away from where the recent volume actually traded — a fast, no-extra-request "am I
-// chasing this candle" check, since these candles are already fetched for RVOL anyway.
-function contCalcVwapDeviation(klines, currentPrice) {
-    if (!klines || !klines.length || !currentPrice) return null;
-    let pv = 0, vol = 0;
-    for (let i = 0; i < klines.length; i++) {
-        const h = parseFloat(klines[i][2]), l = parseFloat(klines[i][3]), c = parseFloat(klines[i][4]), v = parseFloat(klines[i][5]) || 0;
-        const typical = (h + l + c) / 3;
-        pv += typical * v; vol += v;
-    }
-    if (!vol) return null;
-    const vwap = pv / vol;
-    if (!vwap) return null;
-    return (currentPrice - vwap) / vwap * 100;
-}
-// Binance's Open Interest history has no granularity finer than 5m (unlike price klines,
-// which go down to 1m), so period/limit are passed in per-mode to match the RVOL window
-// as closely as that constraint allows — see CONT_MODES' oiPeriod/oiLimit.
 async function contFetchOI(symbol, period, limit) {
     try {
         const ctrl = new AbortController();
@@ -2800,73 +2824,76 @@ async function contFetchOI(symbol, period, limit) {
         return { oiChangePct: (last - first) / first * 100, oiValue: last };
     } catch(e) { return null; }
 }
-// lookbackDays controls how many days of daily candles we fetch before the pump day, so
-// contGetFilteredResults can check that all of them were "проторговка" (quiet consolidation,
-// each day's high-low range under the threshold) right up until the pump. Pairs with LESS
-// history than lookbackDays (recent listings) are still included — dailyRanges just ends up
-// shorter, which will correctly fail the consolidation-window check further down.
-async function contFetchAndCalc(symbol, cfg, lookbackDays) {
-    const [daily, intra, oi] = await Promise.all([
-        contFetchKlines(symbol, '1d', Math.max(lookbackDays, 0) + 2),
-        contFetchKlines(symbol, cfg.interval, cfg.limit),
-        contFetchOI(symbol, cfg.oiPeriod, cfg.oiLimit)
+// lookbackDays (N) is now the single window controlling everything: how many days of daily
+// candles we fetch before the pump day, how many of them must be quiet (проторговка), AND
+// the baseline N used for both R коэфф. (body-size ratio) and RVOL (now daily-volume-based).
+// Everything comes from ONE daily-klines fetch + OI — no separate intraday timeframe needed
+// anymore. Pairs with LESS history than lookbackDays (recent listings) are still included —
+// the averages just end up computed over whatever shorter window is actually available.
+async function contFetchAndCalc(symbol, lookbackDays) {
+    const days = Math.max(lookbackDays, 0) + 2;
+    const [daily, oi] = await Promise.all([
+        contFetchKlines(symbol, '1d', days),
+        contFetchOI(symbol, '1d', days) // same N-day window as everything else now
     ]);
-    if (!daily || daily.length < 2 || !intra) return null;
-    const yestCandle = daily[daily.length - 2];   // last FULLY closed UTC day
+    if (!daily || daily.length < 2) return null;
+    const yestCandle = daily[daily.length - 2];   // last FULLY closed UTC day — the "памп" candidate
     const todayCandle = daily[daily.length - 1];  // today's still-forming UTC day
     const yestOpen = parseFloat(yestCandle[1]), yestClose = parseFloat(yestCandle[4]);
+    const yestVolume = parseFloat(yestCandle[5]) || 0;
     const todayOpen = parseFloat(todayCandle[1]);
     if (!yestOpen || !todayOpen) return null;
     const yestChange = (yestClose - yestOpen) / yestOpen * 100;
-    const currentPrice = parseFloat(intra[intra.length - 1][4]);
+    const currentPrice = parseFloat(todayCandle[4]); // still-forming daily candle's live close
     const todayChange = (currentPrice - todayOpen) / todayOpen * 100;
-    const rvol = contCalcRVOL(intra, cfg.shortN, cfg.baseN);
-    if (rvol == null) return null;
     const oiChangePct = oi ? oi.oiChangePct : null;
     const oiValue = oi ? oi.oiValue : null;
-    // VWAP deviation and day-range position both reuse candles we already fetched above —
-    // zero extra API calls, which matters a lot when scanning hundreds of pairs per scan.
-    // VWAP here is a ROLLING vwap over the same short-interval window used for RVOL (last
-    // ~2-8h depending on timeframe), not a full UTC-session VWAP — deliberately, since a
-    // fresh rolling VWAP is a better "am I chasing this move" reference than a full-day
-    // VWAP that goes stale by the afternoon, and it comes for free from data we already have.
-    const vwapDeviationPct = contCalcVwapDeviation(intra, currentPrice);
     // Day-range position: 0% = sitting at today's low, 100% = sitting at today's high.
     const todayHigh = parseFloat(todayCandle[2]), todayLow = parseFloat(todayCandle[3]);
     const dayRangePos = (todayHigh > todayLow) ? (currentPrice - todayLow) / (todayHigh - todayLow) * 100 : null;
-    // "Дней проторговки" = 0 (or left empty) → skip history entirely and analyze TODAY'S own
-    // move so far, instead of yesterday's. refChange is what every threshold/direction
-    // check below runs against, so this one flag switches the whole screener's frame
-    // of reference from "yesterday vs today" to "just today, right now".
+    // "Окно N" = 0 (or left empty) → skip history entirely and analyze TODAY'S own move so
+    // far, instead of yesterday's. refChange is what every threshold/direction check below
+    // runs against, so this one flag switches the whole screener's frame of reference from
+    // "yesterday vs today" to "just today, right now" — and R коэфф./RVOL have no baseline
+    // to compare against in that mode, so they come out null (filters on them just skip).
     const todayOnly = lookbackDays <= 0;
-    // Days strictly BEFORE the pump day, oldest to newest — this is the проторговка
-    // window contGetFilteredResults checks for quiet consolidation. Capped to lookbackDays,
-    // shrinking gracefully for pairs with shorter history. Not needed in "today only" mode,
-    // since there's no prior-day window to require quiet — today's move is the whole signal.
-    // Each entry keeps high/low alongside the range% so contGetFilteredResults can build the
-    // consolidation "box" (for the breakout check and the suggested stop level) from exactly
-    // the days that end up counted as quiet, not just measure how quiet each day was.
     let dailyRanges = [];
+    let bodyRatio = null, rvol = null;
     if (!todayOnly) {
         const availableDays = Math.max(0, Math.min(lookbackDays, daily.length - 2));
+        let bodySum = 0, volSum = 0, n = 0;
+        // Days strictly BEFORE the pump day, oldest to newest. Each entry keeps range/high/low
+        // for the проторговка check + consolidation "box" (breakout check, stop level), while
+        // bodySum/volSum build the SAME window's average body-size and average volume — the
+        // baseline that yesterday's candle gets compared against for R коэфф. and RVOL.
         for (let i = daily.length - 2 - availableDays; i <= daily.length - 3; i++) {
-            const o = parseFloat(daily[i][1]), h = parseFloat(daily[i][2]), l = parseFloat(daily[i][3]);
-            if (o) dailyRanges.push({ range: (h - l) / o * 100, high: h, low: l });
+            const o = parseFloat(daily[i][1]), h = parseFloat(daily[i][2]), l = parseFloat(daily[i][3]), c = parseFloat(daily[i][4]), v = parseFloat(daily[i][5]) || 0;
+            if (!o) continue;
+            dailyRanges.push({ range: (h - l) / o * 100, high: h, low: l });
+            bodySum += Math.abs(c - o) / o * 100;
+            volSum += v;
+            n++;
+        }
+        if (n > 0) {
+            const yestBodyPct = Math.abs(yestClose - yestOpen) / yestOpen * 100;
+            const avgBodyPct = bodySum / n;
+            bodyRatio = avgBodyPct > 0 ? yestBodyPct / avgBodyPct : null;
+            const avgVol = volSum / n;
+            rvol = avgVol > 0 ? yestVolume / avgVol : null;
         }
     }
     const refChange = todayOnly ? todayChange : yestChange;
-    return { symbol, yestChange, todayChange, refChange, todayOnly, rvol, oiChangePct, oiValue, dailyRanges, currentPrice, vwapDeviationPct, dayRangePos, pumpClose: yestClose };
+    return { symbol, yestChange, todayChange, refChange, todayOnly, rvol, bodyRatio, oiChangePct, oiValue, dailyRanges, currentPrice, dayRangePos, pumpClose: yestClose };
 }
-// contFetchAndCalc makes 3 requests per symbol (daily+intra klines, OI), so this batch
-// uses a smaller symbol count than NATR_SCAN_CFG.batchSize to land on similar actual
-// concurrent-request counts — otherwise it'd be sending 3x as many requests per batch.
-const CONT_BATCH_SIZE = Math.max(1, Math.round(NATR_SCAN_CFG.batchSize / 3));
-async function contProcessMax(pairs, cfg, lookbackDays, onProgress) {
+// Now just ONE daily-klines request + one OI request per symbol (was 3 with the old
+// intraday-RVOL version), so batches can be sized the same as NATR Scanner's again.
+const CONT_BATCH_SIZE = NATR_SCAN_CFG.batchSize;
+async function contProcessMax(pairs, lookbackDays, onProgress) {
     const results = []; const total = pairs.length; let processed = 0;
     for (let i = 0; i < total; i += CONT_BATCH_SIZE) {
         if (contAbortCtrl?.signal.aborted || natrIsBanned()) break;
         const batch = pairs.slice(i, Math.min(i + CONT_BATCH_SIZE, total));
-        const batchResults = await Promise.all(batch.map(sym => contFetchAndCalc(sym, cfg, lookbackDays)));
+        const batchResults = await Promise.all(batch.map(sym => contFetchAndCalc(sym, lookbackDays)));
         batchResults.forEach(r => { if (r) results.push(r); });
         processed += batch.length;
         if (onProgress) onProgress(processed, total);
@@ -2896,13 +2923,12 @@ async function contStartScan() {
         btn.classList.remove('loading'); btn.disabled = false;
         contIsScanning = false; contAbortCtrl = null; return;
     }
-    const cfg = CONT_MODES[contMode] || CONT_MODES['5m'];
     const lbRaw = document.getElementById('contLookbackDays').value.trim();
     const lookbackDays = lbRaw === '' ? 0 : Math.max(0, parseInt(lbRaw) || 0);
     ctSafeSetItem('cont_lookback_days', String(lookbackDays));
     contSetStatus('Сканирование 0/'+pairs.length+'...', true, true);
     const [raw] = await Promise.all([
-        contProcessMax(pairs, cfg, lookbackDays, (p,t) => {
+        contProcessMax(pairs, lookbackDays, (p,t) => {
             if (!contAbortCtrl.signal.aborted) contSetStatus('Сканирование '+p+'/'+t+'...', true, true);
         }),
         natrFetchTicker24h() // populates natrTicker24hMap, shared with NATR Scanner — powers the "Объём 24ч" filter below
@@ -2912,7 +2938,6 @@ async function contStartScan() {
         contIsScanning = false; contAbortCtrl = null; return;
     }
     contRawResults = raw; // keep everything — filters below re-slice this in memory, no rescan needed
-    contUpdateBtcRef();
     contCheckAlerts(contGetFilteredResults());
     contReFilterAndRender();
     contSetStatus('Готово, отсканировано: '+raw.length, true);
@@ -2923,14 +2948,7 @@ async function contStartScan() {
     contIsScanning = false; contAbortCtrl = null;
     contStartAutoRefresh();
 }
-// BTCUSDT is always part of the scanned USDT-perpetuals universe, so relative-strength-vs-
-// BTC comes for free from the same scan — no separate request needed.
-function contUpdateBtcRef() {
-    const btc = contRawResults.find(r => r.symbol === 'BTCUSDT');
-    contBtcToday = btc ? btc.todayChange : null;
-    contBtcRef = btc ? btc.refChange : null;
-}
-// Background refresh — re-fetches everything with the current mode/lookback but without
+// Background refresh — re-fetches everything with the current lookback window but without
 // resetting the table or scan button, so alerts and auto-refresh don't interrupt browsing.
 async function contStartBgUpdate() {
     if (contIsScanning || contIsBgUpdating || natrIsBanned()) return;
@@ -2938,18 +2956,16 @@ async function contStartBgUpdate() {
     contSetTableUpdating(true); contSetStatus('Фоновое обновление...', true, true);
     const pairs = await natrGetAllPairs();
     if (!pairs.length || contAbortCtrl.signal.aborted) { contFinishBgUpdate(false); return; }
-    const cfg = CONT_MODES[contMode] || CONT_MODES['5m'];
     const lbRaw = document.getElementById('contLookbackDays').value.trim();
     const lookbackDays = lbRaw === '' ? 0 : Math.max(0, parseInt(lbRaw) || 0);
     const [raw] = await Promise.all([
-        contProcessMax(pairs, cfg, lookbackDays, (p,t) => {
+        contProcessMax(pairs, lookbackDays, (p,t) => {
             if (!contAbortCtrl.signal.aborted) contSetStatus(p+'/'+t, true, true);
         }),
         natrFetchTicker24h()
     ]);
     if (contAbortCtrl.signal.aborted) { contFinishBgUpdate(false); return; }
     contRawResults = raw;
-    contUpdateBtcRef();
     contCheckAlerts(contGetFilteredResults());
     contReFilterAndRender();
     const lu = document.getElementById('contLastUpdate');
@@ -2965,107 +2981,64 @@ function contFinishBgUpdate(ok) {
 // called on scan completion AND on every filter change, so adjusting a threshold
 // never requires hitting Сканировать again.
 function contGetFilteredResults() {
-    const yestThr = Math.abs(parseFloat(document.getElementById('contYestThreshold').value)) || 40;
-    const passThr = v => contYestOp === 'lte' ? Math.abs(v) <= yestThr : Math.abs(v) >= yestThr;
-
-    const rvolRaw = document.getElementById('contRvolThreshold').value.trim();
-    const rvolThr = rvolRaw === '' ? 0 : (parseFloat(rvolRaw) || 0);
-    const rvolActive = rvolThr > 0;
-    const passRvol = v => contRvolOp === 'lte' ? v <= rvolThr : v >= rvolThr;
-
-    const oiRaw = document.getElementById('contOiMin').value.trim();
-    const oiThr = oiRaw === '' ? 0 : (parseFloat(oiRaw) || 0);
-    const oiActive = oiThr > 0;
-    // ΔOI confirmation now requires the SIGN to match the pump's direction too, not just
-    // the magnitude — OI growing in the SAME direction as price means new positions are
-    // opening (real fuel for continuation); OI moving the other way means positions are
-    // being closed (short squeeze / long liquidation), which is a much weaker, often
-    // exhaustion-flavoured signal that magnitude alone used to let straight through.
-    const passOi = (v, refSign) => {
-        if (Math.sign(v) !== refSign) return false;
-        return contOiOp === 'lte' ? Math.abs(v) <= oiThr : Math.abs(v) >= oiThr;
+    // Helper: parse a from-to range, returns [from, to] (null = not set)
+    const parseRange = (fromId, toId) => {
+        const f = document.getElementById(fromId).value.trim();
+        const t = document.getElementById(toId).value.trim();
+        return [f !== '' ? parseFloat(f) : null, t !== '' ? parseFloat(t) : null];
     };
+    const inRange = (v, from, to) => {
+        if (v === null || v === undefined) return false;
+        if (from !== null && v < from) return false;
+        if (to !== null && v > to) return false;
+        return true;
+    };
+
+    const [yestFrom, yestTo] = parseRange('contYestFrom', 'contYestTo');
+    const yestActive = yestFrom !== null || yestTo !== null;
+
+    const [rvolFrom, rvolTo] = parseRange('contRvolFrom', 'contRvolTo');
+    const rvolActive = rvolFrom !== null || rvolTo !== null;
+
+    const [bodyRatioFrom, bodyRatioTo] = parseRange('contBodyRatioFrom', 'contBodyRatioTo');
+    const bodyRatioActive = bodyRatioFrom !== null || bodyRatioTo !== null;
+
+    const [todayFrom, todayTo] = parseRange('contTodayFrom', 'contTodayTo');
+    const todayActive = todayFrom !== null || todayTo !== null;
+
+    const [oiFrom, oiTo] = parseRange('contOiFrom', 'contOiTo');
+    const oiActive = oiFrom !== null || oiTo !== null;
 
     const lbRaw = document.getElementById('contLookbackDays').value.trim();
     const lookbackDays = lbRaw === '' ? 0 : Math.max(0, parseInt(lbRaw) || 0);
-    const quietRaw = document.getElementById('contQuietThreshold').value.trim();
-    const quietThr = quietRaw === '' ? 10 : (Math.abs(parseFloat(quietRaw)) || 0);
-    const breakoutActive = document.getElementById('contBreakoutBtn').classList.contains('active');
-    const breakoutMarginRaw = document.getElementById('contBreakoutMargin').value.trim();
-    const breakoutMargin = (breakoutMarginRaw === '' ? 0 : Math.abs(parseFloat(breakoutMarginRaw) || 0)) / 100;
 
-    // Проторговка (consolidation): walk backward from the day right before the pump,
-    // counting consecutive quiet days — quiet meaning the day's full HIGH-LOW RANGE (not
-    // just close-open) stayed under "Порог тишины". Using the range instead of the net
-    // change catches a day that spiked hard intraday and closed flat, which close-open
-    // would otherwise wrongly call "quiet". Threshold is a SEPARATE, usually much smaller
-    // number than the pump threshold above — these used to be the same value, which meant
-    // almost any day under the pump threshold (e.g. up to 39% when the pump threshold was
-    // 40%) counted as "quiet", barely filtering anything. A big move anywhere in the
-    // stretch breaks the streak. consolidationHigh/Low track the actual price range spanned
-    // by those quiet days — the "box" the pump needs to break out of, and the natural
-    // stop-loss level shown in the table (base of the box for longs, top for shorts).
-    // Recomputed here (not baked in at scan time) so changing any of these thresholds
-    // re-evaluates instantly — only lookbackDays itself needs a rescan, since that's what
-    // controls how much history was fetched. Computed for EVERY raw result up front so a
-    // pinned (📌) row still has valid values even if it currently fails another filter.
-    contRawResults.forEach(r => {
-        let cd = 0, hi = -Infinity, lo = Infinity;
-        for (let i = r.dailyRanges.length - 1; i >= 0; i--) {
-            if (r.dailyRanges[i].range < quietThr) {
-                cd++;
-                if (r.dailyRanges[i].high > hi) hi = r.dailyRanges[i].high;
-                if (r.dailyRanges[i].low < lo) lo = r.dailyRanges[i].low;
-            } else break;
-        }
-        r.consolidationDays = cd;
-        r.consolidationHigh = cd > 0 ? hi : null;
-        r.consolidationLow = cd > 0 ? lo : null;
-    });
-    // Favorites-only bypasses every other filter (пороги, RVOL, ΔOI, проторговка, пробой,
+    // Favorites-only bypasses every other filter (пороги, RVOL, ΔOI,
     // направление, объём) — same "show me exactly this list, full stop" semantics pinned
     // rows already have. Previously a favorited symbol could silently disappear just
     // because it didn't currently pass, say, the RVOL or breakout filter.
     if (contWatchlistOnly) {
-        return contRawResults.filter(r => contFavorites.has(r.symbol)).sort((a,b) => b.rvol - a.rvol);
+        return contRawResults.filter(r => contFavorites.has(r.symbol)).sort((a,b) => (b.bodyRatio||b.rvol||0) - (a.bodyRatio||a.rvol||0));
     }
     let list = contRawResults.filter(r => {
-        if (!passThr(r.refChange)) return false;
-        if (rvolActive && !passRvol(r.rvol)) return false;
-        // OI filter is opt-in (0/empty = off). When it's on, a row with no OI data
-        // can't be confirmed either way, so it's excluded rather than let through blind.
-        if (oiActive && (r.oiChangePct === null || !passOi(r.oiChangePct, Math.sign(r.refChange)))) return false;
-        // Skipped entirely in "today only" mode (lookbackDays=0 at scan time) — there's no
-        // prior-day window fetched to check. Otherwise require the FULL requested window
-        // to have been quiet; a pair with less history than lookbackDays can't satisfy this
-        // and is correctly excluded rather than let through on a partial, unverified window.
-        if (!r.todayOnly && r.consolidationDays < lookbackDays) return false;
-        // Breakout confirmation: a big move that stays INSIDE the consolidation box isn't a
-        // breakout, no matter how big a % it is — the pump day's CLOSE must actually clear
-        // the box, by at least the margin. Skipped for today-only mode, same as consolidation.
-        if (breakoutActive && !r.todayOnly) {
-            if (r.refChange >= 0) {
-                if (!(r.pumpClose > r.consolidationHigh * (1 + breakoutMargin))) return false;
-            } else {
-                if (!(r.pumpClose < r.consolidationLow * (1 - breakoutMargin))) return false;
-            }
+        if (contYestFilterActive && yestActive && !inRange(Math.abs(r.refChange), yestFrom, yestTo)) return false;
+        if (contRvolFilterActive && rvolActive && !inRange(r.rvol, rvolFrom, rvolTo)) return false;
+        if (contTodayFilterActive && todayActive && !inRange(r.todayChange, todayFrom, todayTo)) return false;
+        if (bodyRatioActive && !inRange(r.bodyRatio, bodyRatioFrom, bodyRatioTo)) return false;
+        // OI range filter: checks absolute value, but still requires sign match with pump direction
+        if (contOiFilterActive && oiActive) {
+            if (r.oiChangePct === null) return false;
+            if (Math.sign(r.oiChangePct) !== Math.sign(r.refChange)) return false;
+            if (!inRange(Math.abs(r.oiChangePct), oiFrom, oiTo)) return false;
         }
         return true;
     });
     if (contDirection === 'up') list = list.filter(r => r.refChange >= 0);
     else if (contDirection === 'down') list = list.filter(r => r.refChange < 0);
-    if (contDirFilterOnly) {
-        const minContRaw = document.getElementById('contMinContinuation').value.trim();
-        const minCont = minContRaw === '' ? 0 : Math.abs(parseFloat(minContRaw) || 0);
-        // Same-sign alone lets +0.01% count as "continuation" of a 40% pump — require the
-        // move to actually be worth calling a continuation, not just technically not zero.
-        list = list.filter(r => Math.sign(r.refChange) === Math.sign(r.todayChange) && Math.abs(r.todayChange) >= minCont);
-    }
     if (contVolFilterActive) {
         if (contVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= contVolFrom; });
         if (contVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume <= contVolTo; });
     }
-    list.sort((a,b) => b.rvol - a.rvol);
+    list.sort((a,b) => (b.bodyRatio||b.rvol||0) - (a.bodyRatio||a.rvol||0));
     return list;
 }
 // Pinned (📌 закреп) rows always stay visible at the top, same bypass behaviour as in
@@ -3081,7 +3054,7 @@ function contReFilterAndRender() {
     }
     const pinnedRows = contRawResults
         .filter(r => contPinned.has(r.symbol))
-        .sort((a,b) => b.rvol - a.rvol);
+        .sort((a,b) => (b.bodyRatio||b.rvol||0) - (a.bodyRatio||a.rvol||0));
     const pinnedSet = new Set(pinnedRows.map(r => r.symbol));
     const rest = filtered.filter(r => !pinnedSet.has(r.symbol));
     contRenderTable(pinnedRows.concat(rest), pinnedRows.length);
@@ -3089,10 +3062,22 @@ function contReFilterAndRender() {
 function contRenderTable(data, pinnedCount) {
     pinnedCount = pinnedCount || 0;
     const body = document.getElementById('contTableBody');
+    // Read current range values for color highlighting (same as NATR scanner pattern)
+    const _pR = (id) => { const v = parseFloat(document.getElementById(id)?.value); return isNaN(v) ? null : v; };
+    const _inR = (v, from, to) => {
+        if (v === null || v === undefined) return false;
+        if (from !== null && v < from) return false;
+        if (to !== null && v > to) return false;
+        return true;
+    };
+    const hlRvolFrom = _pR('contRvolFrom'), hlRvolTo = _pR('contRvolTo');
+    const hlOiFrom = _pR('contOiFrom'), hlOiTo = _pR('contOiTo');
+    const hlYestFrom = _pR('contYestFrom'), hlYestTo = _pR('contYestTo');
+    const hlTodayFrom = _pR('contTodayFrom'), hlTodayTo = _pR('contTodayTo');
     if (!data.length) {
         body.innerHTML = '';
         document.getElementById('contEmptyText').textContent = contRawResults.length
-            ? 'Ничего не проходит текущие фильтры — попробуйте ослабить пороги или выключить «Только совпадение направления»'
+            ? 'Ничего не проходит текущие фильтры — попробуйте ослабить пороги или выключить фильтры'
             : 'Ничего не найдено — нажмите «Сканировать»';
         document.getElementById('contEmptyState').style.display = 'block';
         return;
@@ -3102,63 +3087,83 @@ function contRenderTable(data, pinnedCount) {
         const isPinnedRow = i < pinnedCount;
         const displaySymbol = escapeHtml(r.symbol.replace(/USDT$|USD1$/, ''));
         const refCls = r.refChange >= 0 ? 'cont-yest-up' : 'cont-yest-down';
+        let yestColorClass = '';
+        if (hlYestFrom !== null || hlYestTo !== null) {
+            const absRef = Math.abs(r.refChange);
+            if (hlYestFrom !== null && absRef < hlYestFrom) yestColorClass = ' natr-below-threshold';
+            else if (hlYestTo !== null && absRef > hlYestTo) yestColorClass = ' natr-above-threshold';
+            else if (_inR(absRef, hlYestFrom, hlYestTo)) yestColorClass = ' natr-range-hit';
+        }
         const todayCls = r.todayChange >= 0 ? 'cont-yest-up' : 'cont-yest-down';
         // Label whether OI is moving WITH the pump (new positions opening — real fuel for
         // continuation) or AGAINST it (positions closing — short squeeze / long
         // liquidation, a weaker, exhaustion-flavoured signal) — same sign logic the filter
         // above now enforces when active, but shown here regardless of whether it's on.
         let oiCell;
+        let oiColorClass = '';
         if (r.oiChangePct === null) {
             oiCell = '<span style="color:var(--muted)">—</span>';
         } else {
             const oiSameDir = Math.sign(r.oiChangePct) === Math.sign(r.refChange) && r.oiChangePct !== 0;
             const oiCls = r.oiChangePct >= 0 ? 'cont-yest-up' : 'cont-yest-down';
-            const oiLabel = oiSameDir ? 'нов.' : 'закр.';
             const oiTitle = oiSameDir
                 ? 'Открытие новых позиций в сторону движения — реальное топливо для продолжения'
                 : 'Закрытие позиций (шорт-сквиз / фиксация) — обычно более слабый, «истощающий» сигнал';
-            oiCell = '<span class="mono '+oiCls+'" title="'+oiTitle+'">'+(r.oiChangePct>=0?'+':'')+r.oiChangePct.toFixed(1)+'% <span style="opacity:.6;font-size:0.85em;">'+oiLabel+'</span></span>';
+            // Color highlighting based on OI range (absolute value, same as filter logic)
+            if (hlOiFrom !== null || hlOiTo !== null) {
+                const absOi = Math.abs(r.oiChangePct);
+                if (hlOiFrom !== null && absOi < hlOiFrom) oiColorClass = ' natr-below-threshold';
+                else if (hlOiTo !== null && absOi > hlOiTo) oiColorClass = ' natr-above-threshold';
+                else if (_inR(absOi, hlOiFrom, hlOiTo)) oiColorClass = ' natr-range-hit';
+            }
+            const oiColorOrDir = oiColorClass ? oiColorClass.trim() : oiCls;
+            oiCell = '<span class="mono '+oiColorOrDir+'" title="'+oiTitle+'">'+(r.oiChangePct>=0?'+':'')+r.oiChangePct.toFixed(1)+'%</span>';
         }
         const isPinned = contPinned.has(r.symbol);
         const isFav = contFavorites.has(r.symbol);
-        const vwapCell = r.vwapDeviationPct !== null
-            ? '<span class="mono '+(r.vwapDeviationPct>=0?'cont-yest-up':'cont-yest-down')+'" title="Насколько цена ушла от объёмно-взвешенной средней за последнее RVOL-окно — большой отрыв = вход в догон">'+(r.vwapDeviationPct>=0?'+':'')+r.vwapDeviationPct.toFixed(1)+'%</span>'
+        const bodyRatioCell = r.bodyRatio !== null
+            ? '<span class="mono cont-rvol-hot" title="Тело вчерашней свечи ÷ среднее тело за N предыдущих дней">'+r.bodyRatio.toFixed(2)+'x</span>'
             : '<span style="color:var(--muted)">—</span>';
-        const rangePosCell = r.dayRangePos !== null
-            ? '<span class="mono" title="0% — у дневного минимума, 100% — у дневного максимума">'+r.dayRangePos.toFixed(0)+'%</span>'
-            : '<span style="color:var(--muted)">—</span>';
-        let btcCell = '<span style="color:var(--muted)">—</span>';
-        if (contBtcToday !== null && r.symbol !== 'BTCUSDT') {
-            const rel = r.todayChange - contBtcToday;
-            btcCell = '<span class="mono '+(rel>=0?'cont-yest-up':'cont-yest-down')+'" title="Движение пары сегодня минус движение BTC сегодня ('+(contBtcToday>=0?'+':'')+contBtcToday.toFixed(1)+'%) — плюс значит пара сильнее рынка">'+(rel>=0?'+':'')+rel.toFixed(1)+'%</span>';
-        } else if (r.symbol === 'BTCUSDT') {
-            btcCell = '<span style="color:var(--muted)">BTC</span>';
+        let rvolColorClass = '';
+        if (r.rvol !== null && (hlRvolFrom !== null || hlRvolTo !== null)) {
+            if (hlRvolFrom !== null && r.rvol < hlRvolFrom) rvolColorClass = ' natr-below-threshold';
+            else if (hlRvolTo !== null && r.rvol > hlRvolTo) rvolColorClass = ' natr-above-threshold';
+            else if (_inR(r.rvol, hlRvolFrom, hlRvolTo)) rvolColorClass = ' natr-range-hit';
         }
-        // Suggested invalidation level: the base of the проторговка box the pump broke out
-        // of — low of the box for an up-pump (natural stop below the breakout), high of the
-        // box for a down-pump. Only meaningful when a consolidation window was actually
-        // checked (skipped for "today only" mode, same as the breakout check above).
-        let stopCell = '<span style="color:var(--muted)">—</span>';
-        if (!r.todayOnly && r.consolidationHigh !== null && r.currentPrice) {
-            const stopPrice = r.refChange >= 0 ? r.consolidationLow : r.consolidationHigh;
-            const riskPct = (r.currentPrice - stopPrice) / r.currentPrice * 100 * (r.refChange >= 0 ? 1 : -1);
-            stopCell = '<span class="mono" title="'+(r.refChange>=0?'Низ':'Верх')+' диапазона проторговки перед пампом — естественный уровень инвалидации сетапа">$'+natrFmtPriceShort(stopPrice)+' <span style="opacity:.6;font-size:0.85em;">-'+Math.abs(riskPct).toFixed(1)+'%</span></span>';
+        const rvolCell = r.rvol !== null
+            ? '<span class="mono'+(rvolColorClass ? rvolColorClass : ' cont-rvol-hot')+'">'+r.rvol.toFixed(2)+'x</span>'
+            : '<span style="color:var(--muted)">—</span>';
+        // Объём 24ч из natrTicker24hMap
+        const t24h = natrTicker24hMap.get(r.symbol);
+        let vol24ColorClass = '';
+        if (t24h && (contVolFrom !== null || contVolTo !== null)) {
+            if (contVolFrom !== null && t24h.volume < contVolFrom) vol24ColorClass = ' natr-below-threshold';
+            else if (contVolTo !== null && t24h.volume > contVolTo) vol24ColorClass = ' natr-above-threshold';
+            else if (_inR(t24h.volume, contVolFrom, contVolTo)) vol24ColorClass = ' natr-range-hit';
+        }
+        const vol24Cell = (t24h && t24h.volume != null)
+            ? '<span class="mono'+vol24ColorClass+'">'+natrFmtVolShort(t24h.volume)+'</span>'
+            : '<span style="color:var(--muted)">—</span>';
+        // Color highlighting for Сегодня %
+        let todayColorClass = '';
+        if (hlTodayFrom !== null || hlTodayTo !== null) {
+            if (hlTodayFrom !== null && r.todayChange < hlTodayFrom) todayColorClass = ' natr-below-threshold';
+            else if (hlTodayTo !== null && r.todayChange > hlTodayTo) todayColorClass = ' natr-above-threshold';
+            else if (_inR(r.todayChange, hlTodayFrom, hlTodayTo)) todayColorClass = ' natr-range-hit';
         }
         const caiLink = '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\''+r.symbol+'\')">AI</button>';
-        const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+natrTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); natrOpenInTiger(\''+r.symbol+'\')">'+NATR_TIGER_SVG+'</button>';
+        const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+contTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); contOpenInTiger(\''+r.symbol+'\')">'+NATR_TIGER_SVG+'</button>';
         return '<tr class="'+(isPinnedRow?'natr-pinned-row':'')+'">'+
             natrPinFavCellHtml(r.symbol, isPinned, isFav, 'contTogglePinned', 'contToggleFavorite')+
             '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер '+displaySymbol+'" data-symbol="'+displaySymbol+'">'+
             '<div class="ticker-name">'+displaySymbol+'</div>'+
             '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></td>'+
-            '<td class="mono '+refCls+'" title="'+(r.todayOnly?'Сегодня (режим «только сегодня»)':'Последний закрытый день')+'">'+(r.refChange>=0?'+':'')+r.refChange.toFixed(1)+'%</td>'+
-            '<td class="mono cont-rvol-hot">'+r.rvol.toFixed(2)+'x</td>'+
-            '<td class="mono '+todayCls+'">'+(r.todayChange>=0?'+':'')+r.todayChange.toFixed(1)+'%</td>'+
+            '<td>'+bodyRatioCell+'</td>'+
+            '<td class="mono '+(yestColorClass ? yestColorClass.trim() : refCls)+'" title="'+(r.todayOnly?'Сегодня (режим «только сегодня»)':'Последний закрытый день')+'">'+(r.refChange>=0?'+':'')+r.refChange.toFixed(1)+'%</td>'+
+            '<td class="mono '+(todayColorClass ? todayColorClass.trim() : todayCls)+'">'+(r.todayChange>=0?'+':'')+r.todayChange.toFixed(1)+'%</td>'+
+            '<td>'+vol24Cell+'</td>'+
+            '<td>'+rvolCell+'</td>'+
             '<td>'+oiCell+'</td>'+
-            '<td>'+vwapCell+'</td>'+
-            '<td>'+rangePosCell+'</td>'+
-            '<td>'+btcCell+'</td>'+
-            '<td>'+stopCell+'</td>'+
             '<td style="text-align:center;"><div class="natr-actions-cell">'+caiLink+tigerLink+'</div></td></tr>';
     }).join('');
     document.querySelectorAll('#contTableBody .ticker-cell').forEach(cell => {
