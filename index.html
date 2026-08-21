@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryptoTerminal — NATR Scanner | Часы Трейдера | Календарь | CryptoAI</title>
+    <title>CryptoTerminal — NATR Scanner | Trader Clock | Календарь | CryptoAI</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1117'/%3E%3Cpolyline points='48.5,23 34.25,37.25 26.75,29.75 15.5,41' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='39.5,23 48.5,23 48.5,32' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1117'/%3E%3Cpolyline points='48.5,23 34.25,37.25 26.75,29.75 15.5,41' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='39.5,23 48.5,23 48.5,32' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -416,122 +416,142 @@
         }
 
         /* ======================================================
-           SECTION 2: ЧАСЫ ТРЕЙДЕРА
+        /* ======================================================
+           SECTION 2: TRADER CLOCK (Canvas-based 24h analog)
            ====================================================== */
-        .tw-wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .tw-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 24px 0; border-bottom: 1px solid var(--border);
-            margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
+        .tc-lock-wrap {
+            display: flex;
+            height: calc(100vh - 56px);
+            overflow: hidden;
+            position: relative;
         }
-        .tw-header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
-        .tw-header h1 em { color: var(--accent); font-style: normal; }
-        .tw-tz-selector { }
-        .tw-tz-selector select { }
-        .tw-tz-selector select:hover,.tw-tz-selector select:focus { }
-        .tw-tz-selector select option { }
-
-        .tw-scale-wrapper { margin-left: 20px; margin-right: 15px; position: relative; }
-        .tw-scale-numbers {
-            display: flex; justify-content: space-between;
-            font-size: 14px; color: var(--muted); font-weight: 500;
-            letter-spacing: 1px; margin-bottom: 8px; padding: 0 2px;
+        .tc-canvas-area {
+            flex: 1;
+            position: relative;
+            min-width: 0;
         }
-        .tw-scale-bar {
-            height: 40px; background: rgba(255,255,255,0.05);
-            border-radius: 6px; position: relative; display: flex;
-            overflow: visible; border: 1px solid var(--border);
-            margin-bottom: 10px; cursor: crosshair;
+        .tc-canvas-area canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
-        .tw-hour-cell { flex: 1; border-right: 1px solid rgba(255,255,255,0.06); }
-        .tw-hour-cell:last-child { border-right: none; }
-
-        .tw-overlap-strip { height: 10px; border-radius: 4px; margin-bottom: 8px; }
-        .tw-overlap-legend { font-size: 11px; color: var(--muted); margin-bottom: 22px; display: flex; align-items: center; gap: 6px; }
-        .tw-overlap-legend .dot { width: 8px; height: 8px; border-radius: 2px; background: rgba(240,185,11,0.75); display: inline-block; }
-
-        .tw-mouse-time-indicator {
-            position: absolute; top: -45px; left: 0; transform: translateX(-50%);
-            background: var(--bg-card); color: var(--fg); padding: 8px 16px;
-            font-size: 16px; font-weight: 700; border-radius: 12px;
-            white-space: nowrap; pointer-events: none;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.15);
-            opacity: 0; transition: opacity 0.15s ease;
-            font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; z-index: 1000;
+        .tc-side-panel {
+            width: 280px;
+            flex-shrink: 0;
+            background: rgba(12, 17, 23, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-left: 1px solid var(--border);
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        .tw-mouse-time-indicator::after {
-            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 8px solid transparent;
-            border-right: 8px solid transparent; border-top: 8px solid var(--bg-card);
+        .tc-side-panel::-webkit-scrollbar { width: 4px; }
+        .tc-side-panel::-webkit-scrollbar-track { background: transparent; }
+        .tc-side-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+        .tc-panel-title {
+            font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em;
+            display: flex; align-items: center; gap: 10px;
         }
-        .tw-scale-bar:hover .tw-mouse-time-indicator { opacity: 1; }
-
-        .tw-now-line {
-            position: fixed; top: 0; bottom: 0; width: 2px;
-            background: linear-gradient(180deg,rgba(255,65,108,0.9) 0%,rgba(255,75,43,0.9) 50%,rgba(255,65,108,0.9) 100%);
-            z-index: 999; pointer-events: none;
-            box-shadow: 0 0 15px rgba(255,65,108,0.8),0 0 30px rgba(255,65,108,0.4);
+        .tc-panel-title span { color: var(--accent); }
+        .tc-panel-title svg { width: 22px; height: 22px; }
+        .tc-tz-row {
+            display: flex; flex-direction: column; gap: 6px;
         }
-        .tw-now-line::before {
-            content: attr(data-time); position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(135deg,#ff416c,#ff4b2b); color: white;
-            padding: 10px 20px; font-size: 18px; border-radius: 20px;
-            font-weight: 700; letter-spacing: 2px; white-space: nowrap;
-            box-shadow: 0 6px 25px rgba(255,65,108,0.6);
+        .tc-tz-row label {
+            font-size: 11px; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 0.5px; font-weight: 600;
+        }
+        .tc-tz-row select {
+            background: var(--bg-card); color: var(--fg);
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 8px 12px; font-size: 13px;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer; outline: none; width: 100%;
+            transition: border-color 0.2s;
+        }
+        .tc-tz-row select:focus { border-color: var(--accent); }
+        .tc-time-block { display: flex; flex-direction: column; gap: 6px; }
+        .tc-time-line {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 8px;
+        }
+        .tc-time-line .tl-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+        .tc-time-line .tl-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+        .tc-time-line .tl-val {
+            font-size: 18px; font-weight: 700; color: var(--fg);
+            font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
+        }
+        .tc-time-line .tl-tag {
+            font-size: 10px; color: var(--muted);
+            font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
+        }
+        .tc-divider { height: 1px; background: var(--border); }
+        .tc-legend-group-title {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.2px; color: var(--muted);
+            margin-bottom: 4px; padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tc-legend-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 10px; border-radius: 8px;
+            transition: background 0.2s, opacity 0.2s;
+            border: 1px solid transparent;
+        }
+        .tc-legend-item:hover { background: rgba(255,255,255,0.02); }
+        .tc-legend-item.active {
+            background: var(--accent-dim);
+            border-color: rgba(240, 185, 11, 0.15);
+        }
+        .tc-legend-item.off { opacity: 0.25; }
+        .tc-legend-toggle {
+            width: 28px; height: 16px; border-radius: 8px;
+            background: rgba(255,255,255,0.08); flex-shrink: 0;
+            position: relative; cursor: pointer;
+            transition: background 0.25s; border: none; padding: 0;
+        }
+        .tc-legend-toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 12px; height: 12px; border-radius: 50%;
+            background: var(--muted); transition: transform 0.25s, background 0.25s;
+        }
+        .tc-legend-toggle.on { background: var(--accent-dim); }
+        .tc-legend-toggle.on::after { transform: translateX(12px); background: var(--accent); }
+        .tc-legend-info { flex: 1; min-width: 0; }
+        .tc-legend-name {
+            display: block; font-size: 14px; font-weight: 600; color: var(--fg);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .tc-legend-item:not(.active) .tc-legend-name { color: var(--muted); }
+        .tc-legend-exch {
+            display: block; font-size: 11px; color: var(--muted); margin-top: 1px;
             font-family: 'JetBrains Mono', monospace;
         }
-        .tw-mouse-line {
-            position: fixed; top: 180px; bottom: 0; width: 1px;
-            background: rgba(200,200,200,0.35); z-index: 998;
-            pointer-events: none; display: none;
+        .tc-legend-times {
+            display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; gap: 1px;
         }
-
-        .tw-row { height: 82px; margin-bottom: 6px; position: relative; }
-        .tw-bar-area { height: 100%; position: relative; margin-left: 20px; margin-right: 15px; }
-        .tw-session {
-            position: absolute; top: 6px; bottom: 6px; border-radius: 6px;
-            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; text-align: center; padding: 8px 18px;
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        .tc-legend-time {
+            font-size: 16px; color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums; font-weight: 600;
         }
-        .tw-session:hover { transform: translateY(-2px); }
-        .tw-session.closed { filter: grayscale(0.7); opacity: 0.55; }
-        .usa { background: linear-gradient(135deg,rgba(52,152,219,0.85),rgba(41,128,185,0.85)); }
-        .uk { background: linear-gradient(135deg,rgba(231,76,60,0.85),rgba(192,57,43,0.85)); }
-        .germany { background: linear-gradient(135deg,rgba(243,156,18,0.85),rgba(230,126,34,0.85)); }
-        .russia { background: linear-gradient(135deg,rgba(155,89,182,0.85),rgba(142,68,173,0.85)); }
-        .india { background: linear-gradient(135deg,rgba(255,159,67,0.85),rgba(255,99,132,0.85)); }
-        .china { background: linear-gradient(135deg,rgba(230,126,34,0.85),rgba(211,84,0,0.85)); }
-        .korea { background: linear-gradient(135deg,rgba(26,188,156,0.85),rgba(22,160,133,0.85)); }
-        .japan { background: linear-gradient(135deg,rgba(149,165,166,0.85),rgba(127,140,141,0.85)); }
-        .australia { background: linear-gradient(135deg,rgba(46,204,113,0.85),rgba(39,174,96,0.85)); }
-
-        .session-text { color: white; width: 100%; }
-        .exchange-name { display: block; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .exchange-info { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; opacity: 0.95; }
-        .country-time { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px; }
-        .separator { opacity: 0.5; font-size: 10px; }
-        .session-hours { font-size: 11px; font-weight: 500; }
-        .session-countdown { font-size: 10px; font-weight: 600; margin-top: 3px; opacity: 0.9; letter-spacing: 0.02em; }
+        .tc-legend-gmt {
+            font-size: 10px; color: rgba(94, 109, 122, 0.6);
+            font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
+        }
+        .tc-legend-item.active .tc-legend-time { color: var(--accent); }
+        .tc-legend-item.active .tc-legend-gmt { color: rgba(240, 185, 11, 0.5); }
 
         @media (max-width:768px) {
-            .tw-wrap { padding: 10px; }
-            .tw-header { margin-bottom: 20px; padding: 0 10px; }
-            .tw-header h1 { font-size: 1.2rem; }
-            .tw-tz-selector { position: static; transform: none; }
-            .tw-scale-wrapper,.tw-bar-area { margin-left: 10px; margin-right: 5px; }
-            .tw-scale-numbers { font-size: 11px; }
-            .tw-scale-bar { height: 28px; margin-bottom: 8px; }
-            .tw-overlap-legend { margin-bottom: 16px; }
-            .tw-row { height: 66px; margin-bottom: 4px; }
-            .tw-session { padding: 5px 10px; }
-            .exchange-name { font-size: 10px; }
-            .country-time { font-size: 12px; }
-            .session-hours { font-size: 8px; }
-            .session-countdown { font-size: 7px; }
+            .tc-lock-wrap { flex-direction: column; height: auto; min-height: calc(100vh - 56px); }
+            .tc-canvas-area { height: 55vw; min-height: 300px; }
+            .tc-side-panel { width: 100%; border-left: none; border-top: 1px solid var(--border); }
         }
+
 
         /* ======================================================
            SECTION 3: CRYPTOAI
@@ -938,7 +958,7 @@
     <div class="nav-tabs">
         <button class="nav-tab active" data-section="natr" onclick="switchSection('natr')">NATR Scanner</button>
         <button class="nav-tab" data-section="cont" onclick="switchSection('cont')">Продолжение</button>
-        <button class="nav-tab" data-section="tw" onclick="switchSection('tw')">Часы Трейдера</button>
+        <button class="nav-tab" data-section="tw" onclick="switchSection('tw')">Trader Clock</button>
         <button class="nav-tab" data-section="cal" onclick="switchSection('cal')">Календарь</button>
         <button class="nav-tab" data-section="cai" onclick="switchSection('cai')">CryptoAI</button>
     </div>
@@ -1210,64 +1230,44 @@
 </div>
 
 
-<!-- ========== SECTION 2: ЧАСЫ ТРЕЙДЕРА ========== -->
+<!-- ========== SECTION 2: TRADER CLOCK ========== -->
 <div class="section-panel" id="section-tw">
-<div class="tw-wrap">
-    <div class="tw-header">
-        <h1><em>Часы</em> Трейдера</h1>
-        <div class="tw-tz-selector">
-            <select class="sec-select" id="twTimezoneSelect">
-                <option value="local">Моё время</option>
-                <option value="Europe/Moscow">Москва</option>
-                <option value="Asia/Irkutsk" selected>Иркутск</option>
-                <option value="Asia/Kolkata">Мумбаи</option>
-                <option value="Asia/Shanghai">Шанхай</option>
-                <option value="Asia/Tokyo">Токио</option>
-                <option value="Asia/Seoul">Сеул</option>
-                <option value="Australia/Sydney">Сидней</option>
-                <option value="Europe/London">Лондон</option>
-                <option value="America/New_York">Нью-Йорк</option>
-                <option value="America/Los_Angeles">Лос-Анджелес</option>
-                <option value="Europe/Berlin">Берлин</option>
-                <option value="Asia/Dubai">Дубай</option>
-                <option value="Asia/Singapore">Сингапур</option>
-                <option value="Asia/Hong_Kong">Гонконг</option>
-                <option value="America/Toronto">Торонто</option>
-            </select>
-        </div>
+<div class="tc-lock-wrap">
+    <div class="tc-canvas-area">
+        <canvas id="tcClockCanvas"></canvas>
     </div>
-    <div class="tw-scale-wrapper">
-        <div class="tw-scale-numbers">
-            <span>0</span><span>3</span><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span>
+    <div class="tc-side-panel">
+        <div class="tc-panel-title">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="24" stroke="#f0b90b" stroke-width="4"/><line x1="32" y1="32" x2="32" y2="14" stroke="#f0b90b" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="32" x2="44" y2="32" stroke="#e4e8eb" stroke-width="2" stroke-linecap="round"/></svg>
+            Trader <span>Clock</span>
         </div>
-        <div class="tw-scale-bar" id="twScaleBar">
-            <div class="tw-mouse-time-indicator" id="twMouseTimeIndicator">00:00</div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
-            <div class="tw-hour-cell"></div><div class="tw-hour-cell"></div><div class="tw-hour-cell"></div>
+        <div class="tc-divider"></div>
+        <div class="tc-tz-row">
+            <label>Часовой пояс циферблата</label>
+            <select id="tcTzSelect"></select>
         </div>
-        <div class="tw-overlap-strip" id="twOverlapStrip"></div>
-        <div class="tw-overlap-legend"><span class="dot"></span> Пересечение сессий (2+ рынка открыты одновременно — обычно выше ликвидность)</div>
+        <div class="tc-divider"></div>
+        <div class="tc-time-block">
+            <div class="tc-time-line">
+                <span class="tl-label">Местное</span>
+                <div class="tl-right">
+                    <span class="tl-val" id="tcDLocal">--:--</span>
+                    <span class="tl-tag" id="tcDLocalTag"></span>
+                </div>
+            </div>
+            <div class="tc-time-line">
+                <span class="tl-label">UTC</span>
+                <div class="tl-right">
+                    <span class="tl-val" id="tcDUtc">--:--</span>
+                    <span class="tl-tag">GMT+0</span>
+                </div>
+            </div>
+        </div>
+        <div class="tc-divider"></div>
+        <div id="tcLegend"></div>
     </div>
-    <div class="tw-now-line" id="twNowLine" data-time="00:00"></div>
-    <div class="tw-mouse-line" id="twMouseLine"></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-usa"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-uk"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-germany"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-russia"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-india"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-china"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-korea"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-japan"></div></div>
-    <div class="tw-row"><div class="tw-bar-area" id="tw-area-australia"></div></div>
 </div>
 </div>
-
 <!-- ========== SECTION 4: КАЛЕНДАРЬ ТРЕЙДЕРА ========== -->
 <div class="section-panel" id="section-cal">
 <div class="cal-wrap">
@@ -1412,7 +1412,6 @@
 // ============================================================
 //  NAVIGATION
 // ============================================================
-let twInitialized = false;
 let caiInitialized = false;
 let calInitialized = false;
 
@@ -1422,7 +1421,7 @@ function switchSection(name) {
     document.getElementById('section-' + name).classList.add('active');
     document.querySelector('.nav-tab[data-section="' + name + '"]').classList.add('active');
     try { ctSafeSetItem('ct_active_section', name); } catch(e) { /* storage unavailable (private mode / restricted context) — non-fatal */ }
-    if (name === 'tw' && !twInitialized) { twInit(); twInitialized = true; }
+    if (name === 'tw' && !tcInitialized) { tcInit(); tcInitialized = true; }
     if (name === 'cai' && !caiInitialized) { caiInitialized = true; }
     if (name === 'cal' && !calInitialized) { calInit(); calInitialized = true; }
 }
@@ -3180,189 +3179,344 @@ function contRenderTable(data, pinnedCount) {
 }
 
 // ============================================================
-//  SECTION 2: ЧАСЫ ТРЕЙДЕРА
+//  SECTION 2: TRADER CLOCK (Canvas 24h analog)
 // ============================================================
-let twSelectedTZ = 'Asia/Irkutsk';
-const twExchanges = {
-    usa:{tz:'America/New_York',openH:9,openM:30,closeH:16,closeM:0,name:'NYSE / NASDAQ'},
-    uk:{tz:'Europe/London',openH:8,openM:0,closeH:16,closeM:30,name:'LSE'},
-    germany:{tz:'Europe/Berlin',openH:9,openM:0,closeH:17,closeM:30,name:'XETRA'},
-    russia:{tz:'Europe/Moscow',openH:10,openM:0,closeH:18,closeM:45,name:'MOEX'},
-    india:{tz:'Asia/Kolkata',openH:9,openM:15,closeH:15,closeM:30,name:'NSE / BSE'},
-    china:{tz:'Asia/Shanghai',openH:9,openM:30,closeH:15,closeM:0,name:'Shanghai'},
-    korea:{tz:'Asia/Seoul',openH:9,openM:0,closeH:15,closeM:30,name:'KRX'},
-    japan:{tz:'Asia/Tokyo',openH:9,openM:0,closeH:15,closeM:0,name:'TSE'},
-    australia:{tz:'Australia/Sydney',openH:10,openM:0,closeH:16,closeM:0,name:'ASX'}
-};
-const twTZCache = {};
+let tcInitialized = false;
+let tcAnimFrameId = null;
 
-function twGetTZOffset(targetTZ) {
-    const ck = targetTZ + '_' + Math.floor(Date.now()/60000);
-    if (twTZCache[ck] !== undefined) return twTZCache[ck];
-    const now = new Date();
-    const tf = new Intl.DateTimeFormat('en-US',{timeZone:targetTZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-    const lf = new Intl.DateTimeFormat('en-US',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-    const tp = Object.fromEntries(tf.formatToParts(now).map(p=>[p.type,p.value]));
-    const lp = Object.fromEntries(lf.formatToParts(now).map(p=>[p.type,p.value]));
-    const td = new Date(parseInt(tp.year),parseInt(tp.month)-1,parseInt(tp.day),parseInt(tp.hour),parseInt(tp.minute),parseInt(tp.second));
-    const ld = new Date(parseInt(lp.year),parseInt(lp.month)-1,parseInt(lp.day),parseInt(lp.hour),parseInt(lp.minute),parseInt(lp.second));
-    const diff = (td.getTime()-ld.getTime())/(1000*60*60);
-    twTZCache[ck] = diff; return diff;
+const tcSessions = [
+    { name: 'India',        exch: 'NSE',      s: 3.75, e: 10,    color: '#4CAF50', region: 'Asia-Pacific',  on: true, tz: 'Asia/Kolkata' },
+    { name: 'Canada',       exch: 'TSX',      s: 14.5, e: 21,    color: '#2E7D32', region: 'Americas',     on: true, tz: 'America/Toronto' },
+    { name: 'Japan',        exch: 'TSE',      s: 0,    e: 6,     color: '#03A9F4', region: 'Asia-Pacific',  on: true, tz: 'Asia/Tokyo' },
+    { name: 'Saudi Arabia', exch: 'Tadawul',  s: 6,    e: 11,    color: '#43A047', region: 'Asia-Pacific',  on: true, tz: 'Asia/Riyadh' },
+    { name: 'China',        exch: 'SSE',      s: 1.5,  e: 7,     color: '#29B6F6', region: 'Asia-Pacific',  on: true, tz: 'Asia/Shanghai' },
+    { name: 'Russia',       exch: 'MOEX',     s: 7,    e: 15.75, color: '#E53935', region: 'Europe',       on: true, tz: 'Europe/Moscow' },
+    { name: 'Hong Kong',    exch: 'HKEX',     s: 1.5,  e: 8,     color: '#0288D1', region: 'Asia-Pacific',  on: true, tz: 'Asia/Hong_Kong' },
+    { name: 'UK',           exch: 'LSE',      s: 8,    e: 16.5,  color: '#66BB6A', region: 'Europe',       on: true, tz: 'Europe/London' },
+    { name: 'France',       exch: 'Euronext', s: 8,    e: 16.5,  color: '#388E3C', region: 'Europe',       on: true, tz: 'Europe/Paris' },
+    { name: 'Germany',      exch: 'Xetra',    s: 8,    e: 16.5,  color: '#1B5E20', region: 'Europe',       on: true, tz: 'Europe/Berlin' },
+    { name: 'USA',          exch: 'NYSE',     s: 14.5, e: 21,    color: '#4FC3F7', region: 'Americas',     on: true, tz: 'America/New_York' },
+];
+
+function tcIntervalsOverlap(a, b) {
+    const aW = a.s > a.e, bW = b.s > b.e;
+    if (aW && bW) return true;
+    if (aW) return b.s < a.e || b.e > a.s;
+    if (bW) return a.s < b.e || a.e > b.s;
+    return a.s < b.e && b.s < a.e;
 }
-function twGetTZOffsetBetween(tz1, tz2) {
-    const now = new Date();
-    const f1 = new Intl.DateTimeFormat('en-US',{timeZone:tz1,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-    const f2 = new Intl.DateTimeFormat('en-US',{timeZone:tz2,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-    const p1 = Object.fromEntries(f1.formatToParts(now).map(p=>[p.type,p.value]));
-    const p2 = Object.fromEntries(f2.formatToParts(now).map(p=>[p.type,p.value]));
-    const d1 = new Date(parseInt(p1.year),parseInt(p1.month)-1,parseInt(p1.day),parseInt(p1.hour),parseInt(p1.minute),parseInt(p1.second));
-    const d2 = new Date(parseInt(p2.year),parseInt(p2.month)-1,parseInt(p2.day),parseInt(p2.hour),parseInt(p2.minute),parseInt(p2.second));
-    return (d1.getTime()-d2.getTime())/(1000*60*60);
-}
-function twGetSelectedTZ() { return twSelectedTZ==='local'?Intl.DateTimeFormat().resolvedOptions().timeZone:twSelectedTZ; }
-function twGetNowInTZ() {
-    const tz = twGetSelectedTZ(); const now = new Date();
-    const f = new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',minute:'numeric',second:'numeric',hour12:false});
-    const p = Object.fromEntries(f.formatToParts(now).map(x=>[x.type,x.value]));
-    return {h:parseInt(p.hour),m:parseInt(p.minute),total:parseInt(p.hour)+parseInt(p.minute)/60};
-}
-function twToLocalTime(tz, h, m) {
-    const selectedTZ = twGetSelectedTZ();
-    const offset = twGetTZOffsetBetween(tz, selectedTZ);
-    let localTotal = (h + m/60) - offset;
-    while (localTotal < 0) localTotal += 24;
-    while (localTotal >= 24) localTotal -= 24;
-    return {h:Math.floor(localTotal),m:Math.round((localTotal-Math.floor(localTotal))*60),total:localTotal};
-}
-function twGetCurrentTimeInTZ(tz) {
-    const now = new Date();
-    const f = new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',minute:'numeric',hour12:false});
-    const p = Object.fromEntries(f.formatToParts(now).map(x=>[x.type,x.value]));
-    return {h:String(p.hour).padStart(2,'0'),m:String(p.minute).padStart(2,'0')};
-}
-// Is it Saturday/Sunday in the exchange's OWN local calendar (not the selected display TZ)?
-// Stock exchanges are closed on weekends regardless of which timezone we're viewing them from.
-function twIsWeekendInTZ(tz) {
-    const f = new Intl.DateTimeFormat('en-US', {timeZone: tz, weekday: 'short'});
-    const wd = f.format(new Date());
-    return wd === 'Sat' || wd === 'Sun';
-}
-function twHoursUntil(fromTotal, toTotal) {
-    let diff = toTotal - fromTotal;
-    while (diff < 0) diff += 24;
-    while (diff > 24) diff -= 24;
-    return diff;
-}
-function twFormatDuration(hoursFloat) {
-    const totalMin = Math.max(0, Math.round(hoursFloat * 60));
-    const h = Math.floor(totalMin / 60), m = totalMin % 60;
-    if (h <= 0) return m + 'м';
-    return h + 'ч ' + m + 'м';
-}
-// Builds a CSS gradient highlighting hours where 2+ exchanges are simultaneously open —
-// a quick visual cue for the highest-liquidity overlap windows (e.g. London/New York).
-function twComputeOverlapGradient() {
-    const steps = 144; // 10-minute resolution across 24h
-    const counts = new Array(steps + 1).fill(0);
-    for (const ex of Object.values(twExchanges)) {
-        if (twIsWeekendInTZ(ex.tz)) continue; // closed markets don't contribute to "overlap"
-        const openLocal = twToLocalTime(ex.tz, ex.openH, ex.openM);
-        const closeLocal = twToLocalTime(ex.tz, ex.closeH, ex.closeM);
-        const s = openLocal.total, e = closeLocal.total;
-        for (let i = 0; i <= steps; i++) {
-            const t = (i / steps) * 24;
-            const inRange = e > s ? (t >= s && t < e) : (t >= s || t < e);
-            if (inRange) counts[i]++;
+
+const TC_REGION_ORDER = ['Europe', 'Americas', 'Asia-Pacific'];
+const tcGlobalRings = [];
+tcSessions.forEach((ses, idx) => {
+    let placed = false;
+    for (let r = 0; r < tcGlobalRings.length; r++) {
+        if (tcGlobalRings[r].every(j => !tcIntervalsOverlap(ses, tcSessions[j]))) {
+            tcGlobalRings[r].push(idx); ses._ring = r; placed = true; break;
         }
     }
-    const stops = counts.map((c, i) => {
-        const pct = (i / steps) * 100;
-        const alpha = c >= 2 ? Math.min(0.9, 0.28 + (c - 2) * 0.22) : 0;
-        return 'rgba(240,185,11,' + alpha.toFixed(2) + ') ' + pct.toFixed(2) + '%';
-    }).join(', ');
-    return 'linear-gradient(90deg, ' + stops + ')';
+    if (!placed) { ses._ring = tcGlobalRings.length; tcGlobalRings.push([idx]); }
+});
+const TC_NUM_RINGS = tcGlobalRings.length;
+
+const tcTzList = [
+    { label: 'Автоопределение',  value: 'auto' },
+    { label: 'UTC',              value: 'UTC' },
+    { label: 'Иркутск (IRKT)',   value: 'Asia/Irkutsk' },
+    { label: 'Москва (MSK)',     value: 'Europe/Moscow' },
+    { label: 'Стамбул (TRT)',    value: 'Europe/Istanbul' },
+    { label: 'Дубай (GST)',      value: 'Asia/Dubai' },
+    { label: 'Мумбаи (IST)',     value: 'Asia/Kolkata' },
+    { label: 'Сингапур (SGT)',   value: 'Asia/Singapore' },
+    { label: 'Гонконг (HKT)',    value: 'Asia/Hong_Kong' },
+    { label: 'Шанхай (CST)',     value: 'Asia/Shanghai' },
+    { label: 'Токио (JST)',      value: 'Asia/Tokyo' },
+    { label: 'Сеул (KST)',       value: 'Asia/Seoul' },
+    { label: 'Сидней (AEST)',    value: 'Australia/Sydney' },
+    { label: 'Берлин (CET)',     value: 'Europe/Berlin' },
+    { label: 'Лондон (GMT)',     value: 'Europe/London' },
+    { label: 'Сан-Паулу (BRT)',  value: 'America/Sao_Paulo' },
+    { label: 'Нью-Йорк (EST)',   value: 'America/New_York' },
+    { label: 'Торонто (EST)',    value: 'America/Toronto' },
+];
+
+let tcUserTz = null;
+let tcCanvas, tcCtx, tcW, tcH, tcCX, tcCY, tcR, tcDpr;
+
+function tcGetTzOffset(v) {
+    if (v === 'auto') v = tcUserTz;
+    if (v === 'UTC') return 0;
+    const now = new Date();
+    return (new Date(now.toLocaleString('en-US',{timeZone:v})) - new Date(now.toLocaleString('en-US',{timeZone:'UTC'}))) / 3600000;
 }
-function twCreateBar(cls, leftPct, widthPct, name, openStr, closeStr, countryTime, showText, closed, countdownText) {
-    const bar = document.createElement('div');
-    bar.className = 'tw-session ' + cls + (closed ? ' closed' : '');
-    bar.style.left = leftPct + '%';
-    bar.style.width = Math.max(widthPct, 0.5) + '%';
-    if (showText) {
-        const td = document.createElement('div'); td.className = 'session-text';
-        const hoursLine = closed ? 'Выходной' : (openStr + ' - ' + closeStr);
-        const countdownLine = countdownText ? '<div class="session-countdown">' + countdownText + '</div>' : '';
-        td.innerHTML = '<span class="exchange-name">'+name+'</span><div class="exchange-info"><span class="country-time">'+countryTime+'</span><span class="separator">|</span><span class="session-hours">'+hoursLine+'</span></div>'+countdownLine;
-        bar.appendChild(td);
+function tcGetTimeInTz(v) {
+    if (v === 'auto') v = tcUserTz;
+    const s = new Date().toLocaleString('en-US',{timeZone:v,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    const p = s.split(':');
+    return { h: parseInt(p[0])%24, m: parseInt(p[1]), s: parseInt(p[2])||0 };
+}
+
+function tcResize() {
+    const area = document.querySelector('.tc-canvas-area');
+    if (!area) return;
+    tcDpr = window.devicePixelRatio || 1;
+    tcW = area.clientWidth; tcH = area.clientHeight;
+    tcCanvas.width = tcW * tcDpr; tcCanvas.height = tcH * tcDpr;
+    tcCanvas.style.width = tcW + 'px'; tcCanvas.style.height = tcH + 'px';
+    tcCtx.setTransform(tcDpr, 0, 0, tcDpr, 0, 0);
+    tcCX = tcW / 2; tcCY = tcH / 2;
+    tcR = Math.max(100, Math.min(tcCX, tcCY) - 20);
+}
+
+function tcH2a(h) { return -Math.PI / 2 + (h / 24) * Math.PI * 2; }
+
+function tcFillArc(rIn, rOut, sH, eH, color) {
+    tcCtx.beginPath();
+    if (sH < eH) {
+        tcCtx.arc(tcCX, tcCY, rOut, tcH2a(sH), tcH2a(eH), false);
+        tcCtx.arc(tcCX, tcCY, rIn, tcH2a(eH), tcH2a(sH), true);
+        tcCtx.closePath(); tcCtx.fillStyle = color; tcCtx.fill();
+    } else {
+        tcCtx.arc(tcCX, tcCY, rOut, tcH2a(sH), tcH2a(24), false);
+        tcCtx.arc(tcCX, tcCY, rIn, tcH2a(24), tcH2a(sH), true);
+        tcCtx.closePath(); tcCtx.fillStyle = color; tcCtx.fill();
+        tcCtx.beginPath();
+        tcCtx.arc(tcCX, tcCY, rOut, tcH2a(0), tcH2a(eH), false);
+        tcCtx.arc(tcCX, tcCY, rIn, tcH2a(eH), tcH2a(0), true);
+        tcCtx.closePath(); tcCtx.fillStyle = color; tcCtx.fill();
     }
-    return bar;
 }
-function twGetScalePosition() {
-    const el = document.getElementById('twScaleBar');
-    if (!el) return {left:20,width:window.innerWidth-35};
-    const r = el.getBoundingClientRect();
-    return {left:r.left,width:r.width};
-}
-function twUpdate() {
-    const nowInfo = twGetNowInTZ();
-    const nowTotal = nowInfo.total;
-    const scaleInfo = twGetScalePosition();
-    const timePercent = nowTotal / 24;
-    const exactPos = scaleInfo.left + (scaleInfo.width * timePercent);
-    const nowLine = document.getElementById('twNowLine');
-    nowLine.style.left = exactPos + 'px';
-    nowLine.setAttribute('data-time', String(nowInfo.h).padStart(2,'0') + ':' + String(nowInfo.m).padStart(2,'0'));
-    const stripEl = document.getElementById('twOverlapStrip');
-    if (stripEl) stripEl.style.background = twComputeOverlapGradient();
-    for (const [key, ex] of Object.entries(twExchanges)) {
-        const openLocal = twToLocalTime(ex.tz, ex.openH, ex.openM);
-        const closeLocal = twToLocalTime(ex.tz, ex.closeH, ex.closeM);
-        let startPct = (openLocal.total / 24) * 100;
-        let endPct = (closeLocal.total / 24) * 100;
-        const openStr = String(ex.openH).padStart(2,'0')+':'+String(ex.openM).padStart(2,'0');
-        const closeStr = String(ex.closeH).padStart(2,'0')+':'+String(ex.closeM).padStart(2,'0');
-        const ctObj = twGetCurrentTimeInTZ(ex.tz);
-        const ctStr = ctObj.h+':'+ctObj.m;
-        const closed = twIsWeekendInTZ(ex.tz);
-        let countdownText = 'Выходной — торги закрыты';
-        if (!closed) {
-            const isOpenNow = closeLocal.total > openLocal.total
-                ? (nowTotal >= openLocal.total && nowTotal < closeLocal.total)
-                : (nowTotal >= openLocal.total || nowTotal < closeLocal.total);
-            countdownText = isOpenNow
-                ? 'Закрытие через ' + twFormatDuration(twHoursUntil(nowTotal, closeLocal.total))
-                : 'Открытие через ' + twFormatDuration(twHoursUntil(nowTotal, openLocal.total));
-        }
-        const area = document.getElementById('tw-area-'+key);
-        area.innerHTML = '';
-        if (endPct <= startPct) {
-            const w1 = 100-startPct, w2 = endPct;
-            const showFirst = w1 >= w2;
-            area.appendChild(twCreateBar(key, startPct, w1, ex.name, openStr, '24:00', ctStr, showFirst, closed, countdownText));
-            area.appendChild(twCreateBar(key, 0, w2, ex.name, '00:00', closeStr, ctStr, !showFirst, closed, countdownText));
-        } else {
-            area.appendChild(twCreateBar(key, startPct, endPct-startPct, ex.name, openStr, closeStr, ctStr, true, closed, countdownText));
-        }
+
+function tcStrokeArc(r, sH, eH, color, lw) {
+    tcCtx.lineWidth = lw; tcCtx.strokeStyle = color;
+    if (sH < eH) {
+        tcCtx.beginPath(); tcCtx.arc(tcCX, tcCY, r, tcH2a(sH), tcH2a(eH), false); tcCtx.stroke();
+    } else {
+        tcCtx.beginPath(); tcCtx.arc(tcCX, tcCY, r, tcH2a(sH), tcH2a(24), false); tcCtx.stroke();
+        tcCtx.beginPath(); tcCtx.arc(tcCX, tcCY, r, tcH2a(0), tcH2a(eH), false); tcCtx.stroke();
     }
 }
-function twInit() {
-    document.getElementById('twTimezoneSelect').addEventListener('change', function(e) {
-        twSelectedTZ = e.target.value; twUpdate();
+
+function tcDrawArcText(text, sH, eH, radius, font, color) {
+    let midH;
+    if (sH < eH) { midH = sH + (eH - sH) / 2; }
+    else { const span1 = 24 - sH, span2 = eH, total = span1 + span2, half = total / 2; midH = (sH + half) % 24; }
+    const midA = tcH2a(midH);
+    tcCtx.save();
+    tcCtx.translate(tcCX + Math.cos(midA) * radius, tcCY + Math.sin(midA) * radius);
+    const flip = Math.sin(midA) > 0;
+    tcCtx.rotate(midA + (flip ? -Math.PI/2 : Math.PI/2));
+    tcCtx.font = font; tcCtx.textAlign = 'center'; tcCtx.textBaseline = 'middle';
+    tcCtx.fillStyle = color; tcCtx.fillText(text, 0, 0);
+    tcCtx.restore();
+}
+
+const TCC = {
+    bg: '#0c1117', fg: '#e4e8eb', muted: '#5e6d7a', accent: '#f0b90b',
+    inactiveFill: 'rgba(21, 28, 37, 0.7)', inactiveStroke: 'rgba(255, 255, 255, 0.08)',
+    accentDim: 'rgba(240, 185, 11, 0.10)', accentMid: 'rgba(240, 185, 11, 0.55)',
+    accentStroke: 'rgba(240, 185, 11, 0.8)', accentSoft: 'rgba(240, 185, 11, 0.4)',
+    green: '#0ecb81', red: '#f6465d', border: 'rgba(255,255,255,0.06)',
+    tick: 'rgba(228, 232, 235, 0.12)', tickBright: 'rgba(228, 232, 235, 0.5)',
+    numMuted: 'rgba(228, 232, 235, 0.6)', numBright: '#e4e8eb',
+    minNum: 'rgba(228, 232, 235, 0.2)',
+};
+
+function tcDraw() {
+    tcCtx.clearRect(0, 0, tcW, tcH);
+    const now = new Date();
+    const utcH = now.getUTCHours(), utcM = now.getUTCMinutes();
+    const utcS = now.getUTCSeconds(), utcMs = now.getUTCMilliseconds();
+    const utcTotal = utcH + utcM/60 + utcS/3600 + utcMs/3600000;
+    const sel = document.getElementById('tcTzSelect');
+    const tzVal = sel ? sel.value : 'auto';
+    const tzOff = tcGetTzOffset(tzVal);
+    const clockH = ((utcTotal + tzOff) % 24 + 24) % 24;
+    const minFrac = (utcM + utcS/60 + utcMs/60000) / 60;
+    const secFrac = (utcS + utcMs/1000) / 60;
+
+    const arcThick = Math.max(12, tcR * 0.05);
+    const arcGap = Math.max(3, tcR * 0.012);
+    const ringStep = arcThick + arcGap;
+    const totalRingH = TC_NUM_RINGS * ringStep - arcGap;
+    const startR = Math.max(tcR * 0.12, (tcR * 0.55 - totalRingH / 2));
+    const txtFont = '700 ' + Math.max(9, arcThick * 0.72) + 'px "Space Grotesk", sans-serif';
+
+    for (let ring = 0; ring < TC_NUM_RINGS; ring++) {
+        const rIn = startR + ring * ringStep;
+        const rOut = rIn + arcThick;
+        const rMid = rIn + arcThick / 2;
+        tcGlobalRings[ring].forEach(idx => {
+            const ses = tcSessions[idx];
+            if (!ses.on) return;
+            let sA = ((ses.s + tzOff) % 24 + 24) % 24;
+            let eA = ((ses.e + tzOff) % 24 + 24) % 24;
+            let isOpen;
+            if (ses.s <= ses.e) isOpen = utcTotal >= ses.s && utcTotal < ses.e;
+            else isOpen = utcTotal >= ses.s || utcTotal < ses.e;
+            tcFillArc(rIn, rOut, sA, eA, isOpen ? TCC.accentMid : TCC.inactiveFill);
+            if (!isOpen) {
+                tcStrokeArc(rOut, sA, eA, TCC.inactiveStroke, 1);
+                tcStrokeArc(rIn, sA, eA, TCC.inactiveStroke, 1);
+            }
+            const txtCol = isOpen ? '#ffffff' : 'rgba(94, 109, 122, 0.4)';
+            tcDrawArcText(ses.exch, sA, eA, rMid, txtFont, txtCol);
+        });
+    }
+
+    tcCtx.beginPath(); tcCtx.arc(tcCX, tcCY, tcR, 0, Math.PI*2);
+    tcCtx.lineWidth = 1.5; tcCtx.strokeStyle = TCC.tick; tcCtx.stroke();
+
+    for (let m = 0; m < 60; m++) {
+        const a = -Math.PI / 2 + (m / 60) * Math.PI * 2;
+        tcCtx.beginPath();
+        tcCtx.moveTo(tcCX + Math.cos(a) * (tcR - tcR * 0.018), tcCY + Math.sin(a) * (tcR - tcR * 0.018));
+        tcCtx.lineTo(tcCX + Math.cos(a) * tcR, tcCY + Math.sin(a) * tcR);
+        tcCtx.lineWidth = 0.5; tcCtx.strokeStyle = TCC.tick; tcCtx.stroke();
+    }
+    const minFont = Math.max(11, tcR * 0.03);
+    tcCtx.textAlign = 'center'; tcCtx.textBaseline = 'middle';
+    const curMin = utcM;
+    for (let m = 1; m < 60; m++) {
+        if (m % 5 === 0) continue;
+        const isCurMin = (m === curMin);
+        const a = -Math.PI / 2 + (m / 60) * Math.PI * 2;
+        tcCtx.font = (isCurMin ? '700 ' : '500 ') + minFont + 'px "JetBrains Mono", monospace';
+        tcCtx.fillStyle = isCurMin ? TCC.accent : TCC.minNum;
+        tcCtx.fillText(String(m), tcCX + Math.cos(a) * (tcR - tcR * 0.048), tcCY + Math.sin(a) * (tcR - tcR * 0.048));
+    }
+
+    const numSize = Math.max(16, tcR * 0.09);
+    const numR = tcR - tcR * 0.13;
+    for (let h = 0; h < 24; h++) {
+        const a = tcH2a(h);
+        const isCur = Math.floor(clockH) === h;
+        tcCtx.beginPath();
+        tcCtx.moveTo(tcCX + Math.cos(a)*(tcR - tcR*0.05), tcCY + Math.sin(a)*(tcR - tcR*0.05));
+        tcCtx.lineTo(tcCX + Math.cos(a)*tcR, tcCY + Math.sin(a)*tcR);
+        tcCtx.lineWidth = isCur ? 3.5 : 2;
+        tcCtx.strokeStyle = isCur ? TCC.accent : TCC.tickBright; tcCtx.stroke();
+        tcCtx.font = (isCur ? '700 ' : '600 ') + numSize + 'px "Space Grotesk", sans-serif';
+        tcCtx.textAlign = 'center'; tcCtx.textBaseline = 'middle';
+        tcCtx.fillStyle = isCur ? TCC.accent : TCC.numMuted;
+        tcCtx.fillText(h.toString().padStart(2,'0'), tcCX + Math.cos(a)*numR, tcCY + Math.sin(a)*numR);
+    }
+
+    tcDrawHand(tcH2a(clockH), tcR*0.78, 6, TCC.fg, tcR*0.06);
+    tcDrawHand(tcH2a(minFrac*24), tcR*0.86, 3.5, TCC.accent, tcR*0.04);
+    tcDrawHand(tcH2a(secFrac*24), tcR*0.90, 1.5, TCC.red, tcR*0.03);
+
+    tcCtx.beginPath(); tcCtx.arc(tcCX, tcCY, 5, 0, Math.PI*2); tcCtx.fillStyle = TCC.fg; tcCtx.fill();
+
+    if (tzVal !== 'UTC' && tzVal !== 'auto' || (tzVal === 'auto' && tcUserTz !== 'UTC')) {
+        const ua = tcH2a(((0 + tzOff) % 24 + 24) % 24);
+        const mk = tcR + 10;
+        tcCtx.beginPath(); tcCtx.arc(tcCX + Math.cos(ua)*mk, tcCY + Math.sin(ua)*mk, 4, 0, Math.PI*2);
+        tcCtx.fillStyle = TCC.accent; tcCtx.fill();
+        tcCtx.font = '600 ' + Math.max(9, tcR*0.025) + 'px "JetBrains Mono", monospace';
+        tcCtx.textAlign = 'center'; tcCtx.textBaseline = 'middle'; tcCtx.fillStyle = TCC.accent;
+        tcCtx.fillText('UTC 0:00', tcCX + Math.cos(ua)*(mk+22), tcCY + Math.sin(ua)*(mk+22));
+    }
+
+    const pad = n => String(n).padStart(2,'0');
+    const utcEl = document.getElementById('tcDUtc');
+    if (utcEl) utcEl.textContent = pad(utcH)+':'+pad(utcM);
+    const lt = tcGetTimeInTz('auto');
+    const locEl = document.getElementById('tcDLocal');
+    if (locEl) locEl.textContent = pad(lt.h)+':'+pad(lt.m);
+    const localOff = tcGetTzOffset('auto');
+    const ls = localOff >= 0 ? '+' : '';
+    const loH = Math.floor(Math.abs(localOff));
+    const loM = Math.round((Math.abs(localOff) - loH) * 60);
+    const locTagEl = document.getElementById('tcDLocalTag');
+    if (locTagEl) locTagEl.textContent = 'GMT' + ls + loH + (loM ? ':' + String(loM).padStart(2,'0') : '');
+
+    document.querySelectorAll('.tc-legend-item').forEach(item => {
+        const ses = tcSessions[parseInt(item.dataset.idx)];
+        let open = false;
+        if (ses.on) {
+            if (ses.s <= ses.e) open = utcTotal >= ses.s && utcTotal < ses.e;
+            else open = utcTotal >= ses.s || utcTotal < ses.e;
+        }
+        item.classList.toggle('active', open);
+        const timeEl = item.querySelector('.tc-legend-time');
+        const gmtEl = item.querySelector('.tc-legend-gmt');
+        if (timeEl && ses.tz) {
+            const t = tcGetTimeInTz(ses.tz);
+            const off = tcGetTzOffset(ses.tz);
+            const sign = off >= 0 ? '+' : '';
+            const offH = Math.floor(Math.abs(off));
+            const offM = Math.round((Math.abs(off) - offH) * 60);
+            timeEl.textContent = String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
+            if (gmtEl) gmtEl.textContent = 'GMT' + sign + offH + (offM ? ':' + String(offM).padStart(2,'0') : '');
+        }
     });
-    const sb = document.getElementById('twScaleBar');
-    const ml = document.getElementById('twMouseLine');
-    const mti = document.getElementById('twMouseTimeIndicator');
-    sb.addEventListener('mousemove', function(e) {
-        const rect = sb.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const pct = Math.max(0,Math.min(100,(x/rect.width)*100));
-        ml.style.left = (rect.left + x) + 'px'; ml.style.display = 'block';
-        mti.style.left = pct + '%';
-        const th = (pct/100)*24; const hh = Math.floor(th); const mm = Math.round((th-hh)*60);
-        mti.textContent = String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+
+    tcAnimFrameId = requestAnimationFrame(tcDraw);
+}
+
+function tcDrawHand(angle, len, w, color, tail) {
+    tcCtx.beginPath();
+    tcCtx.moveTo(tcCX - Math.cos(angle)*tail, tcCY - Math.sin(angle)*tail);
+    tcCtx.lineTo(tcCX + Math.cos(angle)*len, tcCY + Math.sin(angle)*len);
+    tcCtx.lineWidth = w; tcCtx.strokeStyle = color; tcCtx.lineCap = 'round'; tcCtx.stroke();
+}
+
+function tcBuildLegend() {
+    const el = document.getElementById('tcLegend');
+    if (!el) return;
+    const rLabel = { 'Americas':'Америка', 'Europe':'Европа', 'Asia-Pacific':'Азия / Тихоокеанский' };
+    TC_REGION_ORDER.forEach(rg => {
+        const group = tcSessions.filter(s => s.region === rg);
+        if (!group.length) return;
+        const title = document.createElement('div');
+        title.className = 'tc-legend-group-title';
+        title.textContent = rLabel[rg];
+        el.appendChild(title);
+        group.forEach(ses => {
+            const idx = tcSessions.indexOf(ses);
+            const item = document.createElement('div');
+            item.className = 'tc-legend-item';
+            item.dataset.idx = idx;
+            const btn = document.createElement('button');
+            btn.className = 'tc-legend-toggle' + (ses.on ? ' on' : '');
+            btn.title = 'Вкл/Выкл';
+            btn.addEventListener('click', function() {
+                tcSessions[idx].on = !tcSessions[idx].on;
+                btn.classList.toggle('on', tcSessions[idx].on);
+                item.classList.toggle('off', !tcSessions[idx].on);
+            });
+            const nm = document.createElement('span'); nm.className = 'tc-legend-name'; nm.textContent = ses.name;
+            const ex = document.createElement('span'); ex.className = 'tc-legend-exch'; ex.textContent = ses.exch;
+            const info = document.createElement('div'); info.className = 'tc-legend-info';
+            info.appendChild(nm); info.appendChild(ex);
+            const times = document.createElement('div'); times.className = 'tc-legend-times';
+            const timeEl = document.createElement('span');
+            timeEl.className = 'tc-legend-time'; timeEl.dataset.tz = ses.tz;
+            const gmtEl = document.createElement('span');
+            gmtEl.className = 'tc-legend-gmt'; gmtEl.dataset.tz = ses.tz;
+            times.appendChild(timeEl); times.appendChild(gmtEl);
+            item.appendChild(btn); item.appendChild(info); item.appendChild(times);
+            el.appendChild(item);
+        });
     });
-    sb.addEventListener('mouseleave', function() { ml.style.display = 'none'; });
-    twUpdate();
-    setInterval(twUpdate, 1000);
+}
+
+function tcInit() {
+    tcUserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const sel = document.getElementById('tcTzSelect');
+    if (!sel) return;
+    tcTzList.forEach(tz => { const o = document.createElement('option'); o.value = tz.value; o.textContent = tz.label; sel.appendChild(o); });
+    const autoIdx = tcTzList.findIndex(t => t.value === tcUserTz);
+    if (autoIdx >= 0) sel.selectedIndex = autoIdx;
+
+    tcCanvas = document.getElementById('tcClockCanvas');
+    tcCtx = tcCanvas.getContext('2d');
+    tcResize();
+    window.addEventListener('resize', tcResize);
+
+    tcBuildLegend();
+    tcDraw();
 }
 
 // ============================================================
