@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryptoTerminal — NATR Scanner | Trader Clock | Календарь | CryptoAI</title>
+    <title>CryptoTerminal — NATR Scanner | Trader Clock | Calendar | CryptoAI</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1117'/%3E%3Cpolyline points='48.5,23 34.25,37.25 26.75,29.75 15.5,41' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='39.5,23 48.5,23 48.5,32' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1117'/%3E%3Cpolyline points='48.5,23 34.25,37.25 26.75,29.75 15.5,41' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='39.5,23 48.5,23 48.5,32' fill='none' stroke='%23f0b90b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,36 +112,6 @@
         /* ======================================================
            SHARED SECTION STYLES (all sections unified)
            ====================================================== */
-        .sec-wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .sec-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 24px 0; border-bottom: 1px solid var(--border);
-            margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
-        }
-        .sec-header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
-        .sec-header h1 em { color: var(--accent); font-style: normal; }
-        .sec-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .sec-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-        .sec-tab {
-            padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
-            cursor: pointer; background: transparent; border: 1px solid transparent;
-            color: var(--muted); transition: all 0.2s;
-        }
-        .sec-tab:hover { color: var(--fg); background: rgba(255,255,255,0.03); }
-        .sec-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(240,185,11,0.2); }
-        .sec-stats {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 18px; background: var(--bg-card);
-            border-radius: 12px; margin-bottom: 16px; font-size: 13px;
-            flex-wrap: wrap; gap: 12px; border: 1px solid var(--border);
-        }
-        .sec-stats span { color: var(--muted); }
-        .sec-stats strong { color: var(--fg); }
-        .sec-stats .mono { color: var(--accent); }
-        .sec-card {
-            background: var(--bg-card); border-radius: 16px;
-            overflow: hidden; border: 1px solid var(--border); position: relative;
-        }
         .sec-select {
             background: var(--bg-card); color: var(--fg);
             border: 1px solid var(--border); padding: 8px 20px;
@@ -202,11 +172,6 @@
         .natr-cat-tab:hover { color: var(--fg); background: rgba(255,255,255,0.03); }
         .natr-cat-tab.active { color: var(--accent); border-color: rgba(240,185,11,0.3); background: var(--accent-dim); }
         .natr-cat-count { font-size: 10px; opacity: 0.6; margin-left: 4px; }
-        .natr-cat-loading { color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 6px; }
-        .natr-cat-loading .cat-spinner {
-            width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--accent);
-            border-radius: 50%; animation: spin 1s linear infinite;
-        }
 
         .natr-tools-card {
             display: flex; flex-direction: column; gap: 10px;
@@ -271,12 +236,6 @@
         .natr-above-threshold { color: var(--green); font-weight: 700; }
         tr.natr-pinned-row { background: rgba(240,185,11,0.06); }
 
-        .natr-cai-link {
-            color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 600;
-            font-size: 11px; vertical-align: middle; margin-left: 4px; white-space: nowrap;
-        }
-        .natr-cai-link:hover { text-decoration: underline; }
-        .natr-cai-link:focus-visible { outline: 2px solid var(--accent); }
         .natr-icon-btn {
             display: inline-flex; align-items: center; justify-content: center;
             width: 32px; height: 32px; padding: 0; margin: 0; vertical-align: middle;
@@ -369,8 +328,6 @@
         .cal-event-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
         .ticker-name { font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; transition: all 0.2s; display: inline-block; }
         .ticker-cell:hover .ticker-name { color: var(--accent); transform: translateX(2px); }
-        .ticker-sub { font-size: 11px; color: var(--muted); margin-top: 2px; transition: all 0.2s; }
-        .ticker-cell:hover .ticker-sub { color: var(--green); }
         .copy-icon {
             position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
             opacity: 0; transition: opacity 0.2s; color: var(--green); pointer-events: none;
@@ -426,16 +383,18 @@
         /* ======================================================
            SECTION 2: TRADER CLOCK (Canvas-based 24h analog)
            ====================================================== */
-        .tc-lock-wrap {
-            display: flex;
-            height: calc(100vh - 56px);
-            overflow: hidden;
-            position: relative;
+        /* Trader Clock — restyled to match the shared card layout used by every other
+           section (.natr-wrap/.natr-header for the page frame, .bg-card panels with
+           the standard border/radius for content) instead of its own full-viewport
+           fixed sidebar, which looked visually disconnected from the rest of the app. */
+        .tc-body {
+            display: flex; gap: 20px;
+            height: calc(100vh - 230px); min-height: 480px;
         }
         .tc-canvas-area {
-            flex: 1;
-            position: relative;
-            min-width: 0;
+            flex: 1; min-width: 0; position: relative;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden;
         }
         .tc-canvas-area canvas {
             display: block;
@@ -443,12 +402,11 @@
             height: 100%;
         }
         .tc-side-panel {
-            width: 280px;
+            width: 300px;
             flex-shrink: 0;
-            background: rgba(12, 17, 23, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-left: 1px solid var(--border);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 16px;
             overflow-y: auto;
             display: flex;
@@ -458,12 +416,6 @@
         .tc-side-panel::-webkit-scrollbar { width: 4px; }
         .tc-side-panel::-webkit-scrollbar-track { background: transparent; }
         .tc-side-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-        .tc-panel-title {
-            font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .tc-panel-title span { color: var(--accent); }
-        .tc-panel-title svg { width: 22px; height: 22px; }
         .tc-tz-row {
             display: flex; flex-direction: column; gap: 6px;
         }
@@ -471,19 +423,11 @@
             font-size: 11px; color: var(--muted); text-transform: uppercase;
             letter-spacing: 0.5px; font-weight: 600;
         }
-        .tc-tz-row select {
-            background: var(--bg-card); color: var(--fg);
-            border: 1px solid var(--border); border-radius: 8px;
-            padding: 8px 12px; font-size: 13px;
-            font-family: 'Space Grotesk', sans-serif;
-            cursor: pointer; outline: none; width: 100%;
-            transition: border-color 0.2s;
-        }
-        .tc-tz-row select:focus { border-color: var(--accent); }
+        .tc-tz-row select { width: 100%; }
         .tc-time-block { display: flex; flex-direction: column; gap: 6px; }
         .tc-time-line {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 12px; background: var(--bg-card);
+            padding: 8px 12px; background: var(--bg);
             border: 1px solid var(--border); border-radius: 8px;
         }
         .tc-time-line .tl-label { font-size: 13px; color: var(--muted); font-weight: 600; }
@@ -554,9 +498,9 @@
         .tc-legend-item.active .tc-legend-gmt { color: rgba(240, 185, 11, 0.5); }
 
         @media (max-width:768px) {
-            .tc-lock-wrap { flex-direction: column; height: auto; min-height: calc(100vh - 56px); }
-            .tc-canvas-area { height: 55vw; min-height: 300px; }
-            .tc-side-panel { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+            .tc-body { flex-direction: column; height: auto; }
+            .tc-canvas-area { height: 88vw; min-height: 300px; }
+            .tc-side-panel { width: 100%; }
         }
 
 
@@ -699,7 +643,6 @@
             background: var(--bg); border: 1px solid var(--border); color: var(--fg);
             font-family: 'Space Grotesk', sans-serif; outline: none; cursor: pointer;
         }
-        .cai-converter .conv-equals { color: var(--muted); }
         .cai-converter .conv-result { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.05rem; color: var(--accent); }
 
         .cai-links-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
@@ -872,7 +815,6 @@
         .cal-event-card.impact-medium:hover { border-color: rgba(240,185,11,0.3); border-left-color: var(--accent); }
 
         .cal-event-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
-        .cal-event-country { font-size: 13px; margin-right: 4px; }
         .cal-event-title { font-size: 12px; font-weight: 600; color: var(--fg); line-height: 1.3; margin-bottom: 6px; }
         .cal-event-values { display: flex; gap: 10px; font-size: 11px; flex-wrap: wrap; }
         .cal-event-val { display: flex; flex-direction: column; }
@@ -964,9 +906,9 @@
     </div>
     <div class="nav-tabs">
         <button class="nav-tab active" data-section="natr" onclick="switchSection('natr')">NATR Scanner</button>
-        <button class="nav-tab" data-section="cont" onclick="switchSection('cont')">Продолжение</button>
+        <button class="nav-tab" data-section="cont" onclick="switchSection('cont')">Trend Continuation</button>
         <button class="nav-tab" data-section="tw" onclick="switchSection('tw')">Trader Clock</button>
-        <button class="nav-tab" data-section="cal" onclick="switchSection('cal')">Календарь</button>
+        <button class="nav-tab" data-section="cal" onclick="switchSection('cal')">Calendar</button>
         <button class="nav-tab" data-section="cai" onclick="switchSection('cai')">CryptoAI</button>
     </div>
     <div style="position:relative;">
@@ -1122,7 +1064,7 @@
 <div class="section-panel" id="section-cont">
 <div class="natr-wrap">
     <div class="natr-header">
-        <h1><em>Продолжение</em> тренда</h1>
+        <h1><em>Trend</em> Continuation</h1>
         <div class="natr-controls">
             <div class="badge-status" id="contStatusBadge">
                 <span class="status-dot"></span>
@@ -1239,39 +1181,39 @@
 
 <!-- ========== SECTION 2: TRADER CLOCK ========== -->
 <div class="section-panel" id="section-tw">
-<div class="tc-lock-wrap">
-    <div class="tc-canvas-area">
-        <canvas id="tcClockCanvas"></canvas>
+<div class="natr-wrap">
+    <div class="natr-header">
+        <h1><em>Trader</em> Clock</h1>
     </div>
-    <div class="tc-side-panel">
-        <div class="tc-panel-title">
-            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="24" stroke="#f0b90b" stroke-width="4"/><line x1="32" y1="32" x2="32" y2="14" stroke="#f0b90b" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="32" x2="44" y2="32" stroke="#e4e8eb" stroke-width="2" stroke-linecap="round"/></svg>
-            Trader <span>Clock</span>
+    <div class="tc-body">
+        <div class="tc-canvas-area">
+            <canvas id="tcClockCanvas"></canvas>
         </div>
-        <div class="tc-divider"></div>
-        <div class="tc-tz-row">
-            <label>Часовой пояс циферблата</label>
-            <select id="tcTzSelect"></select>
-        </div>
-        <div class="tc-divider"></div>
-        <div class="tc-time-block">
-            <div class="tc-time-line">
-                <span class="tl-label">Местное</span>
-                <div class="tl-right">
-                    <span class="tl-val" id="tcDLocal">--:--</span>
-                    <span class="tl-tag" id="tcDLocalTag"></span>
+        <div class="tc-side-panel">
+            <div class="tc-tz-row">
+                <label>Часовой пояс циферблата</label>
+                <select class="sec-select" id="tcTzSelect"></select>
+            </div>
+            <div class="tc-divider"></div>
+            <div class="tc-time-block">
+                <div class="tc-time-line">
+                    <span class="tl-label">Местное</span>
+                    <div class="tl-right">
+                        <span class="tl-val" id="tcDLocal">--:--</span>
+                        <span class="tl-tag" id="tcDLocalTag"></span>
+                    </div>
+                </div>
+                <div class="tc-time-line">
+                    <span class="tl-label">UTC</span>
+                    <div class="tl-right">
+                        <span class="tl-val" id="tcDUtc">--:--</span>
+                        <span class="tl-tag">GMT+0</span>
+                    </div>
                 </div>
             </div>
-            <div class="tc-time-line">
-                <span class="tl-label">UTC</span>
-                <div class="tl-right">
-                    <span class="tl-val" id="tcDUtc">--:--</span>
-                    <span class="tl-tag">GMT+0</span>
-                </div>
-            </div>
+            <div class="tc-divider"></div>
+            <div id="tcLegend"></div>
         </div>
-        <div class="tc-divider"></div>
-        <div id="tcLegend"></div>
     </div>
 </div>
 </div>
@@ -1279,7 +1221,7 @@
 <div class="section-panel" id="section-cal">
 <div class="cal-wrap">
     <div class="cal-header">
-        <h1><em>Календарь</em> Трейдера</h1>
+        <h1><em>Trader</em> Calendar</h1>
         <div class="cal-controls">
             <div class="cal-week-nav">
                 <button class="cal-week-btn" onclick="calPrevWeek()" title="Предыдущая неделя">&#9664;</button>
@@ -1359,7 +1301,7 @@
 <!-- ========== SECTION 3: CRYPTOAI ========== -->
 <div class="section-panel" id="section-cai">
 <div class="cai-wrap">
-    <h1 class="cai-title"><em>CryptoAI</em> Агент</h1>
+    <h1 class="cai-title"><em>CryptoAI</em> Agent</h1>
     <p class="cai-subtitle">Введите тикер — получите полный анализ на русском языке</p>
     <div class="cai-search-box">
         <input type="text" id="caiInput" placeholder="BTC, ETH, QUSDT, SOL..." onkeypress="if(event.key==='Enter')caiSearch()">
@@ -1526,6 +1468,18 @@ function safeUrl(url) {
     if (!url) return '';
     var u = String(url).trim();
     return /^https?:\/\//i.test(u) ? u : '';
+}
+// Generic debounce: collapses bursts of calls (e.g. every keystroke in a
+// number/text filter field) into one trailing call after `wait` ms of quiet.
+// Used only to delay the *expensive* re-filter+re-render pass triggered by
+// range/threshold inputs — the input's own value and its persistence to
+// localStorage still happen synchronously, so typing itself never lags.
+function debounce(fn, wait) {
+    let t = null;
+    return function(...args) {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => { t = null; fn.apply(this, args); }, wait);
+    };
 }
 
 // ---- Sound alerts (NATR threshold + calendar reminders) ----
@@ -1944,13 +1898,6 @@ function natrSwitchCategory(cat) {
         natrReFilterAndRender();
     }
 }
-function natrFilterByCategory(symbols) {
-    if (natrSelectedCategory === 'all' || !natrCategoryMap) return symbols;
-    return symbols.filter(sym => {
-        const cat = (natrCategoryMap[sym] || 'NONE').split(',')[0];
-        return cat === natrSelectedCategory;
-    });
-}
 const NATR_TF_TAB_TO_ASSET_TYPE = { TF_CRYPTO: 'crypto', TF_STOCK: 'stock', TF_ETF: 'etf', TF_COMMODITY: 'commodity', TF_INDEX: 'index', TF_OTHER: 'rwa' };
 // Single source of truth for "what does the current filter set select" — used both
 // for rendering the table AND for deciding what the alert system watches, so alerts
@@ -2003,6 +1950,9 @@ function natrReFilterAndRender() {
     const rest = filtered.filter(r => !pinnedSet.has(r.symbol));
     natrRenderTable(pinnedRows.concat(rest), false, pinnedRows.length);
 }
+// Debounced entry point for free-text/number filter inputs (объём, сделки, NATR-порог):
+// avoids re-filtering + re-rendering the whole table on every single keystroke.
+const natrReFilterAndRenderDebounced = debounce(natrReFilterAndRender, 180);
 function natrChangeTopN(v) {
     natrTopN = parseInt(v, 10) || 10;
     try { ctSafeSetItem('natr_topn', String(natrTopN)); } catch(e) { /* non-fatal */ }
@@ -2032,7 +1982,7 @@ function natrChangeVolRange() {
     } catch(e) { /* non-fatal */ }
     // typing alone only re-colors matching values (see natrInRange in natrRenderTable) —
     // it does not hide rows unless the Фильтр button is toggled on
-    if (natrAllResults.length) natrReFilterAndRender();
+    if (natrAllResults.length) natrReFilterAndRenderDebounced();
 }
 function natrToggleVolFilter() {
     natrVolFilterActive = !natrVolFilterActive;
@@ -2048,7 +1998,7 @@ function natrChangeTradesRange() {
         ctSafeSetItem('natr_trades_from', natrTradesFrom === null ? '' : String(natrTradesFrom));
         ctSafeSetItem('natr_trades_to', natrTradesTo === null ? '' : String(natrTradesTo));
     } catch(e) { /* non-fatal */ }
-    if (natrAllResults.length) natrReFilterAndRender();
+    if (natrAllResults.length) natrReFilterAndRenderDebounced();
 }
 function natrToggleTradesFilter() {
     natrTradesFilterActive = !natrTradesFilterActive;
@@ -2081,7 +2031,7 @@ function natrChangeNatrCompare() {
         ctSafeSetItem('natr_compare_value', natrCompareValue === null ? '' : String(natrCompareValue));
         ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0');
     } catch(e) { /* non-fatal */ }
-    if (natrAllResults.length) natrReFilterAndRender();
+    if (natrAllResults.length) natrReFilterAndRenderDebounced();
 }
 function natrSavePinned() {
     try { ctSafeSetItem('natr_pinned', JSON.stringify([...natrPinned])); } catch(e) { /* non-fatal */ }
@@ -2226,8 +2176,10 @@ function natrGetTigerSocket() {
 // Always requests FUTURES on the target exchange — this app's data (RVOL/OI/NATR) is all
 // derived from Binance USDT-M futures, so the "same instrument" on any other exchange is
 // its own USDT-margined perpetual, not a spot pair.
-function natrOpenInTiger(symbol) {
-    const exchange = natrTigerExchange;
+// Shared by both screeners (NATR Scanner and Продолжение тренда) — previously this whole
+// body was duplicated verbatim in natrOpenInTiger/contOpenInTiger with only the exchange/
+// linkGroup source differing; factored out so the request/response handling lives in one place.
+function tigerLinkSymbol(exchange, linkGroup, symbol) {
     const targetSymbol = natrConvertSymbolForTiger(symbol, exchange);
     natrGetTigerSocket().then(ws => {
         const onMsg = (ev) => {
@@ -2241,10 +2193,13 @@ function natrOpenInTiger(symbol) {
             }
         };
         ws.addEventListener('message', onMsg);
-        ws.send(JSON.stringify({ type: 'setLinkSymbol', e: exchange, m: 'FUTURES', symbol: targetSymbol, linkGroup: natrTigerLinkGroup }));
+        ws.send(JSON.stringify({ type: 'setLinkSymbol', e: exchange, m: 'FUTURES', symbol: targetSymbol, linkGroup: linkGroup }));
     }).catch(() => {
         showToast('Нет связи с Tiger.com Terminal — включите Settings → Local Signal Server (порт 7819)');
     });
+}
+function natrOpenInTiger(symbol) {
+    tigerLinkSymbol(natrTigerExchange, natrTigerLinkGroup, symbol);
 }
 function natrChangeTigerExchange(v) {
     natrTigerExchange = v;
@@ -2263,24 +2218,7 @@ function contChangeTigerLinkGroup(v) {
     ctSafeSetItem('cont_tiger_link_group', v);
 }
 function contOpenInTiger(symbol) {
-    const exchange = contTigerExchange;
-    const targetSymbol = natrConvertSymbolForTiger(symbol, exchange);
-    natrGetTigerSocket().then(ws => {
-        const onMsg = (ev) => {
-            ws.removeEventListener('message', onMsg);
-            let data = null;
-            try { data = JSON.parse(ev.data); } catch(e) { /* non-JSON, ignore */ }
-            if (data && data.response && data.response.type === 'successfully') {
-                showToast('Открыто в Tiger.com (' + exchange + '): ' + targetSymbol);
-            } else {
-                showToast((data && data.message) || ('Tiger.com не распознал тикер ' + targetSymbol + ' на ' + exchange));
-            }
-        };
-        ws.addEventListener('message', onMsg);
-        ws.send(JSON.stringify({ type: 'setLinkSymbol', e: exchange, m: 'FUTURES', symbol: targetSymbol, linkGroup: contTigerLinkGroup }));
-    }).catch(() => {
-        showToast('Нет связи с Tiger.com Terminal — включите Settings → Local Signal Server (порт 7819)');
-    });
+    tigerLinkSymbol(contTigerExchange, contTigerLinkGroup, symbol);
 }
 function natrToggleTigerSettings() {
     const el = document.getElementById('natrTigerSettings');
@@ -2736,7 +2674,7 @@ function contChangeVolRange() {
     contVolTo = natrParseShorthand(document.getElementById('contVolTo').value);
     ctSafeSetItem('cont_vol_from', contVolFrom === null ? '' : String(contVolFrom));
     ctSafeSetItem('cont_vol_to', contVolTo === null ? '' : String(contVolTo));
-    if (contRawResults.length) contReFilterAndRender();
+    if (contRawResults.length) contReFilterAndRenderDebounced();
 }
 function contToggleVolFilter() {
     contVolFilterActive = !contVolFilterActive;
@@ -2838,11 +2776,6 @@ function contStartAutoRefresh() {
     const box = document.getElementById('contAutoRefresh');
     if (box) { box.classList.add('active'); box.style.setProperty('--refresh-dur', CONT_REFRESH_INTERVAL + 's'); }
 }
-function contStopAutoRefresh() {
-    if (contRefreshTimerId) { clearInterval(contRefreshTimerId); contRefreshTimerId = null; }
-    const box = document.getElementById('contAutoRefresh');
-    if (box) box.classList.remove('active');
-}
 // Every filter input below calls this — it re-slices the already-fetched contRawResults
 // live, no network request needed. Only the timeframe tabs and "Дней проторговки" actually
 // change what gets fetched, so those still require pressing Сканировать again.
@@ -2859,7 +2792,7 @@ function contChangeFilters() {
         ctSafeSetItem('cont_oi_from', document.getElementById('contOiFrom').value);
         ctSafeSetItem('cont_oi_to', document.getElementById('contOiTo').value);
     } catch(e) { /* non-fatal */ }
-    if (contRawResults.length) contReFilterAndRender();
+    if (contRawResults.length) contReFilterAndRenderDebounced();
 }
 function contSetStatus(text, active, updating) {
     const badge = document.getElementById('contStatusBadge');
@@ -3133,6 +3066,10 @@ function contReFilterAndRender() {
     const rest = filtered.filter(r => !pinnedSet.has(r.symbol));
     contRenderTable(pinnedRows.concat(rest), pinnedRows.length);
 }
+// Same rationale as natrReFilterAndRenderDebounced: the "Продолжение тренда" filter
+// fields (объём, тело свечи, RVOL, OI, вчера/сегодня %) also re-filter+re-render on
+// every keystroke; debounce it so fast typing doesn't re-run the filter pass per key.
+const contReFilterAndRenderDebounced = debounce(contReFilterAndRender, 180);
 function contRenderTable(data, pinnedCount) {
     pinnedCount = pinnedCount || 0;
     const body = document.getElementById('contTableBody');
@@ -4108,9 +4045,10 @@ function calApplyRestoredNotifyUI() {
         btn.textContent = '\ud83d\udd14 \u041d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f \u0432\u043a\u043b';
     }
 }
+const calRenderDebounced = debounce(calRender, 180);
 function calSetSearchQuery(v) {
     calSearchQuery = (v || '').trim().toLowerCase();
-    calRender();
+    calRenderDebounced();
 }
 
 function calPrevWeek() {
