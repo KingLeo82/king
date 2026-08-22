@@ -49,7 +49,7 @@
         .nav-brand svg { width: 24px; height: 24px; }
         .nav-tabs { display: flex; gap: 4px; }
         .nav-tab {
-            padding: 10px 20px; border-radius: 10px;
+            height: 36px; padding: 0 20px; border-radius: 10px;
             font-size: 13px; font-weight: 600; cursor: pointer;
             background: transparent; border: 1px solid transparent;
             color: var(--muted); transition: all 0.2s;
@@ -66,16 +66,17 @@
         @media (max-width: 640px) {
             .top-nav { flex-direction: column; height: auto; padding: 12px 16px; gap: 10px; }
             .nav-tabs { width: 100%; justify-content: center; }
-            .nav-tab { padding: 8px 12px; font-size: 12px; }
+            .nav-tab { padding: 0 12px; font-size: 12px; }
         }
 
         /* === SHARED COMPONENTS === */
         .btn-gold {
             background: var(--accent); color: #000; border: none;
-            padding: 10px 20px; border-radius: 8px;
+            padding: 0 20px; height: 36px; border-radius: 8px;
             font-weight: 600; font-size: 13px; cursor: pointer;
             transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
             font-family: 'Space Grotesk', sans-serif;
+            white-space: nowrap;
         }
         .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(240,185,11,0.3); }
         .btn-gold:active { transform: translateY(0); }
@@ -86,8 +87,9 @@
 
         .badge-status {
             display: flex; align-items: center; gap: 6px;
-            padding: 8px 14px; background: var(--bg-card);
+            padding: 0 14px; height: 36px; background: var(--bg-card);
             border-radius: 8px; font-size: 12px; color: var(--muted);
+            white-space: nowrap;
         }
         .status-dot {
             width: 8px; height: 8px; border-radius: 50%;
@@ -139,9 +141,10 @@
         .natr-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .natr-auto-refresh {
             display: flex; align-items: center; gap: 6px;
-            padding: 8px 14px; background: var(--bg-card);
+            padding: 0 14px; height: 36px; background: var(--bg-card);
             border-radius: 8px; font-size: 12px; color: var(--muted);
             border: 1px solid var(--border); position: relative; overflow: hidden;
+            white-space: nowrap;
         }
         .natr-auto-refresh.active { border-color: rgba(16,203,129,0.3); color: var(--green); }
         .natr-auto-refresh::after {
@@ -238,7 +241,7 @@
 
         .natr-icon-btn {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 32px; height: 32px; padding: 0; margin: 0; vertical-align: middle;
+            width: 32px; height: 36px; padding: 0; margin: 0; vertical-align: middle;
             border-radius: 8px; border: 1px solid var(--border); background: transparent;
             cursor: pointer; font-family: 'Space Grotesk', sans-serif;
             font-size: 0.85rem; font-weight: 700; line-height: 1; white-space: nowrap;
@@ -286,9 +289,10 @@
         .natr-stats .mono { color: var(--accent); }
         .natr-last-update {
             display: flex; align-items: center; gap: 6px;
-            padding: 8px 14px; background: var(--bg-card);
+            padding: 0 14px; height: 36px; background: var(--bg-card);
             border-radius: 8px; font-size: 12px; color: var(--muted);
             border: 1px solid var(--border);
+            white-space: nowrap;
         }
         .natr-last-update.updating { color: var(--accent); border-color: rgba(240,185,11,0.3); }
         .natr-last-update svg { display: none; }
@@ -510,36 +514,37 @@
         .cai-wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .cai-title {
             font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em;
-            text-align: center; margin-bottom: 6px;
+            margin-bottom: 0;
         }
         .cai-title em { color: var(--accent); font-style: normal; }
-        .cai-subtitle { text-align: center; color: var(--muted); margin-bottom: 24px; font-size: 0.95rem; }
+        .cai-subtitle { color: var(--muted); font-size: 0.95rem; }
 
         .cai-search-box { display: flex; gap: 10px; max-width: 600px; margin: 0 auto 30px; }
         .cai-search-box input[type="text"] {
-            flex: 1; padding: 15px 20px;
-            border: 2px solid var(--border); border-radius: 12px;
-            background: var(--bg-card); color: var(--fg); font-size: 16px;
+            flex: 1; padding: 0 14px; height: 36px;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg-card); color: var(--fg); font-size: 13px;
             outline: none; font-family: 'Space Grotesk', sans-serif;
         }
         .cai-search-box input[type="text"]:focus { border-color: var(--accent); }
         .cai-search-box button {
-            padding: 15px 30px;
+            padding: 0 20px; height: 36px;
             background: var(--accent); color: #000;
-            border: none; border-radius: 12px; font-weight: 700;
-            font-size: 15px; cursor: pointer;
+            border: none; border-radius: 8px; font-weight: 700;
+            font-size: 13px; cursor: pointer;
             transition: all 0.2s; font-family: 'Space Grotesk', sans-serif;
+            display: inline-flex; align-items: center; white-space: nowrap;
         }
         .cai-search-box button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(240,185,11,0.3); }
         .cai-search-box button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .cai-paste-btn {
-            padding: 15px 18px; background: var(--bg-card);
-            border: 2px solid var(--border); border-radius: 12px;
-            color: var(--muted); font-size: 16px; cursor: pointer;
-            transition: all 0.25s; display: flex; align-items: center; gap: 6px;
+            padding: 0 14px; height: 36px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 8px;
+            color: var(--muted); font-size: 13px; cursor: pointer;
+            transition: all 0.25s; display: inline-flex; align-items: center; gap: 6px;
             font-family: 'Space Grotesk', sans-serif; font-weight: 600;
-            flex-shrink: 0;
+            flex-shrink: 0; white-space: nowrap;
         }
         .cai-paste-btn svg { width: 18px; height: 18px; transition: transform 0.2s; }
         .cai-paste-btn:hover {
@@ -554,9 +559,10 @@
 
         .cai-tags { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 35px; }
         .cai-tag {
-            padding: 8px 16px; background: rgba(255,255,255,0.07);
-            border: 1px solid var(--border); border-radius: 20px;
-            cursor: pointer; font-size: 14px; transition: all 0.2s;
+            padding: 0 14px; height: 36px; background: rgba(255,255,255,0.07);
+            border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;
+            display: inline-flex; align-items: center; white-space: nowrap;
         }
         .cai-tag:hover { background: var(--accent-dim); border-color: rgba(240,185,11,0.3); color: var(--accent); transform: translateY(-2px); }
 
@@ -564,9 +570,10 @@
         .cai-history-label { font-size: 12px; color: var(--muted); font-weight: 600; }
         .cai-history-chips { display: flex; gap: 8px; flex-wrap: wrap; }
         .cai-history-chip {
-            padding: 5px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-            border-radius: 14px; cursor: pointer; font-size: 12px; color: var(--muted); transition: all 0.2s;
+            padding: 0 12px; height: 36px; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--muted); transition: all 0.2s;
             font-family: 'JetBrains Mono', monospace;
+            display: inline-flex; align-items: center; white-space: nowrap;
         }
         .cai-history-chip:hover { color: var(--accent); border-color: rgba(240,185,11,0.3); }
 
@@ -688,11 +695,12 @@
         .cai-disambig-item .di-id { font-size: 12px; color: var(--muted); }
         .cai-disambig-item .di-rank { margin-left: auto; font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
         .retry-btn {
-            margin-top: 20px; padding: 12px 30px;
+            margin-top: 20px; padding: 0 20px; height: 36px;
             background: var(--accent); color: #000; font-weight: 700;
-            border: none; border-radius: 10px;
-            font-size: 15px; cursor: pointer;
+            border: none; border-radius: 8px;
+            font-size: 13px; cursor: pointer;
             transition: all 0.2s; font-family: 'Space Grotesk', sans-serif;
+            display: inline-flex; align-items: center; white-space: nowrap;
         }
         .retry-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(240,185,11,0.3); }
         .countdown { font-size: 1.2rem; color: #fbbf24; margin: 15px 0; font-weight: 600; }
@@ -721,11 +729,11 @@
 
         .cal-week-nav {
             display: flex; align-items: center; gap: 8px;
-            background: var(--bg-card); border-radius: 10px;
-            padding: 4px; border: 1px solid var(--border);
+            background: var(--bg-card); border-radius: 8px;
+            height: 36px; padding: 0 4px; border: 1px solid var(--border);
         }
         .cal-week-btn {
-            width: 36px; height: 36px; border-radius: 8px;
+            width: 28px; height: 28px; border-radius: 6px;
             background: transparent; border: none; color: var(--muted);
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: all 0.2s; font-size: 16px;
@@ -736,9 +744,10 @@
             color: var(--fg); white-space: nowrap; min-width: 140px; text-align: center;
         }
         .cal-today-btn {
-            padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700;
+            padding: 0 16px; height: 36px; border-radius: 8px; font-size: 12px; font-weight: 700;
             cursor: pointer; background: var(--accent); border: none;
             color: #000; transition: all 0.2s; font-family: 'Space Grotesk', sans-serif;
+            display: inline-flex; align-items: center; white-space: nowrap;
         }
         .cal-today-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(240,185,11,0.3); }
 
@@ -813,6 +822,7 @@
         .cal-event-card.impact-low { border-left: 3px solid var(--muted); }
         .cal-event-card.impact-high:hover { border-color: rgba(246,70,93,0.3); border-left-color: var(--red); }
         .cal-event-card.impact-medium:hover { border-color: rgba(240,185,11,0.3); border-left-color: var(--accent); }
+        .cal-event-card.next-event-highlight { box-shadow: 0 0 0 2px var(--accent), 0 0 16px rgba(240,185,11,0.2); }
 
         .cal-event-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
         .cal-event-title { font-size: 12px; font-weight: 600; color: var(--fg); line-height: 1.3; margin-bottom: 6px; }
@@ -914,7 +924,34 @@
     <div style="position:relative;">
         <button class="natr-icon-btn" style="width:auto;padding:0 10px;gap:6px;" onclick="natrToggleTigerSettings()" title="Настройки подключения Tiger.com Terminal — на какой бирже открывать тикер"><span style="font-size:0.8rem;">Настройки</span></button>
         <div id="natrTigerSettings" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:480px;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:8px;">Кнопка «Tiger» откроет тикер на выбранной бирже и в выбранной группе линковки.</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="font-size:13px;font-weight:700;color:var(--fg);">Часовой пояс — Часы и Календарь</div>
+                <div style="font-size:11px;color:var(--muted);">Общий часовой пояс для вкладок Trader Clock и Calendar.</div>
+                <select class="sec-select" id="globalTZSelect" onchange="globalTZChanged(this.value)" style="width:220px;">
+                    <option value="auto">Автоопределение</option>
+                    <option value="local">Моё время (системное)</option>
+                    <option value="UTC">UTC</option>
+                    <option value="Asia/Irkutsk">Иркутск (IRKT, UTC+8)</option>
+                    <option value="Europe/Moscow">Москва (MSK, UTC+3)</option>
+                    <option value="Europe/Istanbul">Стамбул (TRT, UTC+3)</option>
+                    <option value="Asia/Dubai">Дубай (GST, UTC+4)</option>
+                    <option value="Asia/Kolkata">Мумбаи (IST, UTC+5:30)</option>
+                    <option value="Asia/Singapore">Сингапур (SGT, UTC+8)</option>
+                    <option value="Asia/Hong_Kong">Гонконг (HKT, UTC+8)</option>
+                    <option value="Asia/Shanghai">Шанхай (CST, UTC+8)</option>
+                    <option value="Asia/Tokyo">Токио (JST, UTC+9)</option>
+                    <option value="Asia/Seoul">Сеул (KST, UTC+9)</option>
+                    <option value="Australia/Sydney">Сидней (AEST, UTC+10/+11)</option>
+                    <option value="Europe/Berlin">Берлин (CET, UTC+1/+2)</option>
+                    <option value="Europe/London">Лондон (GMT, UTC+0/+1)</option>
+                    <option value="America/Sao_Paulo">Сан-Паулу (BRT, UTC-3)</option>
+                    <option value="America/New_York">Нью-Йорк (EST, UTC-5/-4)</option>
+                    <option value="America/Toronto">Торонто (EST, UTC-5/-4)</option>
+                    <option value="America/Los_Angeles">Лос-Анджелес (PST, UTC-8/-7)</option>
+                </select>
+            </div>
+            <div style="height:1px;background:var(--border);margin:6px 0;"></div>
+            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px;">Кнопка «Tiger» откроет тикер на выбранной бирже и в выбранной группе линковки.</div>
             <div style="display:flex;gap:20px;">
                 <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
                     <div style="font-size:13px;font-weight:700;color:var(--fg);">NATR Scanner</div>
@@ -1184,33 +1221,25 @@
 <div class="natr-wrap">
     <div class="natr-header">
         <h1><em>Trader</em> Clock</h1>
+        <div class="natr-controls">
+            <div class="badge-status" style="gap:10px;">
+                <span>Местное</span>
+                <span class="mono" style="color:var(--fg);font-weight:700;font-size:13px;" id="tcDLocal">--:--</span>
+                <span class="mono" style="font-size:10px;opacity:0.6;" id="tcDLocalTag"></span>
+            </div>
+            <div class="badge-status" style="gap:10px;">
+                <span>UTC</span>
+                <span class="mono" style="color:var(--fg);font-weight:700;font-size:13px;" id="tcDUtc">--:--</span>
+                <span class="mono" style="font-size:10px;opacity:0.6;">GMT+0</span>
+            </div>
+        </div>
     </div>
     <div class="tc-body">
         <div class="tc-canvas-area">
             <canvas id="tcClockCanvas"></canvas>
         </div>
         <div class="tc-side-panel">
-            <div class="tc-tz-row">
-                <label>Часовой пояс циферблата</label>
-                <select class="sec-select" id="tcTzSelect"></select>
-            </div>
-            <div class="tc-divider"></div>
-            <div class="tc-time-block">
-                <div class="tc-time-line">
-                    <span class="tl-label">Местное</span>
-                    <div class="tl-right">
-                        <span class="tl-val" id="tcDLocal">--:--</span>
-                        <span class="tl-tag" id="tcDLocalTag"></span>
-                    </div>
-                </div>
-                <div class="tc-time-line">
-                    <span class="tl-label">UTC</span>
-                    <div class="tl-right">
-                        <span class="tl-val" id="tcDUtc">--:--</span>
-                        <span class="tl-tag">GMT+0</span>
-                    </div>
-                </div>
-            </div>
+            <select class="sec-select" id="tcTzSelect" style="display:none;"></select>
             <div class="tc-divider"></div>
             <div id="tcLegend"></div>
         </div>
@@ -1229,7 +1258,7 @@
                 <button class="cal-week-btn" onclick="calNextWeek()" title="Следующая неделя">&#9654;</button>
             </div>
             <button class="cal-today-btn" onclick="calGoToday()">Сегодня</button>
-            <div class="tw-tz-selector" style="position:static;transform:none;">
+            <div class="tw-tz-selector" style="position:static;transform:none;display:none;">
                 <select class="sec-select" id="calTZSelect">
                     <option value="local">Моё время</option>
                     <option value="Europe/Moscow">Москва (UTC+3)</option>
@@ -1248,16 +1277,13 @@
         </div>
     </div>
     <div class="cal-filters">
-        <span class="cal-filter-label">Поиск:</span>
-        <input type="text" id="calSearchInput" class="natr-alert-input" style="width:180px;" placeholder="Название события..." oninput="calSetSearchQuery(this.value)">
-        <div class="cal-filter-sep"></div>
         <span class="cal-filter-label">Важность:</span>
         <button class="cal-filter-btn active" data-impact="high" onclick="calToggleImpact('high')"><span class="cal-filter-dot cal-impact-high"></span> Высокая</button>
         <button class="cal-filter-btn active" data-impact="medium" onclick="calToggleImpact('medium')"><span class="cal-filter-dot cal-impact-medium"></span> Средняя</button>
         <button class="cal-filter-btn active" data-impact="low" onclick="calToggleImpact('low')"><span class="cal-filter-dot cal-impact-low"></span> Низкая</button>
         <div class="cal-filter-sep"></div>
         <button class="natr-tool-btn" id="calNotifyBtn" onclick="calToggleNotify()" title="Уведомлять за 5 минут до событий высокой важности">🔔 Напоминания выкл</button>
-        <div class="cal-filter-sep"></div>
+        <div style="width:100%;"></div>
         <span class="cal-filter-label">Страна:</span>
         <div class="cal-country-filter">
             <button class="cal-country-btn active" data-country="US" onclick="calToggleCountry('US')">🇺🇸 US</button>
@@ -1270,6 +1296,7 @@
             <button class="cal-country-btn active" data-country="CH" onclick="calToggleCountry('CH')">🇨🇭 CH</button>
             <button class="cal-country-btn active" data-country="NZ" onclick="calToggleCountry('NZ')">🇳🇿 NZ</button>
             <button class="cal-country-btn active" data-country="RU" onclick="calToggleCountry('RU')">🇷🇺 RU</button>
+            <button class="cal-country-btn active" data-country="CRYPTO" onclick="calToggleCountry('CRYPTO')">⚡ CRYPTO</button>
         </div>
     </div>
     <div class="cal-next-event" id="calNextEvent" style="display:none;">
@@ -1301,8 +1328,12 @@
 <!-- ========== SECTION 3: CRYPTOAI ========== -->
 <div class="section-panel" id="section-cai">
 <div class="cai-wrap">
-    <h1 class="cai-title"><em>CryptoAI</em> Agent</h1>
-    <p class="cai-subtitle">Введите тикер — получите полный анализ на русском языке</p>
+    <div class="natr-header">
+        <div>
+            <h1 class="cai-title"><em>CryptoAI</em> Agent</h1>
+            <p class="cai-subtitle">Введите тикер — получите полный анализ на русском языке</p>
+        </div>
+    </div>
     <div class="cai-search-box">
         <input type="text" id="caiInput" placeholder="BTC, ETH, QUSDT, SOL..." onkeypress="if(event.key==='Enter')caiSearch()">
         <button class="cai-paste-btn" id="caiPasteBtn" onclick="caiPasteFromClipboard()" title="Вставить из буфера обмена">
@@ -2278,6 +2309,68 @@ document.addEventListener('click', function(ev) {
     if (ev.target.closest && ev.target.closest('button[onclick="natrToggleTigerSettings()"]')) return;
     panel.style.display = 'none';
 });
+
+// ============================================================
+//  GLOBAL TIMEZONE (shared by Trader Clock + Calendar)
+// ============================================================
+let globalTZ = 'auto'; // default
+function globalTZChanged(val) {
+    globalTZ = val;
+    try { ctSafeSetItem('ct_global_tz', val); } catch(e) {}
+    globalTZSyncToWidgets();
+}
+function globalTZSyncToWidgets() {
+    // Sync hidden tcTzSelect
+    const tcSel = document.getElementById('tcTzSelect');
+    if (tcSel) {
+        const mapped = globalTZ === 'local' ? 'auto' : globalTZ;
+        // Ensure the option exists in tcTzSelect
+        let found = false;
+        for (let i = 0; i < tcSel.options.length; i++) {
+            if (tcSel.options[i].value === mapped) { found = true; break; }
+        }
+        if (!found && mapped !== 'auto' && mapped !== 'UTC') {
+            const o = document.createElement('option'); o.value = mapped; o.textContent = mapped; tcSel.appendChild(o);
+        }
+        tcSel.value = mapped;
+    }
+    // Update visible label in clock sidebar
+    const tcLabel = document.getElementById('tcTzLabel');
+    if (tcLabel) {
+        const sel = document.getElementById('globalTZSelect');
+        tcLabel.textContent = sel ? sel.options[sel.selectedIndex].textContent : globalTZ;
+    }
+    // Sync hidden calTZSelect
+    const calSel = document.getElementById('calTZSelect');
+    if (calSel) {
+        const mapped = globalTZ === 'auto' ? 'local' : globalTZ;
+        let found = false;
+        for (let i = 0; i < calSel.options.length; i++) {
+            if (calSel.options[i].value === mapped) { found = true; break; }
+        }
+        if (!found && mapped !== 'local') {
+            const o = document.createElement('option'); o.value = mapped; o.textContent = mapped; calSel.appendChild(o);
+        }
+        calSel.value = mapped;
+        calSelectedTZ = mapped;
+        if (calAllEvents.length) calRender();
+    }
+}
+function globalTZInit() {
+    // Restore from localStorage
+    try { const saved = localStorage.getItem('ct_global_tz'); if (saved) globalTZ = saved; } catch(e) {}
+    const sel = document.getElementById('globalTZSelect');
+    if (sel) {
+        // Ensure the option exists
+        let found = false;
+        for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === globalTZ) { found = true; break; }
+        }
+        if (found) sel.value = globalTZ;
+    }
+    globalTZSyncToWidgets();
+}
+
 // Bulk-fetches 24h price/volume/trade-count for ALL futures symbols in one request
 // (instead of one request per row) — used for the price/volume column and the
 // liquidity/trades filters.
@@ -3519,8 +3612,8 @@ function tcInit() {
     const sel = document.getElementById('tcTzSelect');
     if (!sel) return;
     tcTzList.forEach(tz => { const o = document.createElement('option'); o.value = tz.value; o.textContent = tz.label; sel.appendChild(o); });
-    const autoIdx = tcTzList.findIndex(t => t.value === tcUserTz);
-    if (autoIdx >= 0) sel.selectedIndex = autoIdx;
+    // Apply global TZ to clock
+    globalTZSyncToWidgets();
 
     tcCanvas = document.getElementById('tcClockCanvas');
     tcCtx = tcCanvas.getContext('2d');
@@ -3536,7 +3629,7 @@ function tcInit() {
 // ============================================================
 let calCurrentWeekStart = null;
 let calImpactFilter = new Set(['high', 'medium', 'low']);
-let calCountryFilter = new Set(['US', 'EU', 'UK', 'JP', 'CN', 'AU', 'CA', 'CH', 'NZ', 'RU']);
+let calCountryFilter = new Set(['US', 'EU', 'UK', 'JP', 'CN', 'AU', 'CA', 'CH', 'NZ', 'RU', 'CRYPTO']);
 let calSearchQuery = '';
 let calNotifyEnabled = false;
 try { calNotifyEnabled = localStorage.getItem('cal_notify_enabled') === '1'; } catch(e) { /* non-fatal */ }
@@ -3567,8 +3660,14 @@ const CAL_CURRENCY_FLAGS = {
     USD: '\u{1F1FA}\u{1F1F8}', EUR: '\u{1F1EA}\u{1F1FA}', GBP: '\u{1F1EC}\u{1F1E7}',
     JPY: '\u{1F1EF}\u{1F1F5}', CNY: '\u{1F1E8}\u{1F1F3}', AUD: '\u{1F1E6}\u{1F1FA}',
     CAD: '\u{1F1E8}\u{1F1E6}', CHF: '\u{1F1E8}\u{1F1ED}', NZD: '\u{1F1F3}\u{1F1FF}',
-    KRW: '\u{1F1F0}\u{1F1F7}', RUB: '\u{1F1F7}\u{1F1FA}'
+    KRW: '\u{1F1F0}\u{1F1F7}', RUB: '\u{1F1F7}\u{1F1FA}',
+    CRYPTO: '⚡'
 };
+
+const CAL_CRYPTO_SOURCES = [
+    { name: 'CoinMarketCal', url: 'https://coinmarketcal.com/api/v1/events?max=30&page=1', type: 'json' },
+    { name: 'CoinCodex', url: 'https://api.coincodex.com/api/v1/events', type: 'json' },
+];
 
 let calSelectedTZ = 'Asia/Irkutsk';
 
@@ -3832,6 +3931,8 @@ async function calFetchEvents() {
         calClearStates();
         const isLive = source.indexOf('Офлайн') === -1;
         calUpdateSourceBadge(isLive, source);
+        // Fetch crypto events in background
+        calFetchCryptoEvents();
         calRender();
         return result.events;
     } catch (err) {
@@ -3839,6 +3940,48 @@ async function calFetchEvents() {
         calSetError('Ошибка обработки данных: ' + (err.message || ''));
         calUpdateSourceBadge(false);
         return [];
+    }
+}
+
+async function calFetchCryptoEvents() {
+    for (const src of CAL_CRYPTO_SOURCES) {
+        try {
+            for (const proxy of ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url=']) {
+                try {
+                    const resp = await calFetchWithTimeout(proxy + encodeURIComponent(src.url), {}, 8000);
+                    if (!resp.ok) continue;
+                    const data = await resp.json();
+                    if (!data || !Array.isArray(data.body || data)) continue;
+                    const items = data.body || data;
+                    const weekStart = calCurrentWeekStart || calGetWeekStart(new Date());
+                    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+                    const newEvents = [];
+                    items.forEach(e => {
+                        const dateStr = e.date || e.start_date || '';
+                        if (!dateStr) return;
+                        const utcDate = new Date(dateStr);
+                        if (isNaN(utcDate.getTime())) return;
+                        if (utcDate < weekStart || utcDate >= weekEnd) return;
+                        const title = e.title || e.name || e.coin?.fullname || '';
+                        if (!title) return;
+                        newEvents.push({
+                            utcDate, country: 'CRYPTO', currency: 'CRYPTO',
+                            impact: 'medium', title: title,
+                            previous: '', forecast: '', actual: '',
+                            category: 'Крипто',
+                            detail: (e.description || '').substring(0, 120),
+                            isPast: utcDate < new Date()
+                        });
+                    });
+                    if (newEvents.length) {
+                        calAllEvents = calAllEvents.concat(newEvents).sort((a, b) => a.utcDate - b.utcDate);
+                        calRender();
+                        console.log('Crypto events loaded from ' + src.name + ':', newEvents.length);
+                    }
+                    return; // success, stop trying
+                } catch(e2) { /* try next proxy */ }
+            }
+        } catch(e) { /* try next source */ }
     }
 }
 
@@ -3908,6 +4051,7 @@ function calRender() {
             } else {
                 dayEvents.forEach(evt => {
                     const card = document.createElement('div');
+                    card.dataset.evtTs = evt.utcDate.getTime();
                     card.className = 'cal-event-card impact-' + evt.impact;
                     card.tabIndex = 0;
                     card.setAttribute('role', 'button');
@@ -3974,8 +4118,15 @@ function calRender() {
 function calUpdateNextEvent() {
     const now = new Date();
     const targetTZ = calSelectedTZ === 'local' ? Intl.DateTimeFormat().resolvedOptions().timeZone : calSelectedTZ;
-    const upcoming = calAllEvents.filter(e => e.utcDate > now && e.impact === 'high');
-    const nextEvt = upcoming.length > 0 ? upcoming[0] : calAllEvents.find(e => e.utcDate > now);
+    // Apply same filters as calRender
+    const upcoming = calAllEvents.filter(e => {
+        if (e.utcDate <= now) return false;
+        if (calImpactFilter.size > 0 && !calImpactFilter.has(e.impact)) return false;
+        if (calCountryFilter.size > 0 && !calCountryFilter.has(e.country) && !calCountryFilter.has(e.currency)) return false;
+        if (calSearchQuery && !e.title.toLowerCase().includes(calSearchQuery)) return false;
+        return true;
+    });
+    const nextEvt = upcoming.length > 0 ? upcoming[0] : null;
     const panel = document.getElementById('calNextEvent');
     if (!nextEvt) { panel.style.display = 'none'; return; }
     panel.style.display = 'flex';
@@ -3986,6 +4137,17 @@ function calUpdateNextEvent() {
     const localTimeStr = lt.hourStr + ':' + lt.minuteStr;
     document.getElementById('calNextInfo').textContent = impactText + ' \u2022 ' + lt.day + ' ' + CAL_MONTH_NAMES[lt.month] + ', ' + localTimeStr;
     calUpdateCountdown(nextEvt);
+
+    // Highlight the next event card in the grid
+    document.querySelectorAll('.cal-event-card.next-event-highlight').forEach(c => c.classList.remove('next-event-highlight'));
+    if (nextEvt) {
+        const ts = nextEvt.utcDate.getTime();
+        document.querySelectorAll('.cal-event-card[data-evt-ts="' + ts + '"]').forEach(c => {
+            if (c.querySelector('.cal-event-title') && c.querySelector('.cal-event-title').textContent.includes(nextEvt.title)) {
+                c.classList.add('next-event-highlight');
+            }
+        });
+    }
 }
 
 function calUpdateCountdown(evt) {
@@ -4074,6 +4236,7 @@ function calToggleImpact(impact) {
         calImpactFilter.add(impact);
     }
     document.querySelectorAll('.cal-filter-btn').forEach(b => b.classList.toggle('active', calImpactFilter.has(b.dataset.impact)));
+    try { ctSafeSetItem('cal_impact_filter', JSON.stringify([...calImpactFilter])); } catch(e) {}
     calRender();
 }
 function calToggleCountry(country) {
@@ -4083,16 +4246,36 @@ function calToggleCountry(country) {
         calCountryFilter.add(country);
     }
     document.querySelectorAll('.cal-country-btn').forEach(b => b.classList.toggle('active', calCountryFilter.has(b.dataset.country)));
+    try { ctSafeSetItem('cal_country_filter', JSON.stringify([...calCountryFilter])); } catch(e) {}
     calRender();
 }
 
 function calInit() {
     calCurrentWeekStart = calGetWeekStart(new Date());
     document.getElementById('calWeekLabel').textContent = calFormatWeekLabel(calCurrentWeekStart);
+    // Restore impact filter
+    try {
+        const savedImpact = JSON.parse(localStorage.getItem('cal_impact_filter'));
+        if (Array.isArray(savedImpact) && savedImpact.length) {
+            calImpactFilter = new Set(savedImpact);
+            document.querySelectorAll('.cal-filter-btn').forEach(b => b.classList.toggle('active', calImpactFilter.has(b.dataset.impact)));
+        }
+    } catch(e) {}
+    // Restore country filter
+    try {
+        const savedCountry = JSON.parse(localStorage.getItem('cal_country_filter'));
+        if (Array.isArray(savedCountry) && savedCountry.length) {
+            calCountryFilter = new Set(savedCountry);
+            document.querySelectorAll('.cal-country-btn').forEach(b => b.classList.toggle('active', calCountryFilter.has(b.dataset.country)));
+        }
+    } catch(e) {}
+    // TZ is now controlled globally via globalTZSyncToWidgets; keep listener for programmatic sync
     document.getElementById('calTZSelect').addEventListener('change', function(e) {
         calSelectedTZ = e.target.value;
         calRender();
     });
+    // Apply global TZ to calendar
+    globalTZSyncToWidgets();
     calApplyRestoredNotifyUI();
     calFetchEvents();
     if (calAutoRefreshId) clearInterval(calAutoRefreshId);
@@ -4517,6 +4700,7 @@ document.addEventListener('DOMContentLoaded', function() {
         switchSection(saved);
     }
     natrInitTigerSettingsUI();
+    globalTZInit();
     natrApplyRestoredUI();
     contApplyRestoredUI();
     natrUpdateTimerDisplay();
