@@ -24,11 +24,16 @@
             --purple2: #764ba2;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { overflow-x: hidden; }
         body {
             font-family: 'Space Grotesk', sans-serif;
             background: var(--bg);
             color: var(--fg);
             min-height: 100vh;
+            /* Belt-and-braces: nothing in the layout should cause horizontal
+               scroll on a phone (fixed-width popups, wide tables, etc.), but
+               this guards against it if something does. */
+            overflow-x: hidden;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
 
@@ -47,13 +52,19 @@
         }
         .nav-brand span { color: var(--accent); }
         .nav-brand svg { width: 24px; height: 24px; }
-        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tabs {
+            display: flex; gap: 4px;
+            /* Scrolls horizontally instead of wrapping/overflowing once tabs no
+               longer fit — keeps the nav a single, predictable row at any width. */
+            overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        }
+        .nav-tabs::-webkit-scrollbar { display: none; }
         .nav-tab {
             height: 36px; padding: 0 20px; border-radius: 10px;
             font-size: 13px; font-weight: 600; cursor: pointer;
             background: transparent; border: 1px solid transparent;
             color: var(--muted); transition: all 0.2s;
-            white-space: nowrap;
+            white-space: nowrap; flex-shrink: 0;
         }
         .nav-tab:hover { color: var(--fg); background: rgba(255,255,255,0.03); }
         .nav-tab.active {
@@ -64,9 +75,21 @@
         .section-panel.active { display: block; }
 
         @media (max-width: 640px) {
-            .top-nav { flex-direction: column; height: auto; padding: 12px 16px; gap: 10px; }
-            .nav-tabs { width: 100%; justify-content: center; }
-            .nav-tab { padding: 0 12px; font-size: 12px; }
+            .top-nav { flex-direction: column; height: auto; padding: 10px 12px; gap: 8px; }
+            .nav-tabs { width: 100%; justify-content: flex-start; }
+            .nav-tab { padding: 0 14px; font-size: 12px; min-height: 40px; display: inline-flex; align-items: center; }
+            /* The Tiger settings popup was a fixed 480px + a hard two-column row —
+               guaranteed to overflow a phone screen. Below the breakpoint its trigger
+               wrapper is stretched to the full nav width so the popup can anchor to
+               left:0/right:0 instead of a hardcoded pixel width, and the two
+               NATR/Continuation columns stack instead of sitting side by side. */
+            .natr-tiger-settings-wrap { width: 100%; }
+            .natr-tiger-settings-panel {
+                left: 0 !important; right: 0 !important; min-width: 0 !important; width: auto;
+                max-height: 70vh; overflow-y: auto;
+            }
+            .natr-tiger-settings-cols { flex-direction: column; gap: 16px; }
+            .natr-tiger-settings-cols > div[style*="width:1px"] { display: none; }
         }
 
         /* === SHARED COMPONENTS === */
@@ -381,9 +404,17 @@
             .natr-fav-cell { font-size: 1.3rem; }
             .natr-table-wrap td,.natr-table-wrap th { padding: 12px 14px; }
             .natr-controls { flex-wrap: wrap; justify-content: center; }
+            /* 19 category buttons wrapping into a wall of rows pushes the actual
+               table way down the screen on a phone; a single scrollable row reads
+               more like a native app filter strip and keeps the table close. */
+            .natr-cat-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+            .natr-cat-tabs::-webkit-scrollbar { display: none; }
+            .natr-cat-label, .natr-cat-tab { flex-shrink: 0; }
+            .natr-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+            .natr-tabs::-webkit-scrollbar { display: none; }
+            .natr-tabs .natr-tab { flex-shrink: 0; }
         }
 
-        /* ======================================================
         /* ======================================================
            SECTION 2: TRADER CLOCK (Canvas-based 24h analog)
            ====================================================== */
@@ -904,6 +935,14 @@
             .cal-filters { gap: 6px; }
             .cal-next-event { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
+        @media (max-width:640px) {
+            /* .cal-day-header assumes a fixed 60px nav to stick under. Below 640px the
+               nav wraps onto 2-3 rows and grows well past 60px, so a sticky day header
+               would end up tucked behind it instead of below it. Simplest safe fix:
+               don't stick it on small screens, where the calendar is a single scrolling
+               column anyway and a persistently pinned day label matters less. */
+            .cal-day-header { position: static; top: auto; }
+        }
     </style>
 </head>
 <body>
@@ -921,9 +960,9 @@
         <button class="nav-tab" data-section="cal" onclick="switchSection('cal')">Calendar</button>
         <button class="nav-tab" data-section="cai" onclick="switchSection('cai')">CryptoAI</button>
     </div>
-    <div style="position:relative;">
+    <div class="natr-tiger-settings-wrap" style="position:relative;">
         <button class="natr-icon-btn" style="width:auto;padding:0 10px;gap:6px;" onclick="natrToggleTigerSettings()" title="Настройки подключения Tiger.com Terminal — на какой бирже открывать тикер"><span style="font-size:0.8rem;">Настройки</span></button>
-        <div id="natrTigerSettings" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:480px;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+        <div id="natrTigerSettings" class="natr-tiger-settings-panel" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:480px;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
             <div style="display:flex;flex-direction:column;gap:6px;">
                 <div style="font-size:13px;font-weight:700;color:var(--fg);">Часовой пояс — Часы и Календарь</div>
                 <div style="font-size:11px;color:var(--muted);">Общий часовой пояс для вкладок Trader Clock и Calendar.</div>
@@ -952,7 +991,7 @@
             </div>
             <div style="height:1px;background:var(--border);margin:6px 0;"></div>
             <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px;">Кнопка «Tiger» откроет тикер на выбранной бирже и в выбранной группе линковки.</div>
-            <div style="display:flex;gap:20px;">
+            <div class="natr-tiger-settings-cols" style="display:flex;gap:20px;">
                 <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
                     <div style="font-size:13px;font-weight:700;color:var(--fg);">NATR Scanner</div>
                     <div>
@@ -3289,19 +3328,40 @@ function contRenderTable(data, pinnedCount) {
 let tcInitialized = false;
 let tcAnimFrameId = null;
 
+// Trading hours below are each exchange's own LOCAL wall-clock session (sLocal/eLocal).
+// This is the ground truth that never changes with the calendar. The UTC-equivalent
+// fields (s/e) actually used for drawing/open-checks are derived from these via
+// tcRecomputeSessionUTC(), which re-reads each exchange's current DST offset every
+// time it runs — so summer/winter clock changes are picked up automatically, per
+// exchange, with no manual toggle needed.
 const tcSessions = [
-    { name: 'India',        exch: 'NSE',      s: 3.75, e: 10,    color: '#4CAF50', region: 'Asia-Pacific',  on: true, tz: 'Asia/Kolkata' },
-    { name: 'Canada',       exch: 'TSX',      s: 14.5, e: 21,    color: '#2E7D32', region: 'Americas',     on: true, tz: 'America/Toronto' },
-    { name: 'Japan',        exch: 'TSE',      s: 0,    e: 6,     color: '#03A9F4', region: 'Asia-Pacific',  on: true, tz: 'Asia/Tokyo' },
-    { name: 'Saudi Arabia', exch: 'Tadawul',  s: 6,    e: 11,    color: '#43A047', region: 'Asia-Pacific',  on: true, tz: 'Asia/Riyadh' },
-    { name: 'China',        exch: 'SSE',      s: 1.5,  e: 7,     color: '#29B6F6', region: 'Asia-Pacific',  on: true, tz: 'Asia/Shanghai' },
-    { name: 'Russia',       exch: 'MOEX',     s: 7,    e: 15.75, color: '#E53935', region: 'Europe',       on: true, tz: 'Europe/Moscow' },
-    { name: 'Hong Kong',    exch: 'HKEX',     s: 1.5,  e: 8,     color: '#0288D1', region: 'Asia-Pacific',  on: true, tz: 'Asia/Hong_Kong' },
-    { name: 'UK',           exch: 'LSE',      s: 8,    e: 16.5,  color: '#66BB6A', region: 'Europe',       on: true, tz: 'Europe/London' },
-    { name: 'France',       exch: 'Euronext', s: 8,    e: 16.5,  color: '#388E3C', region: 'Europe',       on: true, tz: 'Europe/Paris' },
-    { name: 'Germany',      exch: 'Xetra',    s: 8,    e: 16.5,  color: '#1B5E20', region: 'Europe',       on: true, tz: 'Europe/Berlin' },
-    { name: 'USA',          exch: 'NYSE',     s: 14.5, e: 21,    color: '#4FC3F7', region: 'Americas',     on: true, tz: 'America/New_York' },
+    { name: 'India',        exch: 'NSE',      sLocal: 9.25, eLocal: 15.5,  color: '#4CAF50', region: 'Asia-Pacific',  on: true, tz: 'Asia/Kolkata' },
+    { name: 'Canada',       exch: 'TSX',      sLocal: 9.5,  eLocal: 16,    color: '#2E7D32', region: 'Americas',     on: true, tz: 'America/Toronto' },
+    { name: 'Japan',        exch: 'TSE',      sLocal: 9,    eLocal: 15.5,  color: '#03A9F4', region: 'Asia-Pacific',  on: true, tz: 'Asia/Tokyo' },
+    { name: 'Saudi Arabia', exch: 'Tadawul',  sLocal: 10,   eLocal: 15,    color: '#43A047', region: 'Asia-Pacific',  on: true, tz: 'Asia/Riyadh' },
+    { name: 'China',        exch: 'SSE',      sLocal: 9.5,  eLocal: 15,    color: '#29B6F6', region: 'Asia-Pacific',  on: true, tz: 'Asia/Shanghai' },
+    { name: 'Russia',       exch: 'MOEX',     sLocal: 10,   eLocal: 18.75, color: '#E53935', region: 'Europe',       on: true, tz: 'Europe/Moscow' },
+    { name: 'Hong Kong',    exch: 'HKEX',     sLocal: 9.5,  eLocal: 16,    color: '#0288D1', region: 'Asia-Pacific',  on: true, tz: 'Asia/Hong_Kong' },
+    { name: 'UK',           exch: 'LSE',      sLocal: 8,    eLocal: 16.5,  color: '#66BB6A', region: 'Europe',       on: true, tz: 'Europe/London' },
+    { name: 'France',       exch: 'Euronext', sLocal: 9,    eLocal: 17.5,  color: '#388E3C', region: 'Europe',       on: true, tz: 'Europe/Paris' },
+    { name: 'Germany',      exch: 'Xetra',    sLocal: 9,    eLocal: 17.5,  color: '#1B5E20', region: 'Europe',       on: true, tz: 'Europe/Berlin' },
+    { name: 'USA',          exch: 'NYSE',     sLocal: 9.5,  eLocal: 16,    color: '#4FC3F7', region: 'Americas',     on: true, tz: 'America/New_York' },
 ];
+
+// Converts each session's local open/close into today's UTC hours using that
+// exchange's real timezone offset (tcGetTzOffset is DST-aware via the IANA tz
+// database), so London/Paris/Frankfurt/Toronto/New York shift automatically
+// between winter and summer time — no hardcoded UTC hours to go stale.
+function tcRecomputeSessionUTC() {
+    tcSessions.forEach(ses => {
+        const off = tcGetTzOffset(ses.tz);
+        ses.s = ((ses.sLocal - off) % 24 + 24) % 24;
+        ses.e = ((ses.eLocal - off) % 24 + 24) % 24;
+    });
+}
+tcRecomputeSessionUTC();
+// Re-check every few minutes in case the tab stays open across a DST transition.
+setInterval(tcRecomputeSessionUTC, 5 * 60 * 1000);
 
 function tcIntervalsOverlap(a, b) {
     const aW = a.s > a.e, bW = b.s > b.e;
@@ -3440,11 +3500,24 @@ function tcDraw() {
     const minFrac = (utcM + utcS/60 + utcMs/60000) / 60;
     const secFrac = (utcS + utcMs/1000) / 60;
 
-    const arcThick = Math.max(12, tcR * 0.05);
-    const arcGap = Math.max(3, tcR * 0.012);
-    const ringStep = arcThick + arcGap;
-    const totalRingH = TC_NUM_RINGS * ringStep - arcGap;
-    const startR = Math.max(tcR * 0.12, (tcR * 0.55 - totalRingH / 2));
+    // Hour-number ring position/size, needed up front so the session rings can be
+    // sized to leave a guaranteed gap before them (previously the two were computed
+    // independently and could end up overlapping on smaller canvases).
+    const numSize = Math.max(16, tcR * 0.09);
+    const numR = tcR - tcR * 0.13;
+
+    // Session rings are packed into the band between a fixed inner radius and the
+    // inner edge of the hour numbers (minus a visible clearance gap), then sized to
+    // fill whatever room that leaves — instead of a fixed thickness that could run
+    // into the numbers on smaller canvases.
+    const ringClearance = Math.max(8, tcR * 0.025);
+    const ringOuterLimit = numR - numSize / 2 - ringClearance;
+    const ringInnerStart = Math.max(tcR * 0.12, tcR * 0.30);
+    const availableBand = Math.max(tcR * 0.12, ringOuterLimit - ringInnerStart);
+    const ringStep = availableBand / TC_NUM_RINGS;
+    const arcGap = Math.max(2, ringStep * 0.16);
+    const arcThick = Math.max(6, ringStep - arcGap);
+    const startR = ringInnerStart;
     const txtFont = '700 ' + Math.max(9, arcThick * 0.72) + 'px "Space Grotesk", sans-serif';
 
     for (let ring = 0; ring < TC_NUM_RINGS; ring++) {
@@ -3491,8 +3564,6 @@ function tcDraw() {
         tcCtx.fillText(String(m), tcCX + Math.cos(a) * (tcR - tcR * 0.048), tcCY + Math.sin(a) * (tcR - tcR * 0.048));
     }
 
-    const numSize = Math.max(16, tcR * 0.09);
-    const numR = tcR - tcR * 0.13;
     for (let h = 0; h < 24; h++) {
         const a = tcH2a(h);
         const isCur = Math.floor(clockH) === h;
