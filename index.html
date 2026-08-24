@@ -90,6 +90,15 @@
             }
             .natr-tiger-settings-cols { flex-direction: column; gap: 16px; }
             .natr-tiger-settings-cols > div[style*="width:1px"] { display: none; }
+            .natr-tiger-settings-wrap .natr-tool-btn { padding: 0 14px; font-size: 12px; min-height: 40px; }
+        }
+
+        /* Settings trigger reuses .natr-tool-btn's coloring (muted/hover/active) but
+           is sized to match .nav-tab exactly, since it sits right in the same row as
+           the nav tabs and should read as part of that row, not a smaller control. */
+        .natr-tiger-settings-wrap .natr-tool-btn {
+            height: 36px; padding: 0 16px; border-radius: 10px;
+            font-size: 13px; font-weight: 600;
         }
 
         /* === SHARED COMPONENTS === */
@@ -961,7 +970,10 @@
         <button class="nav-tab" data-section="cai" onclick="switchSection('cai')">CryptoAI</button>
     </div>
     <div class="natr-tiger-settings-wrap" style="position:relative;">
-        <button class="natr-icon-btn" style="width:auto;padding:0 10px;gap:6px;" onclick="natrToggleTigerSettings()" title="Настройки подключения Tiger.com Terminal — на какой бирже открывать тикер"><span style="font-size:0.8rem;">Настройки</span></button>
+        <button class="natr-tool-btn" id="natrTigerSettingsBtn" style="display:inline-flex;align-items:center;gap:6px;" onclick="natrToggleTigerSettings()" title="Настройки подключения Tiger.com Terminal — на какой бирже открывать тикер">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Настройки</span>
+        </button>
         <div id="natrTigerSettings" class="natr-tiger-settings-panel" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:480px;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
             <div style="display:flex;flex-direction:column;gap:6px;">
                 <div style="font-size:13px;font-weight:700;color:var(--fg);">Часовой пояс — Часы и Календарь</div>
@@ -1018,7 +1030,6 @@
             </div>
             </div>
         </div>
-    </div>
 </nav>
 
 <!-- ========== SECTION 1: NATR SCANNER ========== -->
@@ -1160,9 +1171,6 @@
             </button>
         </div>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin:-14px 0 18px;max-width:640px;">
-        Логика: вчерашняя дневная свеча сравнивается с предыдущими N днями — насколько её тело (|закрытие−открытие|) и объём больше среднего за это окно. Плюс проверка, что перед пампом была тихая проторговка.
-    </p>
     <div class="natr-tools-card">
     <div class="natr-tools" id="contTools">
         <div class="natr-tool-group">
@@ -1279,7 +1287,6 @@
         </div>
         <div class="tc-side-panel">
             <select class="sec-select" id="tcTzSelect" style="display:none;"></select>
-            <div class="tc-divider"></div>
             <div id="tcLegend"></div>
         </div>
     </div>
@@ -1370,7 +1377,6 @@
     <div class="natr-header">
         <div>
             <h1 class="cai-title"><em>CryptoAI</em> Agent</h1>
-            <p class="cai-subtitle">Введите тикер — получите полный анализ на русском языке</p>
         </div>
     </div>
     <div class="cai-search-box">
@@ -1612,6 +1618,41 @@ function fallbackCopy(text) {
     try { if (document.execCommand('copy')) showToast(text + ' скопирован'); else showToast('Ошибка'); } catch(e) { showToast('Ошибка'); }
     ta.value = '';
 }
+// ============================================================
+//  RELIABILITY: global safety net for unexpected errors + connectivity status
+// ============================================================
+// Every fetch() call in the app already has its own try/catch (Binance requests go
+// through natrApiFetch, translations/calendar have their own fallbacks, etc.), but
+// this catches anything that still slips through — a typo, an API response shape
+// change, a bug in a code path nobody wrapped — so it surfaces as one quiet toast
+// instead of silently breaking part of the page with no feedback. Throttled so a
+// burst of related errors (e.g. the same bug firing on every table row) doesn't spam
+// the same toast over and over.
+let ctLastErrorToast = 0;
+function ctReportUnexpectedError(err, source) {
+    console.error('[' + source + ']', err);
+    const now = Date.now();
+    if (now - ctLastErrorToast < 5000) return; // throttle — at most one toast per 5s
+    ctLastErrorToast = now;
+    showToast('⚠️ Непредвиденная ошибка — часть данных могла не обновиться');
+}
+window.addEventListener('error', function(ev) {
+    ctReportUnexpectedError(ev.error || ev.message, 'window.onerror');
+});
+window.addEventListener('unhandledrejection', function(ev) {
+    ctReportUnexpectedError(ev.reason, 'unhandledrejection');
+});
+// Every API call already fails gracefully offline (returns null / keeps last known
+// data — see natrApiFetch, calFetchWithTimeout, caiSafeFetch) and auto-refresh timers
+// just pick back up on their own next tick, so nothing here needs to pause or resume
+// anything. This purely keeps the person informed about *why* things stopped
+// updating, and confirms the moment they're live again.
+window.addEventListener('offline', function() {
+    showToast('📡 Нет соединения с интернетом — данные не обновляются');
+});
+window.addEventListener('online', function() {
+    showToast('✅ Соединение восстановлено');
+});
 // Thin localStorage wrappers used everywhere settings/favorites/pins are persisted.
 // Two things this buys us over calling localStorage directly: (1) a write failure
 // (private browsing, storage disabled, quota full) surfaces ONE visible warning to the
@@ -2146,13 +2187,13 @@ async function natrToggleAlerts() {
     try { ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0'); } catch(e) { /* non-fatal */ }
 }
 function natrFireAlert(symbol, natr) {
-    const sign = natrCompareOp === 'lte' ? '≤' : '≥';
-    const msg = symbol.replace(/USDT$|USD1$/, '') + ': NATR ' + natr.toFixed(2) + '% (' + sign + ' ' + natrCompareValue + '%)';
+    const base = symbol.replace(/USDT$|USD1$/, '');
+    const pct = Math.round(natr) + '%';
     playAlertSound('natr');
     if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification('⚡ NATR прошёл фильтр', { body: msg }); return; } catch(e) { /* fall through to toast */ }
+        try { new Notification('NATR', { body: base + ' ' + pct }); return; } catch(e) { /* fall through to toast */ }
     }
-    showToast(msg);
+    showToast('NATR - ' + base + ' ' + pct);
 }
 // results is already the currently-filtered set (natrGetFilteredResults), so when a NATR
 // threshold is active every item here already satisfies it — we just need to spot which
@@ -2295,6 +2336,8 @@ function natrToggleTigerSettings() {
     if (!el) return;
     const show = el.style.display === 'none' || !el.style.display;
     el.style.display = show ? 'flex' : 'none';
+    const btn = document.getElementById('natrTigerSettingsBtn');
+    if (btn) btn.classList.toggle('active', show);
 }
 function natrInitTigerSettingsUI() {
     // NATR Scanner selects
@@ -2347,6 +2390,8 @@ document.addEventListener('click', function(ev) {
     if (panel.contains(ev.target)) return;
     if (ev.target.closest && ev.target.closest('button[onclick="natrToggleTigerSettings()"]')) return;
     panel.style.display = 'none';
+    const btn = document.getElementById('natrTigerSettingsBtn');
+    if (btn) btn.classList.remove('active');
 });
 
 // ============================================================
@@ -3335,17 +3380,17 @@ let tcAnimFrameId = null;
 // time it runs — so summer/winter clock changes are picked up automatically, per
 // exchange, with no manual toggle needed.
 const tcSessions = [
-    { name: 'India',        exch: 'NSE',      sLocal: 9.25, eLocal: 15.5,  color: '#4CAF50', region: 'Asia-Pacific',  on: true, tz: 'Asia/Kolkata' },
-    { name: 'Canada',       exch: 'TSX',      sLocal: 9.5,  eLocal: 16,    color: '#2E7D32', region: 'Americas',     on: true, tz: 'America/Toronto' },
-    { name: 'Japan',        exch: 'TSE',      sLocal: 9,    eLocal: 15.5,  color: '#03A9F4', region: 'Asia-Pacific',  on: true, tz: 'Asia/Tokyo' },
-    { name: 'Saudi Arabia', exch: 'Tadawul',  sLocal: 10,   eLocal: 15,    color: '#43A047', region: 'Asia-Pacific',  on: true, tz: 'Asia/Riyadh' },
-    { name: 'China',        exch: 'SSE',      sLocal: 9.5,  eLocal: 15,    color: '#29B6F6', region: 'Asia-Pacific',  on: true, tz: 'Asia/Shanghai' },
-    { name: 'Russia',       exch: 'MOEX',     sLocal: 10,   eLocal: 18.75, color: '#E53935', region: 'Europe',       on: true, tz: 'Europe/Moscow' },
-    { name: 'Hong Kong',    exch: 'HKEX',     sLocal: 9.5,  eLocal: 16,    color: '#0288D1', region: 'Asia-Pacific',  on: true, tz: 'Asia/Hong_Kong' },
-    { name: 'UK',           exch: 'LSE',      sLocal: 8,    eLocal: 16.5,  color: '#66BB6A', region: 'Europe',       on: true, tz: 'Europe/London' },
-    { name: 'France',       exch: 'Euronext', sLocal: 9,    eLocal: 17.5,  color: '#388E3C', region: 'Europe',       on: true, tz: 'Europe/Paris' },
-    { name: 'Germany',      exch: 'Xetra',    sLocal: 9,    eLocal: 17.5,  color: '#1B5E20', region: 'Europe',       on: true, tz: 'Europe/Berlin' },
-    { name: 'USA',          exch: 'NYSE',     sLocal: 9.5,  eLocal: 16,    color: '#4FC3F7', region: 'Americas',     on: true, tz: 'America/New_York' },
+    { name: 'India',        exch: 'NSE',      sLocal: 9.25, eLocal: 15.5,  region: 'Asia-Pacific',  on: true, tz: 'Asia/Kolkata' },
+    { name: 'Canada',       exch: 'TSX',      sLocal: 9.5,  eLocal: 16,    region: 'Americas',     on: true, tz: 'America/Toronto' },
+    { name: 'Japan',        exch: 'TSE',      sLocal: 9,    eLocal: 15.5,  region: 'Asia-Pacific',  on: true, tz: 'Asia/Tokyo' },
+    { name: 'Saudi Arabia', exch: 'Tadawul',  sLocal: 10,   eLocal: 15,    region: 'Asia-Pacific',  on: true, tz: 'Asia/Riyadh' },
+    { name: 'China',        exch: 'SSE',      sLocal: 9.5,  eLocal: 15,    region: 'Asia-Pacific',  on: true, tz: 'Asia/Shanghai' },
+    { name: 'Russia',       exch: 'MOEX',     sLocal: 10,   eLocal: 18.75, region: 'Europe',       on: true, tz: 'Europe/Moscow' },
+    { name: 'Hong Kong',    exch: 'HKEX',     sLocal: 9.5,  eLocal: 16,    region: 'Asia-Pacific',  on: true, tz: 'Asia/Hong_Kong' },
+    { name: 'UK',           exch: 'LSE',      sLocal: 8,    eLocal: 16.5,  region: 'Europe',       on: true, tz: 'Europe/London' },
+    { name: 'France',       exch: 'Euronext', sLocal: 9,    eLocal: 17.5,  region: 'Europe',       on: true, tz: 'Europe/Paris' },
+    { name: 'Germany',      exch: 'Xetra',    sLocal: 9,    eLocal: 17.5,  region: 'Europe',       on: true, tz: 'Europe/Berlin' },
+    { name: 'USA',          exch: 'NYSE',     sLocal: 9.5,  eLocal: 16,    region: 'Americas',     on: true, tz: 'America/New_York' },
 ];
 
 // Converts each session's local open/close into today's UTC hours using that
