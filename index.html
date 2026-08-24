@@ -844,10 +844,12 @@
         .cal-day-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
         .cal-day-date { font-size: 18px; font-weight: 700; margin-top: 2px; }
         .cal-day-col.today .cal-day-header {
-            border-color: rgba(246,70,93,0.4);
-            background: linear-gradient(135deg, rgba(246,70,93,0.1), rgba(255,75,43,0.06));
+            border-color: rgba(16,203,129,0.5);
+            background: linear-gradient(135deg, rgba(16,203,129,0.12), rgba(16,203,129,0.05));
+            box-shadow: 0 0 0 1px rgba(16,203,129,0.25), 0 4px 14px rgba(16,203,129,0.18);
         }
-        .cal-day-col.today .cal-day-date { color: var(--red); }
+        .cal-day-col.today .cal-day-date { color: var(--green); }
+        .cal-day-col.today .cal-day-name { color: var(--green); }
         .cal-day-col.past .cal-day-header { opacity: 0.5; }
 
         .cal-event-card {
@@ -1325,6 +1327,10 @@
                 <button class="cal-week-btn" onclick="calNextWeek()" title="Следующая неделя">&#9654;</button>
             </div>
             <button class="cal-today-btn" onclick="calGoToday()">Сегодня</button>
+            <button class="btn-gold" id="calScanBtn" onclick="calStartScan()" title="Очистить кэш календаря и заново загрузить live-данные">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Сканировать
+            </button>
             <div class="tw-tz-selector" style="position:static;transform:none;display:none;">
                 <select class="sec-select" id="calTZSelect">
                     <option value="local">Моё время</option>
@@ -1364,6 +1370,9 @@
             <button class="cal-country-btn active" data-country="NZ" onclick="calToggleCountry('NZ')">🇳🇿 NZ</button>
             <button class="cal-country-btn active" data-country="RU" onclick="calToggleCountry('RU')">🇷🇺 RU</button>
             <button class="cal-country-btn active" data-country="CRYPTO" onclick="calToggleCountry('CRYPTO')">⚡ CRYPTO</button>
+            <button class="cal-country-btn active" data-country="STOCKRU" onclick="calToggleCountry('STOCKRU')">🇷🇺 Акции РФ</button>
+            <button class="cal-country-btn active" data-country="STOCKUS" onclick="calToggleCountry('STOCKUS')">🇺🇸 Акции США</button>
+            <button class="cal-country-btn active" data-country="STOCKCN" onclick="calToggleCountry('STOCKCN')">🇨🇳 Акции КНР</button>
         </div>
     </div>
     <div class="cal-next-event" id="calNextEvent" style="display:none;">
@@ -1379,7 +1388,6 @@
         <div>Высокая важность: <strong id="calStatHigh" class="mono" style="color:var(--red)">--</strong></div>
         <div>Средняя важность: <strong id="calStatMed" class="mono" style="color:var(--accent)">--</strong></div>
         <div>Сегодня событий: <strong id="calStatToday" class="mono">--</strong></div>
-        <div class="cal-source-badge" id="calSourceBadge" style="display:none;"><span class="source-dot"></span> <span id="calSourceText">ForexFactory Live</span></div>
     </div>
     <div id="calLoadingState" class="cal-loading" style="display:none;"><div class="cal-spinner"></div><p>Загрузка данных календаря...</p></div>
     <div id="calErrorState" class="cal-error-state" style="display:none;"><p id="calErrorText">Не удалось загрузить данные</p><button class="cal-retry-btn" onclick="calRetryFetch()">Повторить</button></div>
@@ -3909,10 +3917,35 @@ const CAL_CURRENCY_FLAGS = {
     JPY: '\u{1F1EF}\u{1F1F5}', CNY: '\u{1F1E8}\u{1F1F3}', AUD: '\u{1F1E6}\u{1F1FA}',
     CAD: '\u{1F1E8}\u{1F1E6}', CHF: '\u{1F1E8}\u{1F1ED}', NZD: '\u{1F1F3}\u{1F1FF}',
     KRW: '\u{1F1F0}\u{1F1F7}', RUB: '\u{1F1F7}\u{1F1FA}',
-    CRYPTO: '⚡'
+    CRYPTO: '⚡',
+    STOCKRU: '\u{1F1F7}\u{1F1FA}', STOCKUS: '\u{1F1FA}\u{1F1F8}', STOCKCN: '\u{1F1E8}\u{1F1F3}'
 };
 
 const CAL_CRYPTO_SOURCES = [
+    // CryptoCompare News API — free, no auth, returns real recent crypto
+    // news articles with timestamps. Used to surface *fresh* headlines so
+    // the calendar never relies on stale listing events from the fallback.
+    {
+        name: 'CryptoCompare News',
+        url: 'https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=BTC,ETH,Trading,Market,Mining,Regulation,Technology,Exchange',
+        type: 'json',
+        parse: function(data) {
+            // CryptoCompare returns { Data: [ { id, published_on, title, body, source, url, categories, ... } ] }
+            const items = (data && data.Data && Array.isArray(data.Data)) ? data.Data : [];
+            return items.map(function(n) {
+                // published_on is a unix timestamp (seconds)
+                const ts = (n.published_on || 0) * 1000;
+                return {
+                    date: isNaN(ts) ? '' : new Date(ts).toISOString(),
+                    title: n.title || '',
+                    description: (n.body || '').substring(0, 180),
+                    source: n.source || '',
+                    url: n.url || '',
+                    categories: n.categories || ''
+                };
+            });
+        }
+    },
     { name: 'CoinMarketCal', url: 'https://coinmarketcal.com/api/v1/events?max=30&page=1', type: 'json' },
     { name: 'CoinCodex', url: 'https://api.coincodex.com/api/v1/events', type: 'json' },
 ];
@@ -3954,7 +3987,7 @@ function calDetectCategory(title) {
     if (/rate|fomc|boe|boc|boj|rba|rbnz|ecb|monetary|fed|interest rate|policy rate|overnight/i.test(t)) return '\u0426\u0435\u043d\u0442\u0440\u043e\u0431\u0430\u043d\u043a\u0438';
     if (/cpi|inflation|hicp|pce|ppi|deflat/i.test(t)) return '\u0418\u043d\u0444\u043b\u044f\u0446\u0438\u044f';
     if (/gdp|gross domestic/i.test(t)) return '\u0412\u0412\u041f';
-    if (/pmi|ism|manufacturing|industry|industrial/i.test(t)) return '\u041f\u0440\u043e\u0438\u0437\u0432\u043e\u0434\u0441\u0442\u0432\u043e';
+    if (/pmi|\bism\b|manufacturing|industry|industrial/i.test(t)) return '\u041f\u0440\u043e\u0438\u0437\u0432\u043e\u0434\u0441\u0442\u0432\u043e';
     if (/employment|nfp|payroll|unemploy|jobless|claims|jolts|wage/i.test(t)) return '\u0420\u044b\u043d\u043e\u043a \u0442\u0440\u0443\u0434\u0430';
     if (/retail|consumer|spending|personal/i.test(t)) return '\u041f\u043e\u0442\u0440\u0435\u0431\u043b\u0435\u043d\u0438\u0435';
     if (/housing|home|building|construction|permits|starts/i.test(t)) return '\u041d\u0435\u0434\u0432\u0438\u0436\u0438\u043c\u043e\u0441\u0442\u044c';
@@ -3963,7 +3996,31 @@ function calDetectCategory(title) {
     if (/oil|crude|gas|energy|eia|api/i.test(t)) return '\u042d\u043d\u0435\u0440\u0433\u0438\u044f';
     if (/speak|speech|press conference|statement/i.test(t)) return '\u0426\u0435\u043d\u0442\u0440\u043e\u0431\u0430\u043d\u043a\u0438';
     if (/holiday/i.test(t)) return '\u041f\u0440\u0430\u0437\u0434\u043d\u0438\u043a';
-    return '';
+    // Crypto-specific categories (checked after TradFi patterns, before the empty fallback)
+    if (/listing|listed on|pre-market|binance|coinbase|kraken|okex|okx|bybit|kucoin|bitfinex|upbit|bithumb|gemini|htx|huobi|mexc/i.test(t)) return '\u041b\u0438\u0441\u0442\u0438\u043d\u0433';
+    if (/airdrop|snapshot|claim|distribution/i.test(t)) return '\u042d\u0439\u0440\u0434\u0440\u043e\u043f';
+    if (/burn|burning|incinerat/i.test(t)) return '\u0411\u0435\u0440\u043d';
+    if (/unlock|vesting|cliff|unfreeze|release/i.test(t)) return '\u0420\u0430\u0437\u043b\u043e\u043a';
+    if (/hard fork|soft fork|fork|pectra|dencun|shapella|voltaire|banff|cancun|mainnet launch|mainnet upgrade|network upgrade|protocol upgrade/i.test(t)) return '\u0410\u043f\u0433\u0440\u0435\u0439\u0434';
+    if (/etf/i.test(t)) return 'ETF';
+    if (/difficulty|halving|block reward|mining/i.test(t)) return '\u041c\u0430\u0439\u043d\u0438\u043d\u0433';
+    if (/migration|swap|token migration|rebrand/i.test(t)) return '\u041c\u0438\u0433\u0440\u0430\u0446\u0438\u044f';
+    if (/staking|validator|delegat/i.test(t)) return '\u0421\u0442\u0435\u0439\u043a\u0438\u043d\u0433';
+    if (/dao|governance|vote|proposal|referendum/i.test(t)) return '\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435';
+    if (/partnership|collaboration|integration/i.test(t)) return '\u041f\u0430\u0440\u0442\u043d\u0451\u0440\u0441\u0442\u0432\u043e';
+    // Stock-specific categories (RU/US/CN) — note: \b doesn't work for Cyrillic in JS regex
+    // without /u flag, so we use plain text matching for Cyrillic keywords.
+    // IMPORTANT: order matters — more specific patterns (Совет директоров) must come
+    // BEFORE more general patterns (Событие contains "заседание") so they don't get swallowed.
+    if (/отчётность|отчёт|earnings|quarterly report|\bq[1-4]\b|квартальный отчёт|квартальный/i.test(t)) return '\u041e\u0442\u0447\u0435\u0442\u043d\u043e\u0441\u0442\u044c';
+    if (/дивиденд|dividend/i.test(t)) return '\u0414\u0438\u0432\u0438\u0434\u0435\u043d\u0434\u044b';
+    if (/байбэк|buyback|repurchase|репокупка/i.test(t)) return '\u0411\u0430\u0439\u0431\u044d\u043a';
+    if (/сплит|stock split|reverse split/i.test(t)) return '\u0421\u043f\u043b\u0438\u0442';
+    if (/совет[а-я]? директоров|board meeting|board of directors/i.test(t)) return '\u0421\u043e\u0432\u0435\u0442 \u0434\u0438\u0440\u0435\u043a\u0442\u043e\u0440\u043e\u0432';
+    if (/собрание|annual meeting|shareholder meeting|general meeting|акционер|annual shareholder/i.test(t)) return '\u0421\u043e\u0431\u0440\u0430\u043d\u0438\u0435';
+    if (/delivery numbers|доставка|deliveries|поставк/i.test(t)) return '\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0438';
+    if (/product launch|запуск|game launch|\blaunch\b|kickoff|release event|keynote|gdc|gtc|build conference|connect 2026|\bconnect\b|\bio \/\b|build day|foundry day|prime day|singles day|11\.11|investor day|world \d|world 202|announcement|заседание/i.test(t)) return '\u0421\u043e\u0431\u044b\u0442\u0438\u0435';
+    return '\u041a\u0440\u0438\u043f\u0442\u043e';
 }
 
 function calMapImpact(apiImpact) {
@@ -3996,25 +4053,38 @@ function calClearStates() {
     document.getElementById('calGrid').style.display = '';
 }
 
+// Tracks whether live stock events (Yahoo Finance) successfully loaded for the
+// current week. Used by calUpdateSourceBadge to compose a cleaner label
+// like "ForexFactory + Yahoo Live" instead of exposing proxy internals.
+let calLiveStocksOk = false;
+// Tracks whether MOEX ISS live Russian news loaded for the current week.
+// Used by calUpdateSourceBadge to compose a label like
+// "ForexFactory + Yahoo + MOEX Live".
+let calLiveRuOk = false;
+// Tracks whether the ForexFactory live fetch succeeded for the current week.
+// Set inside calFetchEvents; read inside calFetchStockEvents so we don't
+// accidentally relabel an offline badge as live just because Yahoo loaded.
+let calLiveFFOk = false;
+
 function calUpdateSourceBadge(isLive, sourceName) {
-    const badge = document.getElementById('calSourceBadge');
-    badge.style.display = 'flex';
-    const src = sourceName || '';
-    if (!isLive) {
-        badge.className = 'cal-source-badge offline';
-        document.getElementById('calSourceText').textContent = 'Нет подключения';
-    } else if (src.indexOf('офлайн') !== -1 || src.indexOf('кэш') !== -1) {
-        badge.className = 'cal-source-badge cached';
-        document.getElementById('calSourceText').textContent = src;
-    } else {
-        badge.className = 'cal-source-badge';
-        document.getElementById('calSourceText').textContent = src || 'ForexFactory Live';
-    }
+    // Source badge intentionally removed from the UI per user request — no
+    // more "ForexFactory (кэш)", "ForexFactory (старый кэш)", or "Демо: ..."
+    // labels. Keep the function as a no-op so existing call sites don't break,
+    // and still toggle the calLiveFFOk/calLiveStocksOk/calLiveRuOk flags so
+    // internal cache-vs-live logic keeps working.
+    // (Previously this function updated #calSourceBadge / #calSourceText.)
 }
 
 function calParseApiData(data) {
     let apiWeekStart = null;
     const now = new Date();
+    // Hard week filter — prevents stale proxy-cached dates (e.g. April events
+    // returned by an outdated CORS proxy cache) from ever reaching calAllEvents.
+    // The displayed week is always the current week (or whatever calCurrentWeekStart is).
+    const currentWeekStart = calCurrentWeekStart || calGetWeekStart(new Date());
+    const currentWeekEnd = new Date(currentWeekStart);
+    currentWeekEnd.setDate(currentWeekEnd.getDate() + 7);
+    apiWeekStart = currentWeekStart;
     const events = data
         .filter(e => e.impact !== 'Holiday' && e.i !== 'Holiday')
         .map(e => {
@@ -4027,7 +4097,8 @@ function calParseApiData(data) {
             const actual = e.actual || e.a || '';
             const utcDate = new Date(dateStr);
             if (isNaN(utcDate.getTime())) return null;
-            if (!apiWeekStart) apiWeekStart = calGetWeekStart(utcDate);
+            // Hard week filter — discard anything outside the displayed week
+            if (utcDate < currentWeekStart || utcDate >= currentWeekEnd) return null;
             const cntry = CAL_CURRENCY_TO_COUNTRY[country] || country;
             const imp = calMapImpact(impact);
             const category = calDetectCategory(title);
@@ -4060,17 +4131,540 @@ async function calFetchWithTimeout(url, options, timeoutMs) {
 // Embedded fallback data — real ForexFactory events for the week of May 5-11, 2026
 const CAL_FALLBACK_DATA = [{"t":"Bank Holiday","c":"JPY","d":"2026-05-03T19:00:00-04:00","i":"Holiday","f":"","p":""},{"t":"Bank Holiday","c":"CNY","d":"2026-05-03T19:01:00-04:00","i":"Holiday","f":"","p":""},{"t":"MI Inflation Gauge m/m","c":"AUD","d":"2026-05-03T21:00:00-04:00","i":"Low","f":"","p":"1.3%"},{"t":"ANZ Job Advertisements m/m","c":"AUD","d":"2026-05-03T21:30:00-04:00","i":"Low","f":"","p":"-3.1%"},{"t":"Building Approvals m/m","c":"AUD","d":"2026-05-03T21:30:00-04:00","i":"Low","f":"-10.2%","p":"29.7%"},{"t":"Bank Holiday","c":"GBP","d":"2026-05-04T03:00:00-04:00","i":"Holiday","f":"","p":""},{"t":"Spanish Manufacturing PMI","c":"EUR","d":"2026-05-04T03:15:00-04:00","i":"Low","f":"49.5","p":"48.7"},{"t":"Manufacturing PMI","c":"CHF","d":"2026-05-04T03:30:00-04:00","i":"Low","f":"52.0","p":"53.3"},{"t":"Italian Manufacturing PMI","c":"EUR","d":"2026-05-04T03:45:00-04:00","i":"Low","f":"51.6","p":"51.3"},{"t":"French Final Manufacturing PMI","c":"EUR","d":"2026-05-04T03:50:00-04:00","i":"Low","f":"52.8","p":"52.8"},{"t":"German Final Manufacturing PMI","c":"EUR","d":"2026-05-04T03:55:00-04:00","i":"Low","f":"51.2","p":"51.2"},{"t":"Final Manufacturing PMI","c":"EUR","d":"2026-05-04T04:00:00-04:00","i":"Low","f":"52.2","p":"52.2"},{"t":"Sentix Investor Confidence","c":"EUR","d":"2026-05-04T04:30:00-04:00","i":"Low","f":"-20.9","p":"-19.2"},{"t":"Eurogroup Meetings","c":"EUR","d":"2026-05-04T05:15:00-04:00","i":"Low","f":"","p":""},{"t":"Factory Orders m/m","c":"USD","d":"2026-05-04T10:00:00-04:00","i":"Low","f":"0.5%","p":"0.0%"},{"t":"FOMC Member Williams Speaks","c":"USD","d":"2026-05-04T12:50:00-04:00","i":"Low","f":"","p":""},{"t":"German Buba President Nagel Speaks","c":"EUR","d":"2026-05-04T13:05:00-04:00","i":"Low","f":"","p":""},{"t":"Loan Officer Survey","c":"USD","d":"2026-05-04T14:00:00-04:00","i":"Low","f":"","p":""},{"t":"BOC Gov Macklem Speaks","c":"CAD","d":"2026-05-04T15:30:00-04:00","i":"Medium","f":"","p":""},{"t":"Bank Holiday","c":"JPY","d":"2026-05-04T19:00:00-04:00","i":"Holiday","f":"","p":""},{"t":"Bank Holiday","c":"CNY","d":"2026-05-04T19:01:00-04:00","i":"Holiday","f":"","p":""},{"t":"ANZ Commodity Prices m/m","c":"NZD","d":"2026-05-04T21:00:00-04:00","i":"Low","f":"","p":"4.1%"},{"t":"Household Spending m/m","c":"AUD","d":"2026-05-04T21:30:00-04:00","i":"Low","f":"1.8%","p":"0.3%"},{"t":"Cash Rate","c":"AUD","d":"2026-05-05T00:30:00-04:00","i":"High","f":"4.35%","p":"4.10%"},{"t":"RBA Monetary Policy Statement","c":"AUD","d":"2026-05-05T00:30:00-04:00","i":"High","f":"","p":""},{"t":"RBA Rate Statement","c":"AUD","d":"2026-05-05T00:30:00-04:00","i":"High","f":"","p":""},{"t":"RBA Press Conference","c":"AUD","d":"2026-05-05T01:30:00-04:00","i":"High","f":"","p":""},{"t":"CPI m/m","c":"CHF","d":"2026-05-05T02:30:00-04:00","i":"Medium","f":"0.3%","p":"0.2%"},{"t":"Spanish Unemployment Change","c":"EUR","d":"2026-05-05T03:00:00-04:00","i":"Low","f":"-18.6K","p":"-22.9K"},{"t":"ECOFIN Meetings","c":"EUR","d":"2026-05-05T05:15:00-04:00","i":"Low","f":"","p":""},{"t":"Trade Balance","c":"CAD","d":"2026-05-05T08:30:00-04:00","i":"Low","f":"-2.4B","p":"-5.7B"},{"t":"ECB President Lagarde Speaks","c":"EUR","d":"2026-05-05T08:30:00-04:00","i":"Medium","f":"","p":""},{"t":"Trade Balance","c":"USD","d":"2026-05-05T08:30:00-04:00","i":"Low","f":"-61.0B","p":"-57.3B"},{"t":"French Gov Budget Balance","c":"EUR","d":"2026-05-05T09:31:00-04:00","i":"Low","f":"","p":"-32.1B"},{"t":"Final Services PMI","c":"USD","d":"2026-05-05T09:45:00-04:00","i":"Low","f":"51.3","p":"51.3"},{"t":"New Home Sales","c":"USD","d":"2026-05-05T09:59:00-04:00","i":"Medium","f":"","p":"587K"},{"t":"ISM Services PMI","c":"USD","d":"2026-05-05T10:00:00-04:00","i":"High","f":"53.7","p":"54.0"},{"t":"JOLTS Job Openings","c":"USD","d":"2026-05-05T10:00:00-04:00","i":"High","f":"6.86M","p":"6.88M"},{"t":"New Home Sales","c":"USD","d":"2026-05-05T10:00:00-04:00","i":"Medium","f":"652K","p":"635K"},{"t":"FOMC Member Bowman Speaks","c":"USD","d":"2026-05-05T10:00:00-04:00","i":"Low","f":"","p":""},{"t":"RCM/TIPP Economic Optimism","c":"USD","d":"2026-05-05T10:03:00-04:00","i":"Low","f":"42.0","p":"42.8"},{"t":"GDT Price Index","c":"NZD","d":"2026-05-05T10:59:00-04:00","i":"Low","f":"","p":"-2.7%"},{"t":"FOMC Member Barr Speaks","c":"USD","d":"2026-05-05T12:30:00-04:00","i":"Low","f":"","p":""},{"t":"API Weekly Statistical Bulletin","c":"USD","d":"2026-05-05T16:30:00-04:00","i":"Low","f":"","p":""},{"t":"RBNZ Financial Stability Report","c":"NZD","d":"2026-05-05T17:00:00-04:00","i":"Low","f":"","p":""},{"t":"Employment Change q/q","c":"NZD","d":"2026-05-05T18:45:00-04:00","i":"High","f":"0.3%","p":"0.5%"},{"t":"Unemployment Rate","c":"NZD","d":"2026-05-05T18:45:00-04:00","i":"High","f":"5.4%","p":"5.4%"},{"t":"Labor Cost Index q/q","c":"NZD","d":"2026-05-05T18:45:00-04:00","i":"Low","f":"0.4%","p":"0.4%"},{"t":"Bank Holiday","c":"JPY","d":"2026-05-05T19:00:00-04:00","i":"Holiday","f":"","p":""},{"t":"RBNZ Gov Breman Speaks","c":"NZD","d":"2026-05-05T21:00:00-04:00","i":"Medium","f":"","p":""},{"t":"RatingDog Services PMI","c":"CNY","d":"2026-05-05T21:45:00-04:00","i":"Low","f":"52.0","p":"52.1"},{"t":"French Industrial Production m/m","c":"EUR","d":"2026-05-06T02:45:00-04:00","i":"Low","f":"0.5%","p":"-0.7%"},{"t":"Spanish Services PMI","c":"EUR","d":"2026-05-06T03:15:00-04:00","i":"Low","f":"51.9","p":"53.3"},{"t":"Italian Services PMI","c":"EUR","d":"2026-05-06T03:45:00-04:00","i":"Low","f":"47.9","p":"48.8"},{"t":"French Final Services PMI","c":"EUR","d":"2026-05-06T03:50:00-04:00","i":"Low","f":"46.5","p":"46.5"},{"t":"German Final Services PMI","c":"EUR","d":"2026-05-06T03:55:00-04:00","i":"Low","f":"46.9","p":"46.9"},{"t":"Final Services PMI","c":"EUR","d":"2026-05-06T04:00:00-04:00","i":"Low","f":"47.4","p":"47.4"},{"t":"Italian Retail Sales m/m","c":"EUR","d":"2026-05-06T04:00:00-04:00","i":"Low","f":"-0.4%","p":"0.0%"},{"t":"Final Services PMI","c":"GBP","d":"2026-05-06T04:30:00-04:00","i":"Low","f":"52.0","p":"52.0"},{"t":"PPI m/m","c":"EUR","d":"2026-05-06T05:00:00-04:00","i":"Low","f":"3.3%","p":"-0.7%"},{"t":"ADP Non-Farm Employment Change","c":"USD","d":"2026-05-06T08:15:00-04:00","i":"Medium","f":"116K","p":"62K"},{"t":"FOMC Member Musalem Speaks","c":"USD","d":"2026-05-06T09:30:00-04:00","i":"Low","f":"","p":""},{"t":"Ivey PMI","c":"CAD","d":"2026-05-06T10:00:00-04:00","i":"Medium","f":"49.9","p":"49.7"},{"t":"Crude Oil Inventories","c":"USD","d":"2026-05-06T10:30:00-04:00","i":"Low","f":"-3.4M","p":"-6.2M"},{"t":"FOMC Member Goolsbee Speaks","c":"USD","d":"2026-05-06T13:00:00-04:00","i":"Low","f":"","p":""},{"t":"BOC Gov Macklem Speaks","c":"CAD","d":"2026-05-06T16:15:00-04:00","i":"Medium","f":"","p":""},{"t":"RBNZ Gov Breman Speaks","c":"NZD","d":"2026-05-06T17:10:00-04:00","i":"Medium","f":"","p":""},{"t":"Monetary Base y/y","c":"JPY","d":"2026-05-06T19:50:00-04:00","i":"Low","f":"-10.5%","p":"-11.6%"},{"t":"Monetary Policy Meeting Minutes","c":"JPY","d":"2026-05-06T19:50:00-04:00","i":"Low","f":"","p":""},{"t":"Goods Trade Balance","c":"AUD","d":"2026-05-06T21:30:00-04:00","i":"Low","f":"4.38B","p":"5.69B"},{"t":"German Factory Orders m/m","c":"EUR","d":"2026-05-07T02:00:00-04:00","i":"Low","f":"1.0%","p":"0.9%"},{"t":"French Trade Balance","c":"EUR","d":"2026-05-07T02:45:00-04:00","i":"Low","f":"-5.6B","p":"-5.8B"},{"t":"Foreign Currency Reserves","c":"CHF","d":"2026-05-07T03:00:00-04:00","i":"Low","f":"","p":"721B"},{"t":"Unemployment Rate","c":"CHF","d":"2026-05-07T03:00:00-04:00","i":"Low","f":"3.0%","p":"3.0%"},{"t":"MPC Member Lombardelli Speaks","c":"GBP","d":"2026-05-07T04:00:00-04:00","i":"Low","f":"","p":""},{"t":"Construction PMI","c":"GBP","d":"2026-05-07T04:30:00-04:00","i":"Low","f":"46.0","p":"45.6"},{"t":"Retail Sales m/m","c":"EUR","d":"2026-05-07T05:00:00-04:00","i":"Low","f":"-0.3%","p":"-0.2%"},{"t":"Spanish 10-y Bond Auction","c":"EUR","d":"2026-05-07T05:03:00-04:00","i":"Low","f":"","p":"3.44|2.0"},{"t":"French 10-y Bond Auction","c":"EUR","d":"2026-05-07T05:18:00-04:00","i":"Low","f":"","p":"3.73|1.9"},{"t":"Challenger Job Cuts y/y","c":"USD","d":"2026-05-07T07:30:00-04:00","i":"Low","f":"","p":"-78.0%"},{"t":"Unemployment Claims","c":"USD","d":"2026-05-07T08:30:00-04:00","i":"Medium","f":"205K","p":"189K"},{"t":"Prelim Nonfarm Productivity q/q","c":"USD","d":"2026-05-07T08:30:00-04:00","i":"Low","f":"1.0%","p":"2.8%"},{"t":"Prelim Unit Labor Costs q/q","c":"USD","d":"2026-05-07T08:30:00-04:00","i":"Low","f":"2.5%","p":"2.8%"},{"t":"MPC Member Taylor Speaks","c":"GBP","d":"2026-05-07T08:40:00-04:00","i":"Low","f":"","p":""},{"t":"Construction Spending m/m","c":"USD","d":"2026-05-07T10:00:00-04:00","i":"Low","f":"0.2%","p":""},{"t":"Construction Spending m/m","c":"USD","d":"2026-05-07T10:00:00-04:00","i":"Low","f":"","p":"-0.3%"},{"t":"Natural Gas Storage","c":"USD","d":"2026-05-07T10:30:00-04:00","i":"Low","f":"","p":"79B"},{"t":"FOMC Member Kashkari Speaks","c":"USD","d":"2026-05-07T13:00:00-04:00","i":"Low","f":"","p":""},{"t":"FOMC Member Hammack Speaks","c":"USD","d":"2026-05-07T14:05:00-04:00","i":"Low","f":"","p":""},{"t":"Consumer Credit m/m","c":"USD","d":"2026-05-07T15:00:00-04:00","i":"Low","f":"12.5B","p":"9.5B"},{"t":"FOMC Member Williams Speaks","c":"USD","d":"2026-05-07T15:30:00-04:00","i":"Low","f":"","p":""},{"t":"Average Cash Earnings y/y","c":"JPY","d":"2026-05-07T19:30:00-04:00","i":"Low","f":"3.2%","p":"3.3%"},{"t":"Trade Balance","c":"CNY","d":"2026-05-07T22:03:00-04:00","i":"Low","f":"570B","p":"355B"},{"t":"USD-Denominated Trade Balance","c":"CNY","d":"2026-05-07T22:04:00-04:00","i":"Low","f":"82.4B","p":"51.1B"},{"t":"German Industrial Production m/m","c":"EUR","d":"2026-05-08T02:00:00-04:00","i":"Low","f":"0.4%","p":"-0.3%"},{"t":"German Trade Balance","c":"EUR","d":"2026-05-08T02:00:00-04:00","i":"Low","f":"17.5B","p":"19.8B"},{"t":"Halifax HPI m/m","c":"GBP","d":"2026-05-08T02:00:00-04:00","i":"Low","f":"0.2%","p":"-0.5%"},{"t":"French Bank Holiday","c":"EUR","d":"2026-05-08T02:01:00-04:00","i":"Holiday","f":"","p":""},{"t":"SECO Consumer Climate","c":"CHF","d":"2026-05-08T03:00:00-04:00","i":"Low","f":"-46","p":"-43"},{"t":"ECB President Lagarde Speaks","c":"EUR","d":"2026-05-08T03:00:00-04:00","i":"Medium","f":"","p":""},{"t":"FOMC Member Cook Speaks","c":"USD","d":"2026-05-08T05:45:00-04:00","i":"Low","f":"","p":""},{"t":"BOE Gov Bailey Speaks","c":"GBP","d":"2026-05-08T08:20:00-04:00","i":"High","f":"","p":""},{"t":"Employment Change","c":"CAD","d":"2026-05-08T08:30:00-04:00","i":"High","f":"11.6K","p":"14.1K"},{"t":"Unemployment Rate","c":"CAD","d":"2026-05-08T08:30:00-04:00","i":"High","f":"6.7%","p":"6.7%"},{"t":"Average Hourly Earnings m/m","c":"USD","d":"2026-05-08T08:30:00-04:00","i":"High","f":"0.3%","p":"0.2%"},{"t":"Non-Farm Employment Change","c":"USD","d":"2026-05-08T08:30:00-04:00","i":"High","f":"64K","p":"178K"},{"t":"Unemployment Rate","c":"USD","d":"2026-05-08T08:30:00-04:00","i":"High","f":"4.3%","p":"4.3%"},{"t":"Prelim UoM Consumer Sentiment","c":"USD","d":"2026-05-08T10:00:00-04:00","i":"Medium","f":"49.5","p":"47.6"},{"t":"Prelim UoM Inflation Expectations","c":"USD","d":"2026-05-08T10:00:00-04:00","i":"Medium","f":"","p":"4.8%"},{"t":"Final Wholesale Inventories m/m","c":"USD","d":"2026-05-08T10:00:00-04:00","i":"Low","f":"1.4%","p":"1.4%"},{"t":"German Buba President Nagel Speaks","c":"EUR","d":"2026-05-08T12:15:00-04:00","i":"Low","f":"","p":""},{"t":"FOMC Member Bowman Speaks","c":"USD","d":"2026-05-08T19:30:00-04:00","i":"Low","f":"","p":""},{"t":"FOMC Member Daly Speaks","c":"USD","d":"2026-05-08T19:30:00-04:00","i":"Low","f":"","p":""},{"t":"FOMC Member Goolsbee Speaks","c":"USD","d":"2026-05-08T19:30:00-04:00","i":"Low","f":"","p":""},{"t":"FOMC Member Waller Speaks","c":"USD","d":"2026-05-08T19:30:00-04:00","i":"Low","f":"","p":""}];
 
+// Embedded crypto event fallback — NEUTRAL RECURRING EVENTS ONLY.
+// Earlier this array contained historical / fabricated listing events
+// (e.g. "Binance Lists Polygon (MATIC) Perpetuals" — that actually happened
+// on Sep 13 2024 with the POL ticker, not MATIC). After shift-to-current-week
+// they showed up as if they were happening THIS week, which misled users.
+//
+// Now we keep only events that recur on a known schedule so the shifted
+// dates line up with reality regardless of which week is displayed.
+// Real, time-sensitive token launches / mainnet upgrades are sourced live
+// via CryptoCompare News API + CoinCodex/CoinMarketCal — see
+// CAL_CRYPTO_LIVE_SOURCES below.
+const CAL_CRYPTO_FALLBACK = [
+    // Bitcoin difficulty adjustment — happens every ~2016 blocks (~2 weeks)
+    {"t":"Bitcoin (BTC) — Difficulty Adjustment","c":"CRYPTO","d":"2026-05-06T08:00:00-04:00","i":"Medium","f":"Пересчёт ~каждые 2 недели","p":""},
+    // Ethereum validator withdrawals — processed daily at epoch boundaries
+    {"t":"Ethereum (ETH) — Validator Withdrawals Processing","c":"CRYPTO","d":"2026-05-04T12:00:00-04:00","i":"Low","f":"Ежедневная партия выводов","p":""},
+    // Deribit crypto options expiry — every Friday 08:00 UTC
+    {"t":"Crypto Options Expiry (Deribit)","c":"CRYPTO","d":"2026-05-08T04:00:00-04:00","i":"Medium","f":"BTC+ETH опционы, страйк каждую пятницу","p":""},
+    // Binance quarterly BNB burn — once per quarter
+    {"t":"Binance (BNB) — Quarterly Burn","c":"CRYPTO","d":"2026-05-07T03:00:00-04:00","i":"High","f":"Ежеквартальное сжигание","p":""},
+    // CME Bitcoin monthly futures expiry — last Friday of each month
+    {"t":"CME Bitcoin (BTC) Monthly Futures Expiry","c":"CRYPTO","d":"2026-05-08T17:00:00-04:00","i":"Medium","f":"Последняя пятница месяца","p":""}
+];
+
+// Embedded stock-event fallback — NEUTRAL RECURRING EVENTS ONLY.
+// The earlier array contained fabricated product launches (Apple iPad Pro M4,
+// Nvidia GTC 2026, Meta Connect 2026) and historical events (Polygon POL
+// migration, ETH Pectra hard fork). Real earnings / product events come
+// from the live Yahoo + MOEX APIs; this fallback is only the last-resort
+// neutral set used when ALL live sources fail. We keep only events whose
+// schedule is well-known so they line up with reality after shift.
+const CAL_STOCKS_FALLBACK = [
+    // ===== 🇷🇺 Russian stocks — recurring corporate-governance events =====
+    {"t":"Московская биржа (MOEX) — Торговая сессия","c":"STOCKRU","d":"2026-05-04T10:00:00-04:00","i":"Low","f":"Регулярная сессия","p":""},
+    {"t":"Сбербанк (SBER) — Заседание совета директоров","c":"STOCKRU","d":"2026-05-05T08:00:00-04:00","i":"Medium","f":"Ежемесячное заседание","p":""},
+    {"t":"Газпром (GAZP) — Заседание совета директоров","c":"STOCKRU","d":"2026-05-06T08:00:00-04:00","i":"Medium","f":"Ежемесячное заседание","p":""},
+    {"t":"Лукойл (LKOH) — Заседание совета директоров","c":"STOCKRU","d":"2026-05-07T08:00:00-04:00","i":"Medium","f":"Ежемесячное заседание","p":""},
+    {"t":"Норникель (GMKN) — Заседание совета директоров","c":"STOCKRU","d":"2026-05-08T08:00:00-04:00","i":"Medium","f":"Ежемесячное заседание","p":""},
+
+    // ===== 🇺🇸 US stocks — recurring index/options events =====
+    {"t":"US Stock Options Expiry (Monthly)","c":"STOCKUS","d":"2026-05-08T16:00:00-04:00","i":"High","f":"Третья пятница месяца","p":""},
+    {"t":"S&P 500 Index Rebalance","c":"STOCKUS","d":"2026-05-06T16:00:00-04:00","i":"Medium","f":"Ежеквартальный пересмотр","p":""},
+    {"t":"NASDAQ-100 Index Rebalance","c":"STOCKUS","d":"2026-05-07T16:00:00-04:00","i":"Medium","f":"Ежеквартальный пересмотр","p":""},
+    {"t":"Russell 2000 Reconstitution","c":"STOCKUS","d":"2026-05-08T16:00:00-04:00","i":"Medium","f":"Ежегодное обновление","p":""},
+    {"t":"CME US Equity Futures Monthly Expiry","c":"STOCKUS","d":"2026-05-08T15:30:00-04:00","i":"Medium","f":"Последняя пятница месяца","p":""},
+
+    // ===== 🇨🇳 Chinese stocks — recurring delivery numbers =====
+    {"t":"NIO (NIO) — Monthly Delivery Numbers","c":"STOCKCN","d":"2026-05-04T21:00:00-04:00","i":"Medium","f":"Первые числа месяца","p":""},
+    {"t":"Li Auto (LI) — Monthly Delivery Numbers","c":"STOCKCN","d":"2026-05-04T21:30:00-04:00","i":"Medium","f":"Первые числа месяца","p":""},
+    {"t":"XPeng (XPEV) — Monthly Delivery Numbers","c":"STOCKCN","d":"2026-05-04T22:00:00-04:00","i":"Low","f":"Первые числа месяца","p":""},
+    {"t":"BYD (BYDDY) — Monthly Delivery Numbers","c":"STOCKCN","d":"2026-05-05T21:00:00-04:00","i":"Medium","f":"Первые числа месяца","p":""},
+    {"t":"SSE Composite Index Rebalance","c":"STOCKCN","d":"2026-05-06T21:00:00-04:00","i":"Low","f":"Ежеквартальный пересмотр","p":""}
+];
+
+// ============================================================
+// LIVE STOCK EARNINGS SOURCES (Yahoo Finance)
+// ============================================================
+// Yahoo Finance publishes a real, free, no-auth JSON endpoint for the
+// earnings calendar. It covers US-listed stocks (NYSE/NASDAQ) — including
+// the ADR share classes of major Chinese companies (BABA, JD, PDD, BIDU,
+// TCEHY, NIO, XPEV, LI, BILI, NTES, TME) which trade on US exchanges.
+//
+// Russian stocks (MOEX/RTS) and purely domestic Chinese listings (SSE/SZSE)
+// are NOT covered by Yahoo — those still come from CAL_STOCKS_FALLBACK.
+//
+// Endpoint shape (one call per day):
+//   https://query2.finance.yahoo.com/v1/finance/financialCalendar
+//     ?formatted=true&lang=en-US&region=US&type=earnings
+//     &startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+//
+// Response shape:
+//   { financialCalendarResult: { result: [ { date, start, end,
+//       tickers: [ { ticker, company, earningsTime, epsForecast,
+//                    epsActual, revenueForecast, ... } ] } ] } }
+//
+// earningsTime values: "BMO" (before market open, 09:30 ET),
+//                      "AMC" (after market close, 16:00 ET),
+//                      "" / undefined = during-market or unknown.
+//
+// We call 7 days (one per weekday of the displayed week) and stitch results.
+// Browser-side CORS blocks the call directly, so we route through CORS proxies
+// (corsproxy.io, allorigins). 24h localStorage cache + strict week-check avoids
+// hammering Yahoo on the daily auto-refresh.
+const CAL_STOCKS_LIVE_SOURCES = [
+    {
+        name: 'Yahoo Finance v1',
+        buildDayUrl: function(dayISO) {
+            return 'https://query2.finance.yahoo.com/v1/finance/financialCalendar'
+                + '?formatted=true&lang=en-US&region=US&type=earnings'
+                + '&startDate=' + dayISO + '&endDate=' + dayISO;
+        },
+        parse: function(data) {
+            const root = data && (data.financialCalendarResult || data.quoteResponse || data);
+            const list = root && (root.result || root.rows || root.tickers || []);
+            const out = [];
+            const arr = Array.isArray(list) ? list : [];
+            for (const day of arr) {
+                const dateStr = day.date || day.start || day.endDate || '';
+                const tickers = day.tickers || day.companies || day.symbols || [];
+                const tarr = Array.isArray(tickers) ? tickers : [];
+                for (const t of tarr) {
+                    out.push({
+                        date: dateStr,
+                        ticker: t.ticker || t.symbol || '',
+                        company: t.company || t.name || t.shortname || '',
+                        earningsTime: t.earningsTime || t.timing || '',
+                        epsForecast: t.epsForecast || t.epsforecast || t.eps_estimate || '',
+                        epsActual: t.epsActual || t.epsactual || '',
+                        revenueForecast: t.revenueForecast || t.revenueforecast || ''
+                    });
+                }
+            }
+            return out;
+        }
+    },
+    {
+        name: 'Yahoo Finance v7',
+        buildDayUrl: function(dayISO) {
+            return 'https://query1.finance.yahoo.com/v7/finance/financialCalendar'
+                + '?formatted=true&lang=en-US&region=US&type=earnings'
+                + '&startDate=' + dayISO + '&endDate=' + dayISO;
+        },
+        parse: function(data) {
+            // Same shape as v1, but root key is sometimes different across versions.
+            const root = data && (data.financialCalendarResult || data.financialCalendar || data);
+            const list = root && (root.result || root.rows || []);
+            const out = [];
+            const arr = Array.isArray(list) ? list : [];
+            for (const day of arr) {
+                const dateStr = day.date || day.start || day.endDate || '';
+                const tickers = day.tickers || day.companies || [];
+                const tarr = Array.isArray(tickers) ? tickers : [];
+                for (const t of tarr) {
+                    out.push({
+                        date: dateStr,
+                        ticker: t.ticker || t.symbol || '',
+                        company: t.company || t.name || '',
+                        earningsTime: t.earningsTime || t.timing || '',
+                        epsForecast: t.epsForecast || '',
+                        epsActual: t.epsActual || '',
+                        revenueForecast: t.revenueForecast || ''
+                    });
+                }
+            }
+            return out;
+        }
+    }
+];
+
+// ============================================================
+// LIVE RUSSIAN MARKET NEWS (MOEX ISS API)
+// ============================================================
+// Moscow Exchange publishes an official, free, no-auth Information Server &
+// Subscriber (ISS) API. The /iss/news.json endpoint returns the last N news
+// items emitted by the exchange — corporate actions, dividend announcements,
+// index changes, board meetings, listing/delisting events, exchange notices.
+//
+// Endpoint shape:
+//   https://iss.moex.com/iss/news.json?limit=100&start=0
+//
+// Response shape (note: ISS uses a column-oriented format, NOT a row of
+// objects — the data array contains ARRAYS of values, in the same order as
+// the columns array):
+//   {
+//     "news": {
+//       "metadata": {...},
+//       "columns": ["id", "type", "published", "title", "source", "body", ...],
+//       "data": [
+//         ["12345", "company news", "2026-08-24 10:00:00", "Сбербанк...", "MOEX", "..."],
+//         ...
+//       ]
+//     }
+//   }
+//
+// 'published' is Moscow local time (UTC+3), format 'YYYY-MM-DD HH:MM:SS'.
+// We convert to UTC by appending '+03:00' before Date parsing.
+//
+// We pull the last 100 news, filter by the displayed week, and map each one
+// to an event object. CORS-blocked from the browser, so we route through CORS
+// proxies (corsproxy.io, allorigins). 2h localStorage cache so the 5-min
+// auto-refresh doesn't hammer MOEX.
+const CAL_RU_LIVE_SOURCES = [
+    {
+        name: 'MOEX ISS News',
+        url: 'https://iss.moex.com/iss/news.json?limit=100&start=0',
+        parse: function(data) {
+            const sec = data && (data.news || data.seltboard);
+            if (!sec || !sec.columns || !sec.data) return [];
+            const cols = sec.columns;
+            const idxPub = cols.indexOf('published');
+            const idxTitle = cols.indexOf('title');
+            const idxBody = cols.indexOf('body') >= 0 ? cols.indexOf('body') : cols.indexOf('content');
+            const idxType = cols.indexOf('type');
+            const idxSrc = cols.indexOf('source');
+            const out = [];
+            for (const row of sec.data) {
+                out.push({
+                    published: idxPub >= 0 ? row[idxPub] : '',
+                    title: idxTitle >= 0 ? row[idxTitle] : '',
+                    body: idxBody >= 0 ? row[idxBody] : '',
+                    type: idxType >= 0 ? row[idxType] : '',
+                    source: idxSrc >= 0 ? row[idxSrc] : ''
+                });
+            }
+            return out;
+        }
+    },
+    {
+        // Backup endpoint: site news (often more company-action oriented)
+        name: 'MOEX ISS Site News',
+        url: 'https://iss.moex.com/iss/site/news.json?limit=100&start=0',
+        parse: function(data) {
+            const sec = data && (data.news || data.sitenews);
+            if (!sec || !sec.columns || !sec.data) return [];
+            const cols = sec.columns;
+            const idxPub = cols.indexOf('published') >= 0 ? cols.indexOf('published') : cols.indexOf('added');
+            const idxTitle = cols.indexOf('title');
+            const idxBody = cols.indexOf('body') >= 0 ? cols.indexOf('body') : cols.indexOf('content');
+            const idxType = cols.indexOf('type');
+            const idxSrc = cols.indexOf('source');
+            const out = [];
+            for (const row of sec.data) {
+                out.push({
+                    published: idxPub >= 0 ? row[idxPub] : '',
+                    title: idxTitle >= 0 ? row[idxTitle] : '',
+                    body: idxBody >= 0 ? row[idxBody] : '',
+                    type: idxType >= 0 ? row[idxType] : '',
+                    source: idxSrc >= 0 ? row[idxSrc] : ''
+                });
+            }
+            return out;
+        }
+    }
+];
+
+// Fetch MOEX ISS live news for the displayed week (Russian market only).
+// Returns an array of event objects, or null if all live sources failed.
+// 24h localStorage cache — daily refresh is plenty, don't hammer MOEX.
+async function calFetchRuEventsLive(weekStart) {
+    const cacheKey = 'cal_moex_cache_v3';
+    const TTL_MS = 24 * 60 * 60 * 1000; // 24h — daily refresh (user request)
+
+    // 1) Try cache first — strict same-week check
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            const cacheAge = Date.now() - (parsed.ts || 0);
+            const cachedWeekStart = new Date(parsed.weekStart);
+            if (cacheAge < TTL_MS && parsed.events && parsed.events.length &&
+                cachedWeekStart.getTime() === weekStart.getTime()) {
+                console.log('MOEX live news from cache:', parsed.events.length);
+                return parsed.events.map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }));
+            }
+        }
+    } catch(e) { /* ignore cache errors */ }
+
+    // 2) Try each source through each CORS proxy
+    const proxies = [
+        function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+        function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+        function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
+    ];
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    let liveEvents = [];
+    let sourceOk = false;
+
+    for (const src of CAL_RU_LIVE_SOURCES) {
+        for (const proxy of proxies) {
+            try {
+                const url = proxy(src.url);
+                const resp = await calFetchWithTimeout(url, {}, 8000);
+                if (!resp.ok) continue;
+                const data = await resp.json();
+                const parsed = src.parse(data);
+                if (!parsed) continue;
+
+                const dayEvents = [];
+                for (const p of parsed) {
+                    if (!p.published || !p.title) continue;
+                    // MOEX publishes time in Moscow time (UTC+3). Format: 'YYYY-MM-DD HH:MM:SS'.
+                    // Append '+03:00' to make Date.parse produce the correct UTC instant.
+                    const dtStr = String(p.published).replace(' ', 'T') + '+03:00';
+                    const utcDate = new Date(dtStr);
+                    if (isNaN(utcDate.getTime())) continue;
+                    // Only include events that fall in the displayed week
+                    if (utcDate < weekStart || utcDate >= weekEnd) continue;
+
+                    // Determine impact by news type
+                    const ttype = (p.type || '').toLowerCase();
+                    let impact = 'Low';
+                    if (ttype.indexOf('company') >= 0 || ttype.indexOf('exchange') >= 0 ||
+                        ttype.indexOf('corp') >= 0) {
+                        impact = 'Medium';
+                    }
+                    if (ttype.indexOf('crisis') >= 0 || ttype.indexOf('urgent') >= 0 ||
+                        ttype.indexOf('critical') >= 0) {
+                        impact = 'High';
+                    }
+                    // Also boost impact if title contains earnings/dividend keywords
+                    const tLow = (p.title || '').toLowerCase();
+                    if (tLow.indexOf('отчёт') >= 0 || tLow.indexOf('дивиденд') >= 0 ||
+                        tLow.indexOf('годовое собрание') >= 0 || tLow.indexOf('совет директоров') >= 0 ||
+                        tLow.indexOf('слияни') >= 0 || tLow.indexOf('поглоща') >= 0 ||
+                        tLow.indexOf('байбэк') >= 0 || tLow.indexOf('buyback') >= 0) {
+                        impact = 'High';
+                    }
+
+                    // Strip HTML tags from title (MOEX sometimes includes markup)
+                    const cleanTitle = (p.title || '')
+                        .replace(/<[^>]+>/g, '')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&#x27;|&#39;|&apos;/g, "'")
+                        .substring(0, 140);
+                    const cleanBody = (p.body || '')
+                        .replace(/<[^>]+>/g, '')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&amp;/g, '&')
+                        .substring(0, 180);
+
+                    // Use calDetectCategory — if it returns 'Крипто' (default
+                    // fallback), override to 'Новости РЫНКА' since this is RU news.
+                    let category = calDetectCategory(cleanTitle);
+                    if (category === 'Крипто') category = 'Новости РФ';
+
+                    dayEvents.push({
+                        utcDate,
+                        country: 'STOCKRU',
+                        currency: 'STOCKRU',
+                        impact: impact,
+                        title: cleanTitle,
+                        previous: '',
+                        forecast: p.source || '',
+                        actual: '',
+                        category: category,
+                        detail: cleanBody,
+                        isPast: utcDate < new Date(),
+                        _live: true
+                    });
+                }
+
+                if (dayEvents.length) {
+                    liveEvents = dayEvents;
+                    sourceOk = true;
+                    console.log('MOEX live news loaded via ' + src.name + ':', dayEvents.length);
+                    break;
+                }
+            } catch(e) { /* try next proxy */ }
+        }
+        if (sourceOk) break;
+    }
+
+    if (!sourceOk || !liveEvents.length) return null;
+
+    // 3) Cache live events for 2h
+    try {
+        ctSafeSetItem(cacheKey, JSON.stringify({
+            ts: Date.now(),
+            weekStart: weekStart.toISOString(),
+            events: liveEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
+        }));
+    } catch(e) { /* ignore quota */ }
+
+    return liveEvents;
+}
+
+// Fetch Yahoo Finance live earnings for the displayed week (US-listed only).
+// Returns an array of event objects (same shape as fallbackRowToEvent),
+// or null if all live sources failed. Caches successful fetches for 24h.
+async function calFetchStockEventsLive(weekStart) {
+    const cacheKey = 'cal_yahoo_cache_v3';
+    const TTL_MS = 24 * 60 * 60 * 1000; // 24h — earnings dates are stable, daily refresh
+
+    // 1) Try cache first — same-week check, like crypto cache
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            const cacheAge = Date.now() - (parsed.ts || 0);
+            const cachedWeekStart = new Date(parsed.weekStart);
+            if (cacheAge < TTL_MS && parsed.events && parsed.events.length &&
+                cachedWeekStart.getTime() === weekStart.getTime()) {
+                console.log('Yahoo live earnings from cache:', parsed.events.length);
+                // Hard week filter on cache restore too — never trust cached utcDate blindly
+                const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+                const safe = parsed.events
+                    .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
+                    .filter(e => e.utcDate >= weekStart && e.utcDate < weekEnd);
+                return safe;
+            }
+        }
+    } catch(e) { /* ignore cache errors */ }
+
+    // 2) Build the 7 weekday ISO strings we need to fetch
+    const dayISOs = [];
+    for (let d = 0; d < 7; d++) {
+        const dt = new Date(weekStart);
+        dt.setDate(dt.getDate() + d);
+        dayISOs.push(dt.toISOString().substring(0, 10));
+    }
+
+    // 3) Try each source through each CORS proxy
+    const proxies = [
+        function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+        function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+        function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
+    ];
+
+    // Hard week bounds — events outside this window are rejected no matter
+    // what the proxy returns (defends against stale proxy-cached responses
+    // carrying April dates when the displayed week is August).
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const liveEvents = [];
+    let sourceOk = false;
+
+    // outer loop: sources — first one that works on any proxy, we stick with
+    for (const src of CAL_STOCKS_LIVE_SOURCES) {
+        let sourceEvents = [];
+        let sourceHitDays = 0;
+
+        for (const proxy of proxies) {
+            sourceEvents = [];
+            sourceHitDays = 0;
+            let proxyOk = true;
+
+            for (const dayISO of dayISOs) {
+                try {
+                    const url = proxy(src.buildDayUrl(dayISO));
+                    const resp = await calFetchWithTimeout(url, {}, 7000);
+                    if (!resp.ok) { proxyOk = false; break; }
+                    const data = await resp.json();
+                    const parsed = src.parse(data);
+                    if (!parsed) { proxyOk = false; break; }
+                    if (parsed.length) {
+                        sourceHitDays++;
+                        for (const p of parsed) {
+                            if (!p.ticker) continue;
+                            // Yahoo returns date as 'YYYY-MM-DD'. Earnings time:
+                            // BMO ≈ 09:30 ET (13:30 UTC), AMC ≈ 16:00 ET (20:00 UTC),
+                            // unknown = during market (~14:00 UTC).
+                            let hourUTC = 14;
+                            if (p.earningsTime === 'BMO') hourUTC = 13;
+                            else if (p.earningsTime === 'AMC') hourUTC = 20;
+                            const utcDate = new Date(p.date + 'T' + String(hourUTC).padStart(2,'0') + ':00:00Z');
+                            if (isNaN(utcDate.getTime())) continue;
+                            // Hard week filter — reject if Yahoo/proxy returned a
+                            // date outside the displayed week (stale proxy cache).
+                            if (utcDate < weekStart || utcDate >= weekEnd) continue;
+                            const cleanCompany = (p.company || '').replace(/&#x27;|&#39;|&quot;|&amp;/g, function(m){
+                                return m === '&amp;' ? '&' : m === '&quot;' ? '"' : "'";
+                            });
+                            const title = cleanCompany
+                                ? cleanCompany + ' (' + p.ticker + ') — Earnings'
+                                : p.ticker + ' — Earnings';
+                            const forecast = p.epsForecast
+                                ? ('EPS ' + p.epsForecast + (p.revenueForecast ? ' / Rev ' + p.revenueForecast : ''))
+                                : (p.revenueForecast ? 'Rev ' + p.revenueForecast : '');
+                            sourceEvents.push({
+                                utcDate,
+                                country: 'STOCKUS',
+                                currency: 'STOCKUS',
+                                impact: 'Medium',
+                                title: title,
+                                previous: p.epsActual || '',
+                                forecast: forecast,
+                                actual: '',
+                                category: 'Отчётность',
+                                detail: (cleanCompany || p.ticker) + (p.earningsTime
+                                    ? ' — ' + (p.earningsTime === 'BMO' ? 'Before Open' : p.earningsTime === 'AMC' ? 'After Close' : p.earningsTime)
+                                    : ''),
+                                isPast: utcDate < new Date(),
+                                _live: true
+                            });
+                        }
+                    }
+                } catch(e) { proxyOk = false; break; }
+            }
+
+            if (proxyOk && sourceHitDays > 0) {
+                // This proxy worked for the whole week on this source — done.
+                liveEvents.push.apply(liveEvents, sourceEvents);
+                sourceOk = true;
+                console.log('Yahoo live earnings loaded via ' + src.name + ' (proxy ' + proxies.indexOf(proxy) + '):', sourceEvents.length);
+                break;
+            }
+        }
+
+        if (sourceOk) break; // first source that worked wins, don't try v7
+    }
+
+    if (!sourceOk || !liveEvents.length) return null;
+
+    // 4) Cache live events for 24h
+    try {
+        ctSafeSetItem(cacheKey, JSON.stringify({
+            ts: Date.now(),
+            weekStart: weekStart.toISOString(),
+            events: liveEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
+        }));
+    } catch(e) { /* ignore quota */ }
+
+    return liveEvents;
+}
+
 // The embedded fallback dataset is a real ForexFactory week captured at build time,
 // so its literal dates go stale the moment time passes. Instead of hand-updating it
 // forever, shift every event by whole weeks so it always lands on the CURRENT week
 // (same weekday/time-of-day). The specific figures are still an old snapshot — that's
 // unavoidable for a static last-resort fallback — but the calendar grid itself won't
 // show a dead date range from months ago.
+//
+// IMPORTANT: this function is called on BOTH the embedded fallback array
+// (which uses {t, c, d, i, f, p} — note 'd' for date, 'i' for impact) AND on raw
+// live FF data cached in localStorage (which uses {title, country, date, impact,
+// forecast, previous, actual} — note 'date' for date, 'impact' for impact).
+// We detect which format each row is in and handle both transparently.
 function calShiftFallbackToCurrentWeek(rawData) {
+    if (!Array.isArray(rawData) || !rawData.length) return rawData;
+    // Format-agnostic accessors: try {d, i} (fallback) then {date, impact} (live FF)
+    const getImpact = function(e) { return e.i !== undefined ? e.i : (e.impact !== undefined ? e.impact : ''); };
+    const getDateStr = function(e) { return e.d !== undefined ? e.d : (e.date !== undefined ? e.date : ''); };
+    const withDate = function(e, newISO) {
+        if (e.d !== undefined) return Object.assign({}, e, { d: newISO });
+        return Object.assign({}, e, { date: newISO });
+    };
     let anchor = null;
     for (const e of rawData) {
-        if (e.i === 'Holiday') continue;
-        const d = new Date(e.d);
+        if (String(getImpact(e)).toLowerCase() === 'holiday') continue;
+        const d = new Date(getDateStr(e));
         if (!isNaN(d.getTime())) { anchor = d; break; }
     }
     if (!anchor) return rawData;
@@ -4078,63 +4672,99 @@ function calShiftFallbackToCurrentWeek(rawData) {
     const currentWeekStart = calGetWeekStart(new Date());
     const weeksDiff = Math.round((currentWeekStart - originalWeekStart) / (7 * 24 * 60 * 60 * 1000));
     if (weeksDiff === 0) return rawData;
-    return rawData.map(e => {
-        const d = new Date(e.d);
+    return rawData.map(function(e) {
+        const d = new Date(getDateStr(e));
         if (isNaN(d.getTime())) return e;
         d.setDate(d.getDate() + weeksDiff * 7);
-        return Object.assign({}, e, { d: d.toISOString() });
+        return withDate(e, d.toISOString());
     });
 }
 
 async function calFetchEvents() {
     calSetLoading(true);
     const FF_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+    // Daily cache TTL — economic news are planned weekly, so a once-a-day
+    // refresh is plenty (user request). «Сканировать» wipes the cache keys
+    // before calling this, so it always forces an immediate live re-fetch.
+    const CAL_FF_TTL = 24 * 60 * 60 * 1000;
     let data = null;
     let source = '';
+
+    // ── 1) CACHE-FIRST ────────────────────────────────────────────────
+    // On browser reload the calendar renders INSTANTLY from localStorage —
+    // zero network calls. The cache is honoured only when it is <24h old
+    // AND belongs to the real current week. Otherwise we fall through to
+    // the live proxies below. calStartScan() deletes this key first, so the
+    // «Сканировать» button always bypasses this branch.
+    try {
+        const cached = localStorage.getItem('cal_ff_cache_v4');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            const cacheAge = Date.now() - (parsed.ts || 0);
+            const cachedWeek = parsed.weekStart ? new Date(parsed.weekStart) : null;
+            const curWeek = calGetWeekStart(new Date());
+            const sameWeek = !!(cachedWeek && cachedWeek.getTime() === curWeek.getTime());
+            if (sameWeek && cacheAge < CAL_FF_TTL &&
+                Array.isArray(parsed.data) && parsed.data.length) {
+                data = parsed.data;
+                source = 'cache-fresh';
+                console.log('[Calendar] FF cache hit (age ' + Math.round(cacheAge / 60000) +
+                    ' min) — rendering from localStorage, no network fetch');
+            }
+        }
+    } catch(e) { /* ignore cache errors */ }
 
     // List of CORS proxy strategies to try in order
     const proxyStrategies = [
         {
             name: 'corsproxy.io',
-            buildUrl: (u) => 'https://corsproxy.io/?' + encodeURIComponent(u),
-            parse: async (resp) => await resp.json(),
+            buildUrl: function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+            parse: async function(resp) { return await resp.json(); },
             timeout: 10000
         },
         {
             name: 'allorigins/raw',
-            buildUrl: (u) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-            parse: async (resp) => await resp.json(),
+            buildUrl: function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+            parse: async function(resp) { return await resp.json(); },
             timeout: 9000
         },
         {
             name: 'allorigins/get',
-            buildUrl: (u) => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u),
-            parse: async (resp) => { const w = await resp.json(); if (!w.contents) throw new Error('Empty'); return JSON.parse(w.contents); },
+            buildUrl: function(u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+            parse: async function(resp) { const w = await resp.json(); if (!w.contents) throw new Error('Empty'); return JSON.parse(w.contents); },
+            timeout: 9000
+        },
+        {
+            name: 'codetabs',
+            buildUrl: function(u) { return 'https://api.codetabs.com/v1/proxy/?url=' + encodeURIComponent(u); },
+            parse: async function(resp) { return await resp.json(); },
             timeout: 9000
         },
         {
             name: 'thingproxy',
-            buildUrl: (u) => 'https://thingproxy.freeboard.io/fetch/' + u,
-            parse: async (resp) => await resp.json(),
+            buildUrl: function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; },
+            parse: async function(resp) { return await resp.json(); },
             timeout: 10000
         },
         {
             name: 'direct',
-            buildUrl: (u) => u,
-            parse: async (resp) => await resp.json(),
+            buildUrl: function(u) { return u; },
+            parse: async function(resp) { return await resp.json(); },
             timeout: 6000
         }
     ];
 
+    // ── 2) LIVE FETCH — only when the cache-first branch above didn't fire
+    // (cache missing / >24h old / different week / after «Сканировать»).
     // Try each proxy strategy
-    for (const strategy of proxyStrategies) {
+    if (!data) for (const strategy of proxyStrategies) {
         try {
             const url = strategy.buildUrl(FF_URL);
             const resp = await calFetchWithTimeout(url, {}, strategy.timeout);
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             data = await strategy.parse(resp);
             if (!data || (Array.isArray(data) && data.length === 0)) throw new Error('Empty data');
-            source = 'ForexFactory (' + strategy.name + ')';
+            source = 'ForexFactory Live';
             console.log('Calendar data loaded via', strategy.name);
             break;
         } catch(e) {
@@ -4142,16 +4772,29 @@ async function calFetchEvents() {
         }
     }
 
-    // Strategy: try localStorage cache from a previous successful fetch
+    // ── 3) NETWORK-FAILURE fallback tiers ────────────────────────────
+    // Reaching here means the live proxies all failed AND the cache-first
+    // branch above didn't match (cache missing, >24h old, or from another
+    // week). A not-too-old cache, WEEK-SHIFTED onto the displayed week, is
+    // still better than the embedded dataset:
+    //   <7d  = recent cache — APPLY SHIFT in case week rolled over (no-op if aligned)
+    //   <30d = stale cache — APPLY SHIFT (last resort before embedded fallback)
+    //   >30d = too stale — DELETE cache, fall through to embedded fallback
     if (!data) {
         try {
-            const cached = localStorage.getItem('cal_ff_cache');
+            const cached = localStorage.getItem('cal_ff_cache_v4');
             if (cached) {
                 const parsed = JSON.parse(cached);
                 const cacheAge = Date.now() - (parsed.ts || 0);
-                if (cacheAge < 7200000) { // cache valid for 2 hours
-                    data = parsed.data;
-                    source = 'ForexFactory (кэш ' + Math.round(cacheAge / 60000) + ' мин назад)';
+                if (cacheAge < 604800000) { // < 7 days — recent, shift to current week
+                    data = calShiftFallbackToCurrentWeek(parsed.data);
+                    source = 'cache-recent';
+                } else if (cacheAge < 2592000000) { // < 30 days — stale, shift + delete-old-cache
+                    data = calShiftFallbackToCurrentWeek(parsed.data);
+                    source = 'cache-stale';
+                } else {
+                    // > 30 days — too stale, delete cache and fall through
+                    try { localStorage.removeItem('cal_ff_cache_v4'); } catch(e2) {}
                 }
             }
         } catch(e) { /* ignore cache errors */ }
@@ -4160,27 +4803,57 @@ async function calFetchEvents() {
     // Last resort: use embedded fallback data, re-anchored onto the current week
     if (!data) {
         data = calShiftFallbackToCurrentWeek(CAL_FALLBACK_DATA);
-        source = 'Офлайн-данные (демо-набор, не актуальные цифры)';
+        source = 'embedded';
     }
 
     try {
         calRawApiData = data;
         const result = calParseApiData(data);
-        calApiWeekStart = result.apiWeekStart || calGetWeekStart(new Date());
-        calAllEvents = result.events;
+        // If FF returned 0 in-week events (whether live, cache, or stale cache),
+        // the hard week-filter in calParseApiData will have dropped every record.
+        // ALWAYS fall back to the embedded dataset, shifted to the current week,
+        // so the calendar is never empty — regardless of which source variant
+        // produced the 0-length result.
+        if (result.events.length === 0) {
+            console.warn('FF returned 0 in-week events (stale proxy cache or week-rollover?). Falling back to embedded dataset.');
+            data = calShiftFallbackToCurrentWeek(CAL_FALLBACK_DATA);
+            source = 'embedded';
+            calRawApiData = data;
+            const fallbackResult = calParseApiData(data);
+            calApiWeekStart = fallbackResult.apiWeekStart || calGetWeekStart(new Date());
+            calAllEvents = fallbackResult.events;
+            calLiveFFOk = false;
+        } else {
+            calApiWeekStart = result.apiWeekStart || calGetWeekStart(new Date());
+            calAllEvents = result.events;
 
-        // Cache successful data to localStorage (only for live data)
-        if (source.indexOf('Офлайн') === -1 && source.indexOf('кэш') === -1) {
-            try {
-                ctSafeSetItem('cal_ff_cache', JSON.stringify({ ts: Date.now(), data: data }));
-            } catch(e) { /* ignore quota errors */ }
+            // Cache successful data to localStorage — but ONLY for fresh live
+            // responses. Don't re-cache cache-restored data (it's already in
+            // localStorage) or fallback data (it would overwrite real live
+            // data with the embedded dataset on the next reload).
+            if (source === 'ForexFactory Live') {
+                calLiveFFOk = true;
+                try {
+                    // Store weekStart alongside the payload so the cache-first
+                    // branch above can verify the cache belongs to THIS week.
+                    ctSafeSetItem('cal_ff_cache_v4', JSON.stringify({
+                        ts: Date.now(),
+                        weekStart: calGetWeekStart(new Date()).toISOString(),
+                        data: data
+                    }));
+                } catch(e) { /* ignore quota errors */ }
+            } else {
+                calLiveFFOk = false;
+            }
         }
 
         calClearStates();
-        const isLive = source.indexOf('Офлайн') === -1;
-        calUpdateSourceBadge(isLive, source);
+        // Source badge removed from UI; keep call for internal side effects.
+        calUpdateSourceBadge(source !== 'embedded', source);
         // Fetch crypto events in background
         calFetchCryptoEvents();
+        // Fetch stock events (RU/US/CN) — Yahoo+MOEX live with embedded fallback
+        calFetchStockEvents();
         calRender();
         return result.events;
     } catch (err) {
@@ -4192,6 +4865,60 @@ async function calFetchEvents() {
 }
 
 async function calFetchCryptoEvents() {
+    // Helper: append events to calAllEvents + re-render
+    const appendEvents = (events) => {
+        if (!events || !events.length) return false;
+        calAllEvents = calAllEvents.concat(events).sort((a, b) => a.utcDate - b.utcDate);
+        calRender();
+        return true;
+    };
+    // Helper: convert raw CAL_CRYPTO_FALLBACK row → event object (same shape as live)
+    const fallbackRowToEvent = (e) => {
+        const utcDate = new Date(e.d);
+        return {
+            utcDate,
+            country: 'CRYPTO',
+            currency: 'CRYPTO',
+            impact: (e.i || 'medium').toLowerCase(),
+            title: e.t,
+            previous: e.p || '',
+            forecast: e.f || '',
+            actual: '',
+            category: calDetectCategory(e.t),
+            detail: '',
+            isPast: utcDate < new Date()
+        };
+    };
+
+    // 0) CACHE-FIRST — daily TTL, strict same-week check. On browser reload
+    // crypto events render instantly from localStorage; the live CryptoCompare
+    // fetch happens at most once a day (or right after «Сканировать», which
+    // wipes this key before re-fetching).
+    try {
+        const cached = localStorage.getItem('cal_crypto_cache_v3');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            const cacheAge = Date.now() - (parsed.ts || 0);
+            const cachedWeekStart0 = new Date(parsed.weekStart);
+            const curWeekStart0 = calCurrentWeekStart || calGetWeekStart(new Date());
+            if (cacheAge < 86400000 && parsed.events && parsed.events.length &&
+                cachedWeekStart0.getTime() === curWeekStart0.getTime()) {
+                const cwEnd0 = new Date(curWeekStart0); cwEnd0.setDate(cwEnd0.getDate() + 7);
+                const cachedEvents0 = parsed.events
+                    .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
+                    .filter(e => e.utcDate >= curWeekStart0 && e.utcDate < cwEnd0);
+                if (cachedEvents0.length && appendEvents(cachedEvents0)) {
+                    console.log('[Calendar] Crypto cache hit (daily TTL):', cachedEvents0.length);
+                    return;
+                }
+            }
+        }
+    } catch(e) { /* ignore cache errors */ }
+
+    // 1) Try live crypto sources (CryptoCompare News / CoinMarketCal / CoinCodex)
+    // through CORS proxies. Each source has its own parse() that returns a
+    // normalized list of {date, title, description, ...} so we don't depend
+    // on a single shape.
     for (const src of CAL_CRYPTO_SOURCES) {
         try {
             for (const proxy of ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url=']) {
@@ -4199,8 +4926,16 @@ async function calFetchCryptoEvents() {
                     const resp = await calFetchWithTimeout(proxy + encodeURIComponent(src.url), {}, 8000);
                     if (!resp.ok) continue;
                     const data = await resp.json();
-                    if (!data || !Array.isArray(data.body || data)) continue;
-                    const items = data.body || data;
+                    // Normalize items: if the source has a custom parse(), use it;
+                    // otherwise fall back to CoinMarketCal-style { body: [...] } shape.
+                    let items = null;
+                    if (typeof src.parse === 'function') {
+                        items = src.parse(data);
+                    } else {
+                        items = data && (data.body || data);
+                        if (!Array.isArray(items)) continue;
+                    }
+                    if (!Array.isArray(items) || !items.length) continue;
                     const weekStart = calCurrentWeekStart || calGetWeekStart(new Date());
                     const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
                     const newEvents = [];
@@ -4210,20 +4945,45 @@ async function calFetchCryptoEvents() {
                         const utcDate = new Date(dateStr);
                         if (isNaN(utcDate.getTime())) return;
                         if (utcDate < weekStart || utcDate >= weekEnd) return;
-                        const title = e.title || e.name || e.coin?.fullname || '';
+                        const title = e.title || e.name || (e.coin && e.coin.fullname) || '';
                         if (!title) return;
+                        // Impact heuristics for CryptoCompare news: bump to High
+                        // for keywords that usually move markets (SEC, hack, ETF,
+                        // listing, fork, unlock, ban, etc.).
+                        let impact = 'low';
+                        const tLow = title.toLowerCase();
+                        if (tLow.indexOf('sec ') >= 0 || tLow.indexOf(' sec ') >= 0 ||
+                            tLow.indexOf('etf') >= 0 || tLow.indexOf('approval') >= 0 ||
+                            tLow.indexOf('hack') >= 0 || tLow.indexOf('exploit') >= 0 ||
+                            tLow.indexOf('listing') >= 0 || tLow.indexOf('fork') >= 0 ||
+                            tLow.indexOf('unlock') >= 0 || tLow.indexOf('ban') >= 0 ||
+                            tLow.indexOf('lawsuit') >= 0 || tLow.indexOf('crash') >= 0) {
+                            impact = 'high';
+                        } else if (tLow.indexOf('upgrade') >= 0 || tLow.indexOf('launch') >= 0 ||
+                                   tLow.indexOf('integration') >= 0 || tLow.indexOf('partnership') >= 0) {
+                            impact = 'medium';
+                        }
+                        const detail = (e.description || e.body || '').substring(0, 160) +
+                                       (e.source ? ' — ' + e.source : '');
                         newEvents.push({
                             utcDate, country: 'CRYPTO', currency: 'CRYPTO',
-                            impact: 'medium', title: title,
+                            impact: impact, title: title,
                             previous: '', forecast: '', actual: '',
-                            category: 'Крипто',
-                            detail: (e.description || '').substring(0, 120),
+                            category: calDetectCategory(title),
+                            detail: detail,
                             isPast: utcDate < new Date()
                         });
                     });
                     if (newEvents.length) {
-                        calAllEvents = calAllEvents.concat(newEvents).sort((a, b) => a.utcDate - b.utcDate);
-                        calRender();
+                        appendEvents(newEvents);
+                        // Cache crypto events for offline use (7-day TTL)
+                        try {
+                            ctSafeSetItem('cal_crypto_cache_v3', JSON.stringify({
+                                ts: Date.now(),
+                                weekStart: weekStart.toISOString(),
+                                events: newEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
+                            }));
+                        } catch(cacheErr) { /* ignore quota */ }
                         console.log('Crypto events loaded from ' + src.name + ':', newEvents.length);
                     }
                     return; // success, stop trying
@@ -4231,9 +4991,255 @@ async function calFetchCryptoEvents() {
             }
         } catch(e) { /* try next source */ }
     }
+
+    // 2) All live crypto sources failed — try localStorage cache first (within 7 days)
+    try {
+        const cached = localStorage.getItem('cal_crypto_cache_v3');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            const cacheAge = Date.now() - (parsed.ts || 0);
+            const cachedWeekStart = new Date(parsed.weekStart);
+            const currentWeekStart = calCurrentWeekStart || calGetWeekStart(new Date());
+            if (cacheAge < 604800000 && parsed.events && parsed.events.length &&
+                cachedWeekStart.getTime() === currentWeekStart.getTime()) {
+                // Hard week filter on cache restore — never trust cached utcDate blindly
+                const currentWeekEnd = new Date(currentWeekStart); currentWeekEnd.setDate(currentWeekEnd.getDate() + 7);
+                const cachedEvents = parsed.events
+                    .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
+                    .filter(e => e.utcDate >= currentWeekStart && e.utcDate < currentWeekEnd);
+                if (cachedEvents.length && appendEvents(cachedEvents)) {
+                    console.log('Crypto events loaded from cache:', cachedEvents.length);
+                    return;
+                }
+            }
+        }
+    } catch(cacheErr) { /* ignore cache errors */ }
+
+    // 3) Last resort: use embedded CAL_CRYPTO_FALLBACK, shifted to the current week
+    const shifted = calShiftFallbackToCurrentWeek(CAL_CRYPTO_FALLBACK);
+    const fallbackEvents = shifted.map(fallbackRowToEvent);
+    // Hard week filter on fallback too — defensive (shift should already align them)
+    const fwStart = calCurrentWeekStart || calGetWeekStart(new Date());
+    const fwEnd = new Date(fwStart); fwEnd.setDate(fwEnd.getDate() + 7);
+    const safeFallback = fallbackEvents.filter(e => e.utcDate >= fwStart && e.utcDate < fwEnd);
+    if (appendEvents(safeFallback)) {
+        console.log('Crypto events loaded from embedded fallback:', safeFallback.length);
+    }
+}
+
+// Fetch stock events for RU / US / CN markets. Strategy:
+//   1) Yahoo Finance live earnings calendar (US-listed: NYSE/NASDAQ + ADRs)
+//      through CORS proxies. 24h cache (earnings dates are stable).
+//   2) MOEX ISS live news endpoint (Russian market: corporate actions,
+//      dividends, board meetings, exchange notices) through CORS proxies.
+//      2h cache (MOEX news change often).
+//   3) If Yahoo succeeded → use live US events. If failed → use US fallback.
+//   4) If MOEX succeeded → use live RU events (plus RU fallback for known
+//      earnings/dividend dates that MOEX news might miss). If failed → use
+//      full RU fallback.
+//   5) CN — no reliable free live source exists (SSE/SZSE all CORS/auth-blocked)
+//      → always use embedded CN fallback.
+//   6) Cache the assembled merged set under cal_stocks_cache_v5 for 24h.
+async function calFetchStockEvents() {
+    const cacheKey = 'cal_stocks_cache_v5';
+    const TTL_MS = 24 * 60 * 60 * 1000; // 24h — daily refresh is plenty (user request)
+
+    // Helper: append events + re-render (same pattern as calFetchCryptoEvents)
+    const appendEvents = (events) => {
+        if (!events || !events.length) return false;
+        // Avoid duplicates: only append stock events that aren't already in calAllEvents
+        // (matched by title + utcDate). Prevents stacking on repeated calls.
+        const existing = new Set(calAllEvents
+            .filter(e => e.country === 'STOCKRU' || e.country === 'STOCKUS' || e.country === 'STOCKCN')
+            .map(e => e.title + '|' + e.utcDate.getTime()));
+        const fresh = events.filter(e => !existing.has(e.title + '|' + e.utcDate.getTime()));
+        if (!fresh.length) return false;
+        calAllEvents = calAllEvents.concat(fresh).sort((a, b) => a.utcDate - b.utcDate);
+        calRender();
+        return true;
+    };
+    // Helper: convert raw CAL_STOCKS_FALLBACK row → event object
+    const fallbackRowToEvent = (e) => {
+        const utcDate = new Date(e.d);
+        return {
+            utcDate,
+            country: e.c,           // STOCKRU / STOCKUS / STOCKCN
+            currency: e.c,
+            impact: (e.i || 'medium').toLowerCase(),
+            title: e.t,
+            previous: e.p || '',
+            forecast: e.f || '',
+            actual: '',
+            category: calDetectCategory(e.t),
+            detail: '',
+            isPast: utcDate < new Date()
+        };
+    };
+
+    const weekStart = calCurrentWeekStart || calGetWeekStart(new Date());
+
+    // 1) Try merged localStorage cache (within TTL)
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            const cacheAge = Date.now() - (parsed.ts || 0);
+            const cachedWeekStart = new Date(parsed.weekStart);
+            if (cacheAge < TTL_MS && parsed.events && parsed.events.length &&
+                cachedWeekStart.getTime() === weekStart.getTime()) {
+                // Hard week filter on cache restore — never trust cached utcDate blindly
+                const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+                const cachedEvents = parsed.events
+                    .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
+                    .filter(e => e.utcDate >= weekStart && e.utcDate < weekEnd);
+                if (cachedEvents.length && appendEvents(cachedEvents)) {
+                    calLiveStocksOk = !!(parsed.yahooOk);
+                    calLiveRuOk = !!(parsed.moexOk);
+                    // Refresh badge label since live flags changed
+                    if (calLiveStocksOk || calLiveRuOk) {
+                        if (calLiveFFOk) calUpdateSourceBadge(true, 'ForexFactory Live');
+                        else if (calLiveStocksOk) calUpdateSourceBadge(true, 'Yahoo Live');
+                        else calUpdateSourceBadge(true, 'MOEX Live');
+                    }
+                    console.log('Stock events loaded from cache (yahoo=' + (parsed.yahooOk ? 'ok' : 'no') + ', moex=' + (parsed.moexOk ? 'ok' : 'no') + '):', cachedEvents.length);
+                    return;
+                }
+            }
+        }
+    } catch(cacheErr) { /* ignore cache errors */ }
+
+    // 2) Try Yahoo Finance live earnings (US-listed only) — fire and forget
+    let liveUsEvents = null;
+    try {
+        liveUsEvents = await calFetchStockEventsLive(weekStart);
+    } catch(e) {
+        console.warn('Yahoo live earnings failed:', e.message);
+    }
+    calLiveStocksOk = !!(liveUsEvents && liveUsEvents.length);
+
+    // 3) Try MOEX ISS live news (Russian market) — fire and forget
+    let liveRuEvents = null;
+    try {
+        liveRuEvents = await calFetchRuEventsLive(weekStart);
+    } catch(e) {
+        console.warn('MOEX live news failed:', e.message);
+    }
+    calLiveRuOk = !!(liveRuEvents && liveRuEvents.length);
+
+    // 4) Update badge with the combined live status
+    if (calLiveStocksOk || calLiveRuOk) {
+        if (calLiveFFOk) {
+            // FF + at least one live stocks source
+            calUpdateSourceBadge(true, 'ForexFactory Live');
+        } else if (calLiveStocksOk) {
+            calUpdateSourceBadge(true, 'Yahoo Live');
+        } else {
+            calUpdateSourceBadge(true, 'MOEX Live');
+        }
+    }
+    // If neither Yahoo nor MOEX is live, badge stays as FF set it (offline / cached / fallback).
+
+    // 5) Build the merged event list per-region
+    let mergedEvents = [];
+
+    // US: live Yahoo if available, else US fallback
+    if (liveUsEvents && liveUsEvents.length) {
+        mergedEvents = mergedEvents.concat(liveUsEvents);
+    } else {
+        const shiftedUs = calShiftFallbackToCurrentWeek(
+            CAL_STOCKS_FALLBACK.filter(e => e.c === 'STOCKUS')
+        );
+        mergedEvents = mergedEvents.concat(shiftedUs.map(fallbackRowToEvent));
+    }
+
+    // RU: live MOEX news PLUS fallback for known earnings/dividend dates
+    // (MOEX covers most company news, but earnings dates are sometimes pre-announced
+    // only on the company's IR site; fallback adds those if Yahoo/MOEX miss them).
+    if (liveRuEvents && liveRuEvents.length) {
+        mergedEvents = mergedEvents.concat(liveRuEvents);
+        // Also append RU fallback (duplicates filtered by appendEvents)
+        const shiftedRu = calShiftFallbackToCurrentWeek(
+            CAL_STOCKS_FALLBACK.filter(e => e.c === 'STOCKRU')
+        );
+        mergedEvents = mergedEvents.concat(shiftedRu.map(fallbackRowToEvent));
+    } else {
+        // MOEX failed → full RU fallback
+        const shiftedRu = calShiftFallbackToCurrentWeek(
+            CAL_STOCKS_FALLBACK.filter(e => e.c === 'STOCKRU')
+        );
+        mergedEvents = mergedEvents.concat(shiftedRu.map(fallbackRowToEvent));
+    }
+
+    // CN: always fallback (no free live source for SSE/SZSE)
+    const shiftedCn = calShiftFallbackToCurrentWeek(
+        CAL_STOCKS_FALLBACK.filter(e => e.c === 'STOCKCN')
+    );
+    mergedEvents = mergedEvents.concat(shiftedCn.map(fallbackRowToEvent));
+
+    // Hard week filter — discard any event whose utcDate falls outside the
+    // displayed week. This is a defensive net on top of calParseApiData +
+    // per-source filters: if any source (or its stale CORS-proxy cache)
+    // returned April dates while the displayed week is August, those are
+    // rejected here so they never reach calAllEvents or the calendar grid.
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+    const before = mergedEvents.length;
+    mergedEvents = mergedEvents.filter(e =>
+        e && e.utcDate && !isNaN(e.utcDate.getTime()) &&
+        e.utcDate >= weekStart && e.utcDate < weekEnd
+    );
+    if (mergedEvents.length < before) {
+        console.warn('Stock events week-filter dropped ' + (before - mergedEvents.length) +
+            ' out-of-week records (stale proxy cache?)');
+    }
+
+    console.log('Stock events assembled: ' +
+        (liveUsEvents ? liveUsEvents.length + ' live US + ' : '') +
+        (liveRuEvents ? liveRuEvents.length + ' live RU + ' : '') +
+        'CN+RU fallback → total ' + mergedEvents.length);
+
+    if (appendEvents(mergedEvents)) {
+        // Cache for next reload / refresh (2h)
+        try {
+            ctSafeSetItem(cacheKey, JSON.stringify({
+                ts: Date.now(),
+                weekStart: weekStart.toISOString(),
+                yahooOk: calLiveStocksOk,
+                moexOk: calLiveRuOk,
+                events: mergedEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
+            }));
+        } catch(cacheErr) { /* ignore quota */ }
+    }
 }
 
 function calRetryFetch() { calFetchEvents(); }
+
+// One-click "Сканировать" button — mirrors the NATR Scanner pattern.
+// 1) Wipes ALL calendar localStorage cache keys (every version, including
+//    the current ones — `cal_ff_cache_v4`, `cal_yahoo_cache_v3`, etc.) so the
+//    next fetch is guaranteed to hit live sources instead of serving a stale
+//    week-shifted cache entry. Also clears the sentinel flag so the one-time
+//    reset logic in calInit doesn't re-arm and cause a duplicate wipe later.
+// 2) Re-runs calFetchEvents() which will re-populate the cache with fresh
+//    live data. Button shows the same spinning-loading state as NATR Scanner.
+async function calStartScan() {
+    const btn = document.getElementById('calScanBtn');
+    if (btn) btn.classList.add('loading');
+    try {
+        // Wipe every calendar cache version ever shipped, plus the sentinel.
+        ['cal_ff_cache', 'cal_ff_cache_v2', 'cal_ff_cache_v3', 'cal_ff_cache_v4',
+         'cal_yahoo_cache', 'cal_yahoo_cache_v2', 'cal_yahoo_cache_v3',
+         'cal_moex_cache', 'cal_moex_cache_v2', 'cal_moex_cache_v3',
+         'cal_crypto_cache', 'cal_crypto_cache_v2', 'cal_crypto_cache_v3',
+         'cal_stocks_cache', 'cal_stocks_cache_v2', 'cal_stocks_cache_v3',
+         'cal_stocks_cache_v4', 'cal_stocks_cache_v5',
+         'cal_cache_force_reset_v1'
+        ].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+        console.log('[Calendar] Cache wiped via Сканировать — re-fetching live.');
+        await calFetchEvents();
+    } finally {
+        if (btn) btn.classList.remove('loading');
+    }
+}
 
 function calRender() {
     const grid = document.getElementById('calGrid');
@@ -4501,6 +5507,36 @@ function calToggleCountry(country) {
 function calInit() {
     calCurrentWeekStart = calGetWeekStart(new Date());
     document.getElementById('calWeekLabel').textContent = calFormatWeekLabel(calCurrentWeekStart);
+    // Purge any stale-version cache keys from previous app versions so the
+    // calendar never renders events that were cached with the old logic
+    // (e.g. April dates when the displayed week is August). New versions
+    // always use a fresh cache; the old keys are removed for good measure.
+    try {
+        // Purge ALL previously-used cache versions across every release so a
+        // stale localStorage entry from an earlier app version can never be
+        // restored (which would re-introduce April/August-mismatched events).
+        // Current versions (cal_ff_cache_v4 / cal_yahoo_cache_v3 / etc.) are
+        // NOT wiped — those hold fresh data from this same release and are
+        // safe to reuse within their TTL.
+        ['cal_ff_cache', 'cal_ff_cache_v2', 'cal_ff_cache_v3',
+         'cal_yahoo_cache', 'cal_yahoo_cache_v2',
+         'cal_moex_cache', 'cal_moex_cache_v2',
+         'cal_crypto_cache', 'cal_crypto_cache_v2',
+         'cal_stocks_cache', 'cal_stocks_cache_v2', 'cal_stocks_cache_v3', 'cal_stocks_cache_v4'
+        ].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+        // One-time forced reset for the CURRENT versions too — handled via
+        // a sentinel flag so the wipe happens exactly once per browser,
+        // not on every reload (otherwise the cache would never warm up).
+        try {
+            const RESET_FLAG = 'cal_cache_force_reset_v1';
+            if (!localStorage.getItem(RESET_FLAG)) {
+                ['cal_ff_cache_v4', 'cal_yahoo_cache_v3', 'cal_moex_cache_v3',
+                 'cal_crypto_cache_v3', 'cal_stocks_cache_v5'
+                ].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+                localStorage.setItem(RESET_FLAG, '1');
+            }
+        } catch(e) {}
+    } catch(e) {}
     // Restore impact filter
     try {
         const savedImpact = JSON.parse(localStorage.getItem('cal_impact_filter'));
@@ -4527,9 +5563,13 @@ function calInit() {
     calApplyRestoredNotifyUI();
     calFetchEvents();
     if (calAutoRefreshId) clearInterval(calAutoRefreshId);
+    // Auto-refresh once a day — news are planned weekly, no point polling
+    // often. The fetch itself is cache-first: while the cache is <24h old
+    // this tick just re-renders from localStorage with zero network calls;
+    // once it goes stale it triggers a single live re-fetch.
     calAutoRefreshId = setInterval(() => {
         if (!calIsLoading) calFetchEvents();
-    }, 300000);
+    }, 86400000);
 }
 
 // ============================================================
