@@ -305,11 +305,6 @@
         .cont-yest-down { color: var(--red); }
         .cont-rvol-hot { color: var(--accent); font-weight: 700; }
 
-        @media (max-width: 640px) {
-            .natr-table-wrap { overflow-x: auto; }
-            .natr-table-wrap table { min-width: 720px; }
-        }
-
         .natr-stats {
             display: flex; justify-content: space-between; align-items: center;
             padding: 14px 18px; background: var(--bg-card);
@@ -332,9 +327,27 @@
 
         .natr-table-wrap {
             background: var(--bg-card); border-radius: 16px;
-            overflow: hidden; border: 1px solid var(--border); position: relative;
+            /* Таблицы скринеров — 8–10 колонок: на телефоне/планшете/узком окне
+               они должны ПРОКРУЧИВАТЬСЯ горизонтально, а не сжиматься или
+               обрезаться. Раньше здесь стоял `overflow: hidden`, объявленный
+               ПОСЛЕ мобильного media-query с overflow-x:auto — из-за порядка
+               в каскаде он молча побеждал, и таблица с min-width обрезалась
+               по краю контейнера: без скроллбара, без свайпа, колонки правее
+               «Цены» были просто недостижимы. */
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: 1px solid var(--border); position: relative;
+            -webkit-overflow-scrolling: touch;
         }
-        .natr-table-wrap table { width: 100%; border-collapse: collapse; }
+        /* border-collapse: separate — position:sticky на ячейках таблицы
+           (закреплённая колонка тикера на мобиле) ненадёжен со схлопнутыми
+           границами в ряде браузеров; разделители строк перенесены с tr на td
+           соответствующе (см. ниже). */
+        .natr-table-wrap table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        /* Минимальная ширина каждой таблицы: NATR — 8 колонок, Продолжение — 10.
+           Ниже этих ширин таблица прокручивается, а не сжимается в нечитаемое. */
+        #natrTableWrap table { min-width: 760px; }
+        #contTableWrap table { min-width: 950px; }
         .natr-table-wrap thead th {
             text-align: left; padding: 14px 18px; font-size: 11px; font-weight: 600;
             text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
@@ -349,11 +362,12 @@
         .natr-table-wrap thead th.sort-active { color: var(--accent) !important; }
 
         .natr-table-wrap tbody tr {
-            transition: all 0.25s ease; border-bottom: 1px solid var(--border);
+            transition: all 0.25s ease;
         }
-        .natr-table-wrap tbody tr:last-child { border-bottom: none; }
+        .natr-table-wrap tbody td { border-bottom: 1px solid var(--border); }
+        .natr-table-wrap tbody tr:last-child td { border-bottom: none; }
         .natr-table-wrap tbody tr:hover { background: rgba(255,255,255,0.02); }
-        .natr-table-wrap tbody tr.border-after { border-bottom: 2px solid rgba(255,255,255,0.12) !important; }
+        .natr-table-wrap tbody tr.border-after td { border-bottom: 2px solid rgba(255,255,255,0.12) !important; }
         .natr-table-wrap tbody tr.row-updated { animation: rowFlash 0.5s ease-out; }
         @keyframes rowFlash { 0%{background:rgba(240,185,11,0.15);transform:translateX(-2px)} 100%{background:transparent;transform:translateX(0)} }
         .natr-table-wrap tbody td { padding: 16px 18px; vertical-align: middle; }
@@ -931,12 +945,6 @@
         .cal-error-state p { font-size: 14px; margin-bottom: 12px; }
         .cal-error-state .cal-retry-btn { padding: 8px 20px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--accent-dim); border: 1px solid rgba(240,185,11,0.2); color: var(--accent); transition: all 0.2s; font-family: 'Space Grotesk', sans-serif; }
         .cal-error-state .cal-retry-btn:hover { background: rgba(240,185,11,0.2); }
-        .cal-source-badge { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(16,203,129,0.08); border: 1px solid rgba(16,203,129,0.2); border-radius: 8px; font-size: 11px; color: var(--green); font-weight: 600; }
-        .cal-source-badge .source-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
-        .cal-source-badge.offline { background: rgba(246,70,93,0.08); border-color: rgba(246,70,93,0.2); color: var(--red); }
-        .cal-source-badge.offline .source-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
-        .cal-source-badge.cached { background: rgba(240,185,11,0.08); border-color: rgba(240,185,11,0.2); color: var(--accent); }
-        .cal-source-badge.cached .source-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
 
         .cal-legend {
             display: flex; gap: 16px; justify-content: center; padding: 16px 0;
@@ -973,6 +981,55 @@
                don't stick it on small screens, where the calendar is a single scrolling
                column anyway and a persistently pinned day label matters less. */
             .cal-day-header { position: static; top: auto; }
+        }
+
+        /* ======================================================
+           МОБАЙЛ: таблицы скринеров — прокрутка + закреплённый тикер
+           ====================================================== */
+        @media (max-width: 640px) {
+            /* Fixed-раскладка даёт точные ширины колонок: смещение закреплённой
+               колонки тикера (left: 74px) обязано совпадать с фактической шириной
+               первой колонки, а auto-таблицы растягивают колонки непредсказуемо.
+               Все ширины ниже суммируются РОВНО в min-width таблицы — иначе
+               излишек перераспределяется и сдвигает sticky-смещение. */
+            .natr-table-wrap table { table-layout: fixed; }
+            #natrTableWrap table { min-width: 748px; }  /* 74+110+78+100+90+90+110+96 */
+            #contTableWrap table { min-width: 950px; }  /* 74+110+78+100+100+100+100+80+112+96 */
+
+            .natr-table-wrap thead th, .natr-table-wrap tbody td { padding: 12px 10px; }
+            /* Колонка 📌★ сжимается до предсказуемых 74px (ширина критична для sticky) */
+            .natr-table-wrap thead th:first-child,
+            .natr-table-wrap tbody td:first-child { width: 74px !important; padding-left: 6px; padding-right: 4px; }
+            .natr-table-wrap thead th:nth-child(2),
+            .natr-table-wrap tbody td:nth-child(2) { width: 110px !important; }
+            #natrTableWrap thead th[data-key="price"] { width: 100px !important; }
+            .natr-table-wrap thead th:last-child { width: 96px !important; }
+
+            /* Компактные кнопки закреп/избранное под узкую колонку */
+            .natr-pinfav-cell { gap: 3px; }
+            .natr-pin-cell, .natr-fav-cell { width: 30px; height: 32px; border-radius: 7px; }
+            .natr-pin-cell svg { width: 17px; height: 17px; }
+            .natr-fav-cell { font-size: 1.2rem; }
+            .natr-actions-cell { gap: 6px; }
+
+            /* Закреплённые первые две колонки (📌★ + Тикер): при горизонтальной
+               прокрутке всегда видно, к какой монете относятся значения справа
+               (NATR %, R коэфф., RVOL, ΔOI). Без этого правые колонки нечитаемы —
+               строка прокручивается, а тикер уезжает за край экрана. */
+            .natr-table-wrap thead th:nth-child(1),
+            .natr-table-wrap tbody td:nth-child(1) { position: sticky; left: 0; z-index: 2; background: var(--bg-card); }
+            .natr-table-wrap thead th:nth-child(2),
+            .natr-table-wrap tbody td:nth-child(2) {
+                position: sticky; left: 74px; z-index: 2;
+                background: var(--bg-card);
+                box-shadow: 6px 0 8px -6px rgba(0,0,0,0.6);
+            }
+            /* Закреплённые (pinned) строки сохраняют золотой оттенок на sticky-ячейках */
+            .natr-table-wrap tbody tr.natr-pinned-row td:nth-child(1),
+            .natr-table-wrap tbody tr.natr-pinned-row td:nth-child(2) {
+                background-color: var(--bg-card);
+                background-image: linear-gradient(rgba(240,185,11,0.06), rgba(240,185,11,0.06));
+            }
         }
     </style>
 </head>
@@ -1409,7 +1466,7 @@
         </div>
     </div>
     <div class="cai-search-box">
-        <input type="text" id="caiInput" placeholder="BTC, ETH, QUSDT, SOL..." onkeypress="if(event.key==='Enter')caiSearch()">
+        <input type="text" id="caiInput" placeholder="BTC, ETH, QUSDT, SOL..." onkeydown="if(event.key==='Enter')caiSearch()">
         <button class="cai-paste-btn" id="caiPasteBtn" onclick="caiPasteFromClipboard()" title="Вставить из буфера обмена">
             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
             Вставить
@@ -1464,9 +1521,32 @@
 
 <script>
 // ============================================================
+//  v22 — ревизия кода (оптимизация / баги / чистка):
+//   • Trader Clock: пауза rAF-цикла, когда вкладка не видна (раньше 60
+//     кадров/с впустую в фоне), кэш смещений часовых поясов, обновление
+//     легенды/заголовков 1 раз/сек вместо каждого кадра
+//   • Календарь: кэш Intl-форматтера, локальная дата события считается 1 раз
+//     за рендер (было ×7), параллельная загрузка недели Yahoo (было 7
+//     последовательных запросов), общий список CORS-прокси
+//   • Кэш килайнов Binance чистится от устаревших записей (раньше рос
+//     бесконечно)
+//   • Баги: наложение таймеров тостов, сломанный fallback-аватар CoinGecko
+//     (via.placeholder.com больше не работает), пустой экран вместо сообщения
+//     при ошибке API, сохранённый часовой пояс, отсутствующий в списке
+//   • Безопасность: экранирование символов в inline-onclick (jsAttr)
+//   • Удалён мёртвый код: calUpdateSourceBadge и флаги live-статуса, поля
+//     dailyRanges/pumpClose/dayRangePos/_stub, natrCategoryLoading и др.
+//   • Возвращена к жизни анимация подсветки изменившихся строк NATR при
+//     фоновом обновлении (animate раньше всегда был false)
+//   • МОБАЙЛ: таблицы скринеров горизонтально прокручиваются (раньше
+//     overflow:hidden, объявленный ПОСЛЕ мобильного media-query, молча
+//     побеждал его в каскаде и обрезал таблицу без прокрутки — колонки
+//     правее «Цены» были недостижимы); колонки 📌★+Тикер закреплены
+//     (sticky) — при прокрутке всегда видно, к какой монете относятся
+//     значения справа (NATR %, R, RVOL, ΔOI)
+// ============================================================
 //  NAVIGATION
 // ============================================================
-let caiInitialized = false;
 let calInitialized = false;
 
 function switchSection(name) {
@@ -1474,9 +1554,9 @@ function switchSection(name) {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('section-' + name).classList.add('active');
     document.querySelector('.nav-tab[data-section="' + name + '"]').classList.add('active');
-    try { ctSafeSetItem('ct_active_section', name); } catch(e) { /* storage unavailable (private mode / restricted context) — non-fatal */ }
+    ctSafeSetItem('ct_active_section', name); // never throws — warns once if storage is blocked
     if (name === 'tw' && !tcInitialized) { tcInit(); tcInitialized = true; }
-    if (name === 'cai' && !caiInitialized) { caiInitialized = true; }
+    else if (name === 'tw') tcResumeDraw(); // restart the paused rAF loop
     if (name === 'cal' && !calInitialized) { calInit(); calInitialized = true; }
 }
 
@@ -1517,7 +1597,13 @@ function natrSortData(data) {
         let va, vb;
         switch (key) {
             case 'symbol': return mult * a.symbol.localeCompare(b.symbol);
-            case 'type': return mult * natrGetAssetType(a.symbol).localeCompare(natrGetAssetType(b.symbol));
+            case 'type': {
+                // natrGetAssetType does a split(',') per call — memoize per sort
+                // so a 500-row sort doesn't run it ~9000 times.
+                const typeCache = new Map();
+                const typeOf = s => { let t = typeCache.get(s); if (t === undefined) { t = natrGetAssetType(s); typeCache.set(s, t); } return t; };
+                return mult * typeOf(a.symbol).localeCompare(typeOf(b.symbol));
+            }
             case 'price': case 'volume': case 'count': {
                 const ta = natrTicker24hMap.get(a.symbol);
                 const tb = natrTicker24hMap.get(b.symbol);
@@ -1537,7 +1623,11 @@ function contSortData(data) {
         let va, vb;
         switch (key) {
             case 'symbol': return mult * a.symbol.localeCompare(b.symbol);
-            case 'type': return mult * natrGetAssetType(a.symbol).localeCompare(natrGetAssetType(b.symbol));
+            case 'type': {
+                const typeCache = new Map();
+                const typeOf = s => { let t = typeCache.get(s); if (t === undefined) { t = natrGetAssetType(s); typeCache.set(s, t); } return t; };
+                return mult * typeOf(a.symbol).localeCompare(typeOf(b.symbol));
+            }
             case 'volume': {
                 const ta = natrTicker24hMap.get(a.symbol);
                 const tb = natrTicker24hMap.get(b.symbol);
@@ -1574,6 +1664,13 @@ function safeUrl(url) {
     if (!url) return '';
     var u = String(url).trim();
     return /^https?:\/\//i.test(u) ? u : '';
+}
+// Escapes a value for use inside a single-quoted JS string embedded in a
+// double-quoted HTML attribute (onclick="fn('...')"): first JS-escaped, then
+// HTML-escaped, so the attribute parser and the JS parser each see exactly
+// what they expect — a quote or backslash in a symbol can no longer break out.
+function jsAttr(s) {
+    return escapeHtml(String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
 }
 // Generic debounce: collapses bursts of calls (e.g. every keystroke in a
 // number/text filter field) into one trailing call after `wait` ms of quiet.
@@ -1631,11 +1728,15 @@ function playAlertSound(kind) {
         osc.stop(start + 0.32);
     });
 }
+let ctToastTimer = null;
 function showToast(text) {
     const t = document.getElementById('globalToast');
     document.getElementById('globalToastText').textContent = text;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
+    // A second toast within the 2s window must not be hidden early by the
+    // first toast's still-pending removal timer — clear it before re-arming.
+    if (ctToastTimer) clearTimeout(ctToastTimer);
+    ctToastTimer = setTimeout(() => { t.classList.remove('show'); ctToastTimer = null; }, 2000);
 }
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1739,10 +1840,8 @@ function natrRegisterBan(resp) {
     const defaultSec = resp.status === 418 ? Math.min(600, 90 * natrBanStreak) : Math.min(300, 30 * natrBanStreak);
     const cooldownSec = (retryAfterSec && retryAfterSec > 0) ? retryAfterSec : defaultSec;
     natrBannedUntil = Date.now() + cooldownSec * 1000;
-    try {
-        ctSafeSetItem('natr_banned_until', String(natrBannedUntil));
-        ctSafeSetItem('natr_ban_streak', String(natrBanStreak));
-    } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_banned_until', String(natrBannedUntil));
+    ctSafeSetItem('natr_ban_streak', String(natrBanStreak));
     if (natrAbortCtrl) natrAbortCtrl.abort();
     if (contAbortCtrl) contAbortCtrl.abort();
     const until = new Date(natrBannedUntil).toLocaleTimeString('ru-RU');
@@ -1750,7 +1849,7 @@ function natrRegisterBan(resp) {
 }
 // Called after any successful (non-banning) response, to notice the streak has ended.
 function natrClearBanStreak() {
-    if (natrBanStreak !== 0 && !natrIsBanned()) { natrBanStreak = 0; try { ctSafeSetItem('natr_ban_streak', '0'); } catch(e) {} }
+    if (natrBanStreak !== 0 && !natrIsBanned()) { natrBanStreak = 0; ctSafeSetItem('natr_ban_streak', '0'); }
 }
 function natrBanStatusText() { return '⛔ Binance ограничил — ждём ' + natrBanSecondsLeft() + 'с'; }
 // Single choke point for every Binance request in the app (klines, OI, ticker, exchangeInfo).
@@ -1792,12 +1891,20 @@ let natrAbortCtrl = null;
 const natrResultsCache = new Map();
 const NATR_CACHE_TTL = 58000;
 const natrPendingRequests = new Map();
+// The results cache used to hold every fetched kline set forever — with ~500
+// symbols x several timeframes a long-lived tab slowly accumulated tens of MB
+// of stale arrays. Expired entries are pruned at the start of every scan.
+function natrPruneResultsCache() {
+    const now = Date.now();
+    for (const [k, v] of natrResultsCache) {
+        if (now - v.ts >= NATR_CACHE_TTL) natrResultsCache.delete(k);
+    }
+}
 const NATR_REFRESH_INTERVAL = 60;
 let natrRefreshCountdown = NATR_REFRESH_INTERVAL;
 let natrRefreshTimerId = null;
 let natrSelectedCategory = 'all';
 let natrCategoryMap = null; // will be set to NATR_EMBEDDED_CATEGORIES on init
-let natrCategoryLoading = false;
 
 // --- Top-N / pin / favorites / liquidity filter / alerts state ---
 // Закреп (pin) and избранное (favorite) are separate concepts, each with its own
@@ -1828,13 +1935,13 @@ const NATR_TIGER_SVG = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA
 // CryptoAI/Tiger action links. Each caller passes its own toggle function names since the
 // two tables keep fully independent pin/favorite sets.
 function natrPinFavCellHtml(symbol, isPinned, isFav, pinFn, favFn) {
-    const esc = s => s.replace(/'/g, "\\'");
-    const sym = esc(symbol);
+    const sym = jsAttr(symbol);          // for the JS string inside onclick=""
+    const attrSym = escapeHtml(symbol); // for the data-symbol="" attribute
     return '<td style="text-align:center;"><div class="natr-pinfav-cell">' +
-        '<span class="natr-pin-cell' + (isPinned ? ' pinned' : '') + '" tabindex="0" role="button" aria-pressed="' + isPinned + '" aria-label="Закреп" data-symbol="' + symbol + '" ' +
+        '<span class="natr-pin-cell' + (isPinned ? ' pinned' : '') + '" tabindex="0" role="button" aria-pressed="' + isPinned + '" aria-label="Закреп" data-symbol="' + attrSym + '" ' +
         'onclick="event.stopPropagation(); ' + pinFn + '(\'' + sym + '\')" ' +
         'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + pinFn + '(\'' + sym + '\');}">' + NATR_PIN_SVG + '</span>' +
-        '<span class="natr-fav-cell' + (isFav ? ' favorited' : '') + '" tabindex="0" role="button" aria-pressed="' + isFav + '" aria-label="Избранное" data-symbol="' + symbol + '" ' +
+        '<span class="natr-fav-cell' + (isFav ? ' favorited' : '') + '" tabindex="0" role="button" aria-pressed="' + isFav + '" aria-label="Избранное" data-symbol="' + attrSym + '" ' +
         'onclick="event.stopPropagation(); ' + favFn + '(\'' + sym + '\')" ' +
         'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + favFn + '(\'' + sym + '\');}">' + (isFav ? '★' : '☆') + '</span>' +
         '</div></td>';
@@ -2036,7 +2143,7 @@ function natrUpdateCatTabCounts() {
 function natrSwitchCategory(cat) {
     natrSelectedCategory = cat;
     document.querySelectorAll('#natrCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
-    try { ctSafeSetItem('natr_category', cat); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_category', cat);
     // If we have results, re-filter and re-render
     if (natrAllResults.length > 0) {
         natrReFilterAndRender();
@@ -2093,37 +2200,36 @@ function natrGetFilteredResults() {
 function natrBuildFavoriteStubs() {
     return [...natrFavorites].map(sym => ({
         symbol: sym,
-        natr: null,
-        _stub: true
+        natr: null
     }));
 }
 // Pinned (📌 закреп) rows always stay visible at the top of the table, unaffected by
 // category/объём/сделки/NATR filters or Top N — only their values refresh. Separate from
 // избранное (favorite): favorites only control the "★ Избранное" show-only-favorites filter.
-function natrReFilterAndRender() {
+function natrReFilterAndRender(animate) {
     const filtered = natrSortData(natrGetFilteredResults());
     if (natrPinned.size === 0) {
-        natrRenderTable(filtered, false, 0);
+        natrRenderTable(filtered, !!animate, 0);
         return;
     }
     let pinnedRows;
     if (natrAllResults.length === 0) {
         // No scan yet — pinned symbols still need to show at the top, so build stubs
         // from natrPinned the same way natrBuildFavoriteStubs does for favorites.
-        pinnedRows = [...natrPinned].map(sym => ({ symbol: sym, natr: null, _stub: true }));
+        pinnedRows = [...natrPinned].map(sym => ({ symbol: sym, natr: null }));
     } else {
         pinnedRows = natrSortData(natrAllResults.filter(r => natrPinned.has(r.symbol)));
     }
     const pinnedSet = new Set(pinnedRows.map(r => r.symbol));
     const rest = filtered.filter(r => !pinnedSet.has(r.symbol));
-    natrRenderTable(pinnedRows.concat(rest), false, pinnedRows.length);
+    natrRenderTable(pinnedRows.concat(rest), !!animate, pinnedRows.length);
 }
 // Debounced entry point for free-text/number filter inputs (объём, сделки, NATR-порог):
 // avoids re-filtering + re-rendering the whole table on every single keystroke.
 const natrReFilterAndRenderDebounced = debounce(natrReFilterAndRender, 180);
 function natrChangeTopN(v) {
     natrTopN = parseInt(v, 10) || 10;
-    try { ctSafeSetItem('natr_topn', String(natrTopN)); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_topn', String(natrTopN));
     if (natrAllResults.length) natrReFilterAndRender();
 }
 // Accepts plain numbers and shorthand like "10к"/"10k" (thousands) or "1м"/"1m" (millions),
@@ -2144,10 +2250,8 @@ function natrParseShorthand(str) {
 function natrChangeVolRange() {
     natrVolFrom = natrParseShorthand(document.getElementById('natrVolFrom').value);
     natrVolTo = natrParseShorthand(document.getElementById('natrVolTo').value);
-    try {
-        ctSafeSetItem('natr_vol_from', natrVolFrom === null ? '' : String(natrVolFrom));
-        ctSafeSetItem('natr_vol_to', natrVolTo === null ? '' : String(natrVolTo));
-    } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_vol_from', natrVolFrom === null ? '' : String(natrVolFrom));
+    ctSafeSetItem('natr_vol_to', natrVolTo === null ? '' : String(natrVolTo));
     // typing alone only re-colors matching values (see natrInRange in natrRenderTable) —
     // it does not hide rows unless the Фильтр button is toggled on
     if (natrAllResults.length) natrReFilterAndRenderDebounced();
@@ -2156,23 +2260,21 @@ function natrToggleVolFilter() {
     natrVolFilterActive = !natrVolFilterActive;
     const btn = document.getElementById('natrVolFilterBtn');
     if (btn) btn.classList.toggle('active', natrVolFilterActive);
-    try { ctSafeSetItem('natr_vol_filter_active', natrVolFilterActive ? '1' : '0'); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_vol_filter_active', natrVolFilterActive ? '1' : '0');
     if (natrAllResults.length) natrReFilterAndRender();
 }
 function natrChangeTradesRange() {
     natrTradesFrom = natrParseShorthand(document.getElementById('natrTradesFrom').value);
     natrTradesTo = natrParseShorthand(document.getElementById('natrTradesTo').value);
-    try {
-        ctSafeSetItem('natr_trades_from', natrTradesFrom === null ? '' : String(natrTradesFrom));
-        ctSafeSetItem('natr_trades_to', natrTradesTo === null ? '' : String(natrTradesTo));
-    } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_trades_from', natrTradesFrom === null ? '' : String(natrTradesFrom));
+    ctSafeSetItem('natr_trades_to', natrTradesTo === null ? '' : String(natrTradesTo));
     if (natrAllResults.length) natrReFilterAndRenderDebounced();
 }
 function natrToggleTradesFilter() {
     natrTradesFilterActive = !natrTradesFilterActive;
     const btn = document.getElementById('natrTradesFilterBtn');
     if (btn) btn.classList.toggle('active', natrTradesFilterActive);
-    try { ctSafeSetItem('natr_trades_filter_active', natrTradesFilterActive ? '1' : '0'); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_trades_filter_active', natrTradesFilterActive ? '1' : '0');
     if (natrAllResults.length) natrReFilterAndRender();
 }
 // Shared "is this value within the typed from/to bounds" check — used to color matching
@@ -2194,18 +2296,16 @@ function natrChangeNatrCompare() {
         const btn = document.getElementById('natrAlertBtn');
         if (btn) btn.classList.remove('active');
     }
-    try {
-        ctSafeSetItem('natr_compare_op', natrCompareOp);
-        ctSafeSetItem('natr_compare_value', natrCompareValue === null ? '' : String(natrCompareValue));
-        ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0');
-    } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_compare_op', natrCompareOp);
+    ctSafeSetItem('natr_compare_value', natrCompareValue === null ? '' : String(natrCompareValue));
+    ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0');
     if (natrAllResults.length) natrReFilterAndRenderDebounced();
 }
 function natrSavePinned() {
-    try { ctSafeSetItem('natr_pinned', JSON.stringify([...natrPinned])); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_pinned', JSON.stringify([...natrPinned]));
 }
 function natrSaveFavorites() {
-    try { ctSafeSetItem('natr_favorites', JSON.stringify([...natrFavorites])); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_favorites', JSON.stringify([...natrFavorites]));
 }
 function natrTogglePinned(symbol) {
     if (natrPinned.has(symbol)) natrPinned.delete(symbol); else natrPinned.add(symbol);
@@ -2220,7 +2320,7 @@ function natrToggleFavorite(symbol) {
 function natrToggleWatchlistOnly() {
     natrWatchlistOnly = !natrWatchlistOnly;
     document.getElementById('natrWatchlistBtn').classList.toggle('active', natrWatchlistOnly);
-    try { ctSafeSetItem('natr_watchlist_only', natrWatchlistOnly ? '1' : '0'); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_watchlist_only', natrWatchlistOnly ? '1' : '0');
     // Always re-render — even if no scan has been done yet, the user wants to see
     // what's in their favorites list right now (stub rows with "—" for unknown data).
     // When a scan already happened, the existing natrAllResults path takes over.
@@ -2245,7 +2345,7 @@ async function natrToggleAlerts() {
         natrAlertsEnabled = false;
         btn.classList.remove('active');
     }
-    try { ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0'); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0');
 }
 function natrFireAlert(symbol, natr) {
     const base = symbol.replace(/USDT$|USD1$/, '');
@@ -2461,7 +2561,7 @@ document.addEventListener('click', function(ev) {
 let globalTZ = 'auto'; // default
 function globalTZChanged(val) {
     globalTZ = val;
-    try { ctSafeSetItem('ct_global_tz', val); } catch(e) {}
+    ctSafeSetItem('ct_global_tz', val);
     globalTZSyncToWidgets();
 }
 function globalTZSyncToWidgets() {
@@ -2511,7 +2611,12 @@ function globalTZInit() {
         for (let i = 0; i < sel.options.length; i++) {
             if (sel.options[i].value === globalTZ) { found = true; break; }
         }
-        if (found) sel.value = globalTZ;
+        if (!found) {
+            // A value saved by an older version may not be in the static list —
+            // add it so the select actually shows the active timezone.
+            const o = document.createElement('option'); o.value = globalTZ; o.textContent = globalTZ; sel.appendChild(o);
+        }
+        sel.value = globalTZ;
     }
     globalTZSyncToWidgets();
 }
@@ -2699,8 +2804,8 @@ function natrRenderTable(data, animate, pinnedCount) {
         const natrCell = item.natr == null
             ? '<span class="mono" style="color:var(--muted)">—</span>'
             : '<span class="natr-val mono '+nc+' '+na+'">'+item.natr.toFixed(2)+'<small style="font-size:0.65em;color:var(--muted)">%</small></span>';
-        const caiLink = '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\''+item.symbol+'\')">AI</button>';
-        const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+natrTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); natrOpenInTiger(\''+item.symbol+'\')">'+NATR_TIGER_SVG+'</button>';
+        const caiLink = '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\''+jsAttr(item.symbol)+'\')">AI</button>';
+        const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+natrTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); natrOpenInTiger(\''+jsAttr(item.symbol)+'\')">'+NATR_TIGER_SVG+'</button>';
         return '<tr class="'+bc+' '+ra+(isPinnedRow?' natr-pinned-row':'')+'">'+
             natrPinFavCellHtml(item.symbol, isPinned, isFav, 'natrTogglePinned', 'natrToggleFavorite')+
             '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер '+displaySymbol+'" data-symbol="'+displaySymbol+'">'+
@@ -2734,12 +2839,13 @@ function natrRenderTable(data, animate, pinnedCount) {
 function natrSwitchMode(m) {
     natrMode = m;
     document.querySelectorAll('.natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
-    try { ctSafeSetItem('natr_mode', m); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('natr_mode', m);
     if (natrAllResults.length) natrReFilterAndRender();
 }
 async function natrStartBgUpdate() {
     if (natrIsScanning || natrIsBgUpdating || natrIsBanned()) return;
     natrIsBgUpdating = true; natrAbortCtrl = new AbortController();
+    natrPruneResultsCache();
     natrSetTableUpdating(true); natrSetStatus('Фоновое обновление...', true, true);
     const pairs = await natrGetAllPairs();
     if (!pairs.length || natrAbortCtrl.signal.aborted) { natrFinishBgUpdate(false); return; }
@@ -2755,7 +2861,7 @@ async function natrStartBgUpdate() {
     if (natrAbortCtrl.signal.aborted) { natrFinishBgUpdate(false); return; }
     natrAllResults = results.sort((a,b) => b.natr - a.natr);
     natrCheckAlerts(natrGetFilteredResults());
-    natrReFilterAndRender();
+    natrReFilterAndRender(true); // animate — flash rows whose NATR changed since the previous render
     natrFinishBgUpdate(true);
 }
 function natrFinishBgUpdate(ok) {
@@ -2771,12 +2877,19 @@ async function natrStartScan() {
     }
     if (natrIsBgUpdating && natrAbortCtrl) { natrAbortCtrl.abort(); natrIsBgUpdating = false; natrSetTableUpdating(false); }
     natrIsScanning = true; natrAbortCtrl = new AbortController();
+    natrPruneResultsCache();
     document.getElementById('natrScanBtn').classList.add('loading');
     natrShowSkeleton(); document.getElementById('natrEmptyState').style.display = 'none';
     natrSetStatus('Загрузка списка...', true);
     const pairs = await natrGetAllPairs();
     if (!pairs.length || natrAbortCtrl.signal.aborted) {
-        natrSetStatus('Ошибка API'); natrHideSkeleton();
+        if (!natrAbortCtrl.signal.aborted) {
+            // Show a visible failure state instead of a silently blank table.
+            natrSetStatus('Ошибка API'); natrHideSkeleton();
+            const p = document.querySelector('#natrEmptyState p');
+            if (p) p.textContent = 'Ошибка API Binance — проверьте соединение и нажмите «Сканировать» ещё раз';
+            document.getElementById('natrEmptyState').style.display = 'block';
+        } else { natrSetStatus('Отменено'); natrHideSkeleton(); }
         document.getElementById('natrScanBtn').classList.remove('loading');
         natrIsScanning = false; natrAbortCtrl = null; return;
     }
@@ -2901,24 +3014,24 @@ function contSetDirection(dir) {
     document.getElementById('contDirAllBtn').classList.toggle('active', dir === 'all');
     document.getElementById('contDirUpBtn').classList.toggle('active', dir === 'up');
     document.getElementById('contDirDownBtn').classList.toggle('active', dir === 'down');
-    try { ctSafeSetItem('cont_direction', dir); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('cont_direction', dir);
     if (contRawResults.length) contReFilterAndRender();
 }
 
 function contToggleWatchlistOnly() {
     contWatchlistOnly = !contWatchlistOnly;
     document.getElementById('contWatchlistBtn').classList.toggle('active', contWatchlistOnly);
-    try { ctSafeSetItem('cont_watchlist_only', contWatchlistOnly ? '1' : '0'); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('cont_watchlist_only', contWatchlistOnly ? '1' : '0');
     // Always re-render — even if no scan has been done yet, the user wants to see
     // what's in their favorites list right now (stub rows with "—" for unknown data).
     // When a scan already happened, the existing contRawResults path takes over.
     contReFilterAndRender();
 }
 function contSavePinned() {
-    try { ctSafeSetItem('cont_pinned', JSON.stringify([...contPinned])); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('cont_pinned', JSON.stringify([...contPinned]));
 }
 function contSaveFavorites() {
-    try { ctSafeSetItem('cont_favorites', JSON.stringify([...contFavorites])); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('cont_favorites', JSON.stringify([...contFavorites]));
 }
 function contTogglePinned(symbol) {
     if (contPinned.has(symbol)) contPinned.delete(symbol); else contPinned.add(symbol);
@@ -3043,18 +3156,16 @@ function contStartAutoRefresh() {
 // live, no network request needed. Only the timeframe tabs and "Дней проторговки" actually
 // change what gets fetched, so those still require pressing Сканировать again.
 function contChangeFilters() {
-    try {
-        ctSafeSetItem('cont_yest_from', document.getElementById('contYestFrom').value);
-        ctSafeSetItem('cont_yest_to', document.getElementById('contYestTo').value);
-        ctSafeSetItem('cont_body_ratio_from', document.getElementById('contBodyRatioFrom').value);
-        ctSafeSetItem('cont_body_ratio_to', document.getElementById('contBodyRatioTo').value);
-        ctSafeSetItem('cont_rvol_from', document.getElementById('contRvolFrom').value);
-        ctSafeSetItem('cont_rvol_to', document.getElementById('contRvolTo').value);
-        ctSafeSetItem('cont_today_from', document.getElementById('contTodayFrom').value);
-        ctSafeSetItem('cont_today_to', document.getElementById('contTodayTo').value);
-        ctSafeSetItem('cont_oi_from', document.getElementById('contOiFrom').value);
-        ctSafeSetItem('cont_oi_to', document.getElementById('contOiTo').value);
-    } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('cont_yest_from', document.getElementById('contYestFrom').value);
+    ctSafeSetItem('cont_yest_to', document.getElementById('contYestTo').value);
+    ctSafeSetItem('cont_body_ratio_from', document.getElementById('contBodyRatioFrom').value);
+    ctSafeSetItem('cont_body_ratio_to', document.getElementById('contBodyRatioTo').value);
+    ctSafeSetItem('cont_rvol_from', document.getElementById('contRvolFrom').value);
+    ctSafeSetItem('cont_rvol_to', document.getElementById('contRvolTo').value);
+    ctSafeSetItem('cont_today_from', document.getElementById('contTodayFrom').value);
+    ctSafeSetItem('cont_today_to', document.getElementById('contTodayTo').value);
+    ctSafeSetItem('cont_oi_from', document.getElementById('contOiFrom').value);
+    ctSafeSetItem('cont_oi_to', document.getElementById('contOiTo').value);
     if (contRawResults.length) contReFilterAndRenderDebounced();
 }
 function contSetStatus(text, active, updating) {
@@ -3120,28 +3231,22 @@ async function contFetchAndCalc(symbol, lookbackDays) {
     const todayChange = (currentPrice - todayOpen) / todayOpen * 100;
     const oiChangePct = oi ? oi.oiChangePct : null;
     const oiValue = oi ? oi.oiValue : null;
-    // Day-range position: 0% = sitting at today's low, 100% = sitting at today's high.
-    const todayHigh = parseFloat(todayCandle[2]), todayLow = parseFloat(todayCandle[3]);
-    const dayRangePos = (todayHigh > todayLow) ? (currentPrice - todayLow) / (todayHigh - todayLow) * 100 : null;
     // "Окно N" = 0 (or left empty) → skip history entirely and analyze TODAY'S own move so
     // far, instead of yesterday's. refChange is what every threshold/direction check below
     // runs against, so this one flag switches the whole screener's frame of reference from
     // "yesterday vs today" to "just today, right now" — and R коэфф./RVOL have no baseline
     // to compare against in that mode, so they come out null (filters on them just skip).
     const todayOnly = lookbackDays <= 0;
-    let dailyRanges = [];
     let bodyRatio = null, rvol = null;
     if (!todayOnly) {
         const availableDays = Math.max(0, Math.min(lookbackDays, daily.length - 2));
         let bodySum = 0, volSum = 0, n = 0;
-        // Days strictly BEFORE the pump day, oldest to newest. Each entry keeps range/high/low
-        // for the проторговка check + consolidation "box" (breakout check, stop level), while
-        // bodySum/volSum build the SAME window's average body-size and average volume — the
-        // baseline that yesterday's candle gets compared against for R коэфф. and RVOL.
+        // Days strictly BEFORE the pump day, oldest to newest — bodySum/volSum
+        // build that window's average body-size and average volume, the baseline
+        // that yesterday's candle gets compared against for R коэфф. and RVOL.
         for (let i = daily.length - 2 - availableDays; i <= daily.length - 3; i++) {
-            const o = parseFloat(daily[i][1]), h = parseFloat(daily[i][2]), l = parseFloat(daily[i][3]), c = parseFloat(daily[i][4]), v = parseFloat(daily[i][5]) || 0;
+            const o = parseFloat(daily[i][1]), c = parseFloat(daily[i][4]), v = parseFloat(daily[i][5]) || 0;
             if (!o) continue;
-            dailyRanges.push({ range: (h - l) / o * 100, high: h, low: l });
             bodySum += Math.abs(c - o) / o * 100;
             volSum += v;
             n++;
@@ -3155,7 +3260,7 @@ async function contFetchAndCalc(symbol, lookbackDays) {
         }
     }
     const refChange = todayOnly ? todayChange : yestChange;
-    return { symbol, yestChange, todayChange, refChange, todayOnly, rvol, bodyRatio, oiChangePct, oiValue, dailyRanges, currentPrice, dayRangePos, pumpClose: yestClose };
+    return { symbol, yestChange, todayChange, refChange, todayOnly, rvol, bodyRatio, oiChangePct, oiValue };
 }
 // Now just ONE daily-klines request + one OI request per symbol (was 3 with the old
 // intraday-RVOL version), so batches can be sized the same as NATR Scanner's again.
@@ -3192,6 +3297,11 @@ async function contStartScan() {
     const pairs = await natrGetAllPairs(); // same USDT perpetuals list the NATR scanner uses
     if (!pairs.length || contAbortCtrl.signal.aborted) {
         contSetStatus(contAbortCtrl.signal.aborted ? 'Остановлено' : 'Ошибка API');
+        if (!contAbortCtrl.signal.aborted) {
+            // Show a visible failure state instead of a silently blank table.
+            document.getElementById('contEmptyText').textContent = 'Ошибка API Binance — проверьте соединение и попробуйте ещё раз';
+            document.getElementById('contEmptyState').style.display = 'block';
+        }
         btn.classList.remove('loading'); btn.disabled = false;
         contIsScanning = false; contAbortCtrl = null; return;
     }
@@ -3331,8 +3441,7 @@ function contBuildFavoriteStubs() {
         todayChange: null,
         rvol: null,
         oiChangePct: null,
-        todayOnly: false,
-        _stub: true
+        todayOnly: false
     }));
 }
 // Pinned (📌 закреп) rows always stay visible at the top, same bypass behaviour as in
@@ -3353,7 +3462,7 @@ function contReFilterAndRender() {
         pinnedRows = [...contPinned].map(sym => ({
             symbol: sym,
             bodyRatio: null, refChange: null, todayChange: null,
-            rvol: null, oiChangePct: null, todayOnly: false, _stub: true
+            rvol: null, oiChangePct: null, todayOnly: false
         }));
     } else {
         pinnedRows = contSortData(contRawResults.filter(r => contPinned.has(r.symbol)));
@@ -3478,8 +3587,8 @@ function contRenderTable(data, pinnedCount) {
         const todayCell = r.todayChange === null
             ? '<span style="color:var(--muted)">—</span>'
             : '<span class="mono '+(todayColorClass ? todayColorClass.trim() : todayCls)+'">'+(r.todayChange>=0?'+':'')+r.todayChange.toFixed(1)+'%</span>';
-        const caiLink = '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\''+r.symbol+'\')">AI</button>';
-        const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+contTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); contOpenInTiger(\''+r.symbol+'\')">'+NATR_TIGER_SVG+'</button>';
+        const caiLink = '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\''+jsAttr(r.symbol)+'\')">AI</button>';
+        const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+contTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); contOpenInTiger(\''+jsAttr(r.symbol)+'\')">'+NATR_TIGER_SVG+'</button>';
         return '<tr class="'+(isPinnedRow?'natr-pinned-row':'')+'">'+
             natrPinFavCellHtml(r.symbol, isPinned, isFav, 'contTogglePinned', 'contToggleFavorite')+
             '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер '+displaySymbol+'" data-symbol="'+displaySymbol+'">'+
@@ -3532,6 +3641,13 @@ const tcSessions = [
     { name: 'Germany',      exch: 'Xetra',    sLocal: 9,    eLocal: 17.5,  region: 'Europe',       on: true, tz: 'Europe/Berlin' },
     { name: 'USA',          exch: 'NYSE',     sLocal: 9.5,  eLocal: 16,    region: 'Americas',     on: true, tz: 'America/New_York' },
 ];
+
+// Offsets only change on DST transitions, but computing one costs two Intl
+// toLocaleString round-trips — and tcDraw used to do that per session PER FRAME
+// (well over a thousand calls/sec with the legend open). Cached for 60s, which
+// is far finer granularity than any real DST shift. Declared above the first
+// top-level tcRecomputeSessionUTC() call, which also goes through it.
+const tcTzOffsetCache = new Map();
 
 // Converts each session's local open/close into today's UTC hours using that
 // exchange's real timezone offset (tcGetTzOffset is DST-aware via the IANA tz
@@ -3593,11 +3709,20 @@ const tcTzList = [
 let tcUserTz = null;
 let tcCanvas, tcCtx, tcW, tcH, tcCX, tcCY, tcR, tcDpr;
 
+// Offsets only change on DST transitions, but computing one costs two Intl
+// toLocaleString round-trips — and tcDraw used to do that per session PER FRAME
+// (well over a thousand calls/sec with the legend open). Cached for 60s, which
+// is far finer granularity than any real DST shift.
 function tcGetTzOffset(v) {
     if (v === 'auto') v = tcUserTz;
     if (v === 'UTC') return 0;
-    const now = new Date();
-    return (new Date(now.toLocaleString('en-US',{timeZone:v})) - new Date(now.toLocaleString('en-US',{timeZone:'UTC'}))) / 3600000;
+    const nowMs = Date.now();
+    const hit = tcTzOffsetCache.get(v);
+    if (hit && nowMs - hit.ts < 60000) return hit.off;
+    const d = new Date();
+    const off = (new Date(d.toLocaleString('en-US',{timeZone:v})) - new Date(d.toLocaleString('en-US',{timeZone:'UTC'}))) / 3600000;
+    tcTzOffsetCache.set(v, { off, ts: nowMs });
+    return off;
 }
 function tcGetTimeInTz(v) {
     if (v === 'auto') v = tcUserTz;
@@ -3672,7 +3797,15 @@ const TCC = {
     minNum: 'rgba(228, 232, 235, 0.2)',
 };
 
+let tcLastDomSync = 0;
 function tcDraw() {
+    // Don't burn CPU/GPU on 60fps repaints of a canvas nobody can see (another
+    // app section is active, or the browser tab is backgrounded). The loop
+    // restarts via tcResumeDraw() when the clock becomes visible again.
+    if (document.hidden || !document.getElementById('section-tw').classList.contains('active')) {
+        tcAnimFrameId = null;
+        return;
+    }
     tcCtx.clearRect(0, 0, tcW, tcH);
     const now = new Date();
     const utcH = now.getUTCHours(), utcM = now.getUTCMinutes();
@@ -3779,42 +3912,56 @@ function tcDraw() {
         tcCtx.fillText('UTC 0:00', tcCX + Math.cos(ua)*(mk+22), tcCY + Math.sin(ua)*(mk+22));
     }
 
-    const pad = n => String(n).padStart(2,'0');
-    const utcEl = document.getElementById('tcDUtc');
-    if (utcEl) utcEl.textContent = pad(utcH)+':'+pad(utcM);
-    const lt = tcGetTimeInTz('auto');
-    const locEl = document.getElementById('tcDLocal');
-    if (locEl) locEl.textContent = pad(lt.h)+':'+pad(lt.m);
-    const localOff = tcGetTzOffset('auto');
-    const ls = localOff >= 0 ? '+' : '';
-    const loH = Math.floor(Math.abs(localOff));
-    const loM = Math.round((Math.abs(localOff) - loH) * 60);
-    const locTagEl = document.getElementById('tcDLocalTag');
-    if (locTagEl) locTagEl.textContent = 'GMT' + ls + loH + (loM ? ':' + String(loM).padStart(2,'0') : '');
+    // Header clocks and legend times only show HH:MM — updating them once per
+    // second is plenty (they were previously recomputed on every frame, ~60x
+    // per second, including an Intl timezone format per exchange per frame).
+    const nowMs = Date.now();
+    if (nowMs - tcLastDomSync >= 1000) {
+        tcLastDomSync = nowMs;
+        const pad = n => String(n).padStart(2,'0');
+        const utcEl = document.getElementById('tcDUtc');
+        if (utcEl) utcEl.textContent = pad(utcH)+':'+pad(utcM);
+        const lt = tcGetTimeInTz('auto');
+        const locEl = document.getElementById('tcDLocal');
+        if (locEl) locEl.textContent = pad(lt.h)+':'+pad(lt.m);
+        const localOff = tcGetTzOffset('auto');
+        const ls = localOff >= 0 ? '+' : '';
+        const loH = Math.floor(Math.abs(localOff));
+        const loM = Math.round((Math.abs(localOff) - loH) * 60);
+        const locTagEl = document.getElementById('tcDLocalTag');
+        if (locTagEl) locTagEl.textContent = 'GMT' + ls + loH + (loM ? ':' + String(loM).padStart(2,'0') : '');
 
-    document.querySelectorAll('.tc-legend-item').forEach(item => {
-        const ses = tcSessions[parseInt(item.dataset.idx)];
-        let open = false;
-        if (ses.on) {
-            if (ses.s <= ses.e) open = utcTotal >= ses.s && utcTotal < ses.e;
-            else open = utcTotal >= ses.s || utcTotal < ses.e;
-        }
-        item.classList.toggle('active', open);
-        const timeEl = item.querySelector('.tc-legend-time');
-        const gmtEl = item.querySelector('.tc-legend-gmt');
-        if (timeEl && ses.tz) {
-            const t = tcGetTimeInTz(ses.tz);
-            const off = tcGetTzOffset(ses.tz);
-            const sign = off >= 0 ? '+' : '';
-            const offH = Math.floor(Math.abs(off));
-            const offM = Math.round((Math.abs(off) - offH) * 60);
-            timeEl.textContent = String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
-            if (gmtEl) gmtEl.textContent = 'GMT' + sign + offH + (offM ? ':' + String(offM).padStart(2,'0') : '');
-        }
-    });
+        document.querySelectorAll('.tc-legend-item').forEach(item => {
+            const ses = tcSessions[parseInt(item.dataset.idx)];
+            let open = false;
+            if (ses.on) {
+                if (ses.s <= ses.e) open = utcTotal >= ses.s && utcTotal < ses.e;
+                else open = utcTotal >= ses.s || utcTotal < ses.e;
+            }
+            item.classList.toggle('active', open);
+            const timeEl = item.querySelector('.tc-legend-time');
+            const gmtEl = item.querySelector('.tc-legend-gmt');
+            if (timeEl && ses.tz) {
+                const t = tcGetTimeInTz(ses.tz);
+                const off = tcGetTzOffset(ses.tz);
+                const sign = off >= 0 ? '+' : '';
+                const offH = Math.floor(Math.abs(off));
+                const offM = Math.round((Math.abs(off) - offH) * 60);
+                timeEl.textContent = String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
+                if (gmtEl) gmtEl.textContent = 'GMT' + sign + offH + (offM ? ':' + String(offM).padStart(2,'0') : '');
+            }
+        });
+    }
 
     tcAnimFrameId = requestAnimationFrame(tcDraw);
 }
+
+// Restart the draw loop after it paused itself (clock section re-activated or
+// browser tab became visible again). Safe to call at any time.
+function tcResumeDraw() {
+    if (tcInitialized && !tcAnimFrameId) { tcLastDomSync = 0; tcDraw(); }
+}
+document.addEventListener('visibilitychange', tcResumeDraw);
 
 function tcDrawHand(angle, len, w, color, tail) {
     tcCtx.beginPath();
@@ -3968,11 +4115,19 @@ function calFormatWeekLabel(start) {
     return start.getDate() + ' ' + sm + ' \u2014 ' + end.getDate() + ' ' + em;
 }
 
+// Intl.DateTimeFormat construction is expensive; calRender used to build a
+// new formatter per call — hundreds of them per calendar render. One cached
+// formatter per timezone is plenty (formatToParts stays per-call).
+const calFmtCache = new Map();
 function calUTCToLocal(utcDate, targetTZ) {
-    const f = new Intl.DateTimeFormat('ru-RU', {
-        timeZone: targetTZ, day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', hour12: false
-    });
+    let f = calFmtCache.get(targetTZ);
+    if (!f) {
+        f = new Intl.DateTimeFormat('ru-RU', {
+            timeZone: targetTZ, day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: false
+        });
+        calFmtCache.set(targetTZ, f);
+    }
     const parts = f.formatToParts(utcDate);
     const p = Object.fromEntries(parts.map(x => [x.type, x.value]));
     return {
@@ -4051,28 +4206,6 @@ function calClearStates() {
     document.getElementById('calLoadingState').style.display = 'none';
     document.getElementById('calErrorState').style.display = 'none';
     document.getElementById('calGrid').style.display = '';
-}
-
-// Tracks whether live stock events (Yahoo Finance) successfully loaded for the
-// current week. Used by calUpdateSourceBadge to compose a cleaner label
-// like "ForexFactory + Yahoo Live" instead of exposing proxy internals.
-let calLiveStocksOk = false;
-// Tracks whether MOEX ISS live Russian news loaded for the current week.
-// Used by calUpdateSourceBadge to compose a label like
-// "ForexFactory + Yahoo + MOEX Live".
-let calLiveRuOk = false;
-// Tracks whether the ForexFactory live fetch succeeded for the current week.
-// Set inside calFetchEvents; read inside calFetchStockEvents so we don't
-// accidentally relabel an offline badge as live just because Yahoo loaded.
-let calLiveFFOk = false;
-
-function calUpdateSourceBadge(isLive, sourceName) {
-    // Source badge intentionally removed from the UI per user request — no
-    // more "ForexFactory (кэш)", "ForexFactory (старый кэш)", or "Демо: ..."
-    // labels. Keep the function as a no-op so existing call sites don't break,
-    // and still toggle the calLiveFFOk/calLiveStocksOk/calLiveRuOk flags so
-    // internal cache-vs-live logic keeps working.
-    // (Previously this function updated #calSourceBadge / #calSourceText.)
 }
 
 function calParseApiData(data) {
@@ -4366,6 +4499,14 @@ const CAL_RU_LIVE_SOURCES = [
     }
 ];
 
+// Shared CORS-proxy chain for the calendar's live sources (MOEX, Yahoo) —
+// previously this exact list was duplicated inside each fetcher.
+const CAL_PROXIES = [
+    function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+    function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+    function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
+];
+
 // Fetch MOEX ISS live news for the displayed week (Russian market only).
 // Returns an array of event objects, or null if all live sources failed.
 // 24h localStorage cache — daily refresh is plenty, don't hammer MOEX.
@@ -4389,11 +4530,7 @@ async function calFetchRuEventsLive(weekStart) {
     } catch(e) { /* ignore cache errors */ }
 
     // 2) Try each source through each CORS proxy
-    const proxies = [
-        function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
-        function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-        function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
-    ];
+    const proxies = CAL_PROXIES;
 
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
@@ -4490,13 +4627,11 @@ async function calFetchRuEventsLive(weekStart) {
     if (!sourceOk || !liveEvents.length) return null;
 
     // 3) Cache live events for 2h
-    try {
-        ctSafeSetItem(cacheKey, JSON.stringify({
+    ctSafeSetItem(cacheKey, JSON.stringify({
             ts: Date.now(),
             weekStart: weekStart.toISOString(),
             events: liveEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
         }));
-    } catch(e) { /* ignore quota */ }
 
     return liveEvents;
 }
@@ -4537,11 +4672,7 @@ async function calFetchStockEventsLive(weekStart) {
     }
 
     // 3) Try each source through each CORS proxy
-    const proxies = [
-        function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
-        function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-        function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
-    ];
+    const proxies = CAL_PROXIES;
 
     // Hard week bounds — events outside this window are rejected no matter
     // what the proxy returns (defends against stale proxy-cached responses
@@ -4561,14 +4692,21 @@ async function calFetchStockEventsLive(weekStart) {
             sourceHitDays = 0;
             let proxyOk = true;
 
-            for (const dayISO of dayISOs) {
+            // All 7 weekdays fetched in parallel through the same proxy — a
+            // full week used to take 7 sequential round-trips (worst case ~49s
+            // on timeouts); now it costs one round-trip's worth of time.
+            const dayResults = await Promise.all(dayISOs.map(async dayISO => {
                 try {
                     const url = proxy(src.buildDayUrl(dayISO));
                     const resp = await calFetchWithTimeout(url, {}, 7000);
-                    if (!resp.ok) { proxyOk = false; break; }
+                    if (!resp.ok) return null;
                     const data = await resp.json();
-                    const parsed = src.parse(data);
-                    if (!parsed) { proxyOk = false; break; }
+                    return src.parse(data) || [];
+                } catch(e) { return null; }
+            }));
+            proxyOk = dayResults.every(r => Array.isArray(r));
+            if (proxyOk) {
+                for (const parsed of dayResults) {
                     if (parsed.length) {
                         sourceHitDays++;
                         for (const p of parsed) {
@@ -4611,7 +4749,7 @@ async function calFetchStockEventsLive(weekStart) {
                             });
                         }
                     }
-                } catch(e) { proxyOk = false; break; }
+                }
             }
 
             if (proxyOk && sourceHitDays > 0) {
@@ -4629,13 +4767,11 @@ async function calFetchStockEventsLive(weekStart) {
     if (!sourceOk || !liveEvents.length) return null;
 
     // 4) Cache live events for 24h
-    try {
-        ctSafeSetItem(cacheKey, JSON.stringify({
+    ctSafeSetItem(cacheKey, JSON.stringify({
             ts: Date.now(),
             weekStart: weekStart.toISOString(),
             events: liveEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
         }));
-    } catch(e) { /* ignore quota */ }
 
     return liveEvents;
 }
@@ -4822,7 +4958,6 @@ async function calFetchEvents() {
             const fallbackResult = calParseApiData(data);
             calApiWeekStart = fallbackResult.apiWeekStart || calGetWeekStart(new Date());
             calAllEvents = fallbackResult.events;
-            calLiveFFOk = false;
         } else {
             calApiWeekStart = result.apiWeekStart || calGetWeekStart(new Date());
             calAllEvents = result.events;
@@ -4832,7 +4967,6 @@ async function calFetchEvents() {
             // localStorage) or fallback data (it would overwrite real live
             // data with the embedded dataset on the next reload).
             if (source === 'ForexFactory Live') {
-                calLiveFFOk = true;
                 try {
                     // Store weekStart alongside the payload so the cache-first
                     // branch above can verify the cache belongs to THIS week.
@@ -4842,14 +4976,10 @@ async function calFetchEvents() {
                         data: data
                     }));
                 } catch(e) { /* ignore quota errors */ }
-            } else {
-                calLiveFFOk = false;
             }
         }
 
         calClearStates();
-        // Source badge removed from UI; keep call for internal side effects.
-        calUpdateSourceBadge(source !== 'embedded', source);
         // Fetch crypto events in background
         calFetchCryptoEvents();
         // Fetch stock events (RU/US/CN) — Yahoo+MOEX live with embedded fallback
@@ -4859,7 +4989,6 @@ async function calFetchEvents() {
     } catch (err) {
         console.error('Calendar parse error:', err);
         calSetError('Ошибка обработки данных: ' + (err.message || ''));
-        calUpdateSourceBadge(false);
         return [];
     }
 }
@@ -4977,13 +5106,11 @@ async function calFetchCryptoEvents() {
                     if (newEvents.length) {
                         appendEvents(newEvents);
                         // Cache crypto events for offline use (7-day TTL)
-                        try {
-                            ctSafeSetItem('cal_crypto_cache_v3', JSON.stringify({
+                        ctSafeSetItem('cal_crypto_cache_v3', JSON.stringify({
                                 ts: Date.now(),
                                 weekStart: weekStart.toISOString(),
                                 events: newEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
                             }));
-                        } catch(cacheErr) { /* ignore quota */ }
                         console.log('Crypto events loaded from ' + src.name + ':', newEvents.length);
                     }
                     return; // success, stop trying
@@ -5093,51 +5220,28 @@ async function calFetchStockEvents() {
                     .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
                     .filter(e => e.utcDate >= weekStart && e.utcDate < weekEnd);
                 if (cachedEvents.length && appendEvents(cachedEvents)) {
-                    calLiveStocksOk = !!(parsed.yahooOk);
-                    calLiveRuOk = !!(parsed.moexOk);
-                    // Refresh badge label since live flags changed
-                    if (calLiveStocksOk || calLiveRuOk) {
-                        if (calLiveFFOk) calUpdateSourceBadge(true, 'ForexFactory Live');
-                        else if (calLiveStocksOk) calUpdateSourceBadge(true, 'Yahoo Live');
-                        else calUpdateSourceBadge(true, 'MOEX Live');
-                    }
-                    console.log('Stock events loaded from cache (yahoo=' + (parsed.yahooOk ? 'ok' : 'no') + ', moex=' + (parsed.moexOk ? 'ok' : 'no') + '):', cachedEvents.length);
+                    console.log('Stock events loaded from cache:', cachedEvents.length);
                     return;
                 }
             }
         }
     } catch(cacheErr) { /* ignore cache errors */ }
 
-    // 2) Try Yahoo Finance live earnings (US-listed only) — fire and forget
+    // 2) Try Yahoo Finance live earnings (US-listed only)
     let liveUsEvents = null;
     try {
         liveUsEvents = await calFetchStockEventsLive(weekStart);
     } catch(e) {
         console.warn('Yahoo live earnings failed:', e.message);
     }
-    calLiveStocksOk = !!(liveUsEvents && liveUsEvents.length);
 
-    // 3) Try MOEX ISS live news (Russian market) — fire and forget
+    // 3) Try MOEX ISS live news (Russian market)
     let liveRuEvents = null;
     try {
         liveRuEvents = await calFetchRuEventsLive(weekStart);
     } catch(e) {
         console.warn('MOEX live news failed:', e.message);
     }
-    calLiveRuOk = !!(liveRuEvents && liveRuEvents.length);
-
-    // 4) Update badge with the combined live status
-    if (calLiveStocksOk || calLiveRuOk) {
-        if (calLiveFFOk) {
-            // FF + at least one live stocks source
-            calUpdateSourceBadge(true, 'ForexFactory Live');
-        } else if (calLiveStocksOk) {
-            calUpdateSourceBadge(true, 'Yahoo Live');
-        } else {
-            calUpdateSourceBadge(true, 'MOEX Live');
-        }
-    }
-    // If neither Yahoo nor MOEX is live, badge stays as FF set it (offline / cached / fallback).
 
     // 5) Build the merged event list per-region
     let mergedEvents = [];
@@ -5199,15 +5303,11 @@ async function calFetchStockEvents() {
 
     if (appendEvents(mergedEvents)) {
         // Cache for next reload / refresh (2h)
-        try {
-            ctSafeSetItem(cacheKey, JSON.stringify({
+        ctSafeSetItem(cacheKey, JSON.stringify({
                 ts: Date.now(),
                 weekStart: weekStart.toISOString(),
-                yahooOk: calLiveStocksOk,
-                moexOk: calLiveRuOk,
                 events: mergedEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
             }));
-        } catch(cacheErr) { /* ignore quota */ }
     }
 }
 
@@ -5248,6 +5348,14 @@ function calRender() {
     const targetTZ = calSelectedTZ === 'local' ? Intl.DateTimeFormat().resolvedOptions().timeZone : calSelectedTZ;
     const nowLocal = calUTCToLocal(now, targetTZ);
     const today = new Date(nowLocal.year, nowLocal.month, nowLocal.day);
+    // One local-date computation per event (cached) — the day columns below
+    // used to re-run calUTCToLocal for EVERY event in EVERY one of the 7 columns.
+    const localDates = new Map();
+    const localOf = (e) => {
+        let ld = localDates.get(e);
+        if (!ld) { ld = calUTCToLocal(e.utcDate, targetTZ); localDates.set(e, ld); }
+        return ld;
+    };
 
     let filtered = calAllEvents.filter(e => {
         if (calImpactFilter.size > 0 && !calImpactFilter.has(e.impact)) return false;
@@ -5260,7 +5368,7 @@ function calRender() {
     const highEvents = calAllEvents.filter(e => e.impact === 'high').length;
     const medEvents = calAllEvents.filter(e => e.impact === 'medium').length;
     const todayEvents = calAllEvents.filter(e => {
-        const ld = calUTCToLocal(e.utcDate, targetTZ);
+        const ld = localOf(e);
         return ld.year === nowLocal.year && ld.month === nowLocal.month && ld.day === nowLocal.day;
     }).length;
 
@@ -5293,7 +5401,7 @@ function calRender() {
             col.appendChild(empty);
         } else {
             const dayEvents = filtered.filter(e => {
-                const ld = calUTCToLocal(e.utcDate, targetTZ);
+                const ld = localOf(e);
                 return ld.year === dayDate.getFullYear() && ld.month === dayDate.getMonth() && ld.day === dayDate.getDate();
             });
 
@@ -5394,14 +5502,12 @@ function calUpdateNextEvent() {
 
     // Highlight the next event card in the grid
     document.querySelectorAll('.cal-event-card.next-event-highlight').forEach(c => c.classList.remove('next-event-highlight'));
-    if (nextEvt) {
-        const ts = nextEvt.utcDate.getTime();
-        document.querySelectorAll('.cal-event-card[data-evt-ts="' + ts + '"]').forEach(c => {
-            if (c.querySelector('.cal-event-title') && c.querySelector('.cal-event-title').textContent.includes(nextEvt.title)) {
-                c.classList.add('next-event-highlight');
-            }
-        });
-    }
+    const ts = nextEvt.utcDate.getTime();
+    document.querySelectorAll('.cal-event-card[data-evt-ts="' + ts + '"]').forEach(c => {
+        if (c.querySelector('.cal-event-title') && c.querySelector('.cal-event-title').textContent.includes(nextEvt.title)) {
+            c.classList.add('next-event-highlight');
+        }
+    });
 }
 
 function calUpdateCountdown(evt) {
@@ -5450,7 +5556,7 @@ async function calToggleNotify() {
         btn.classList.remove('active');
         btn.textContent = '\ud83d\udd14 \u041d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f \u0432\u044b\u043a\u043b';
     }
-    try { ctSafeSetItem('cal_notify_enabled', calNotifyEnabled ? '1' : '0'); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('cal_notify_enabled', calNotifyEnabled ? '1' : '0');
 }
 // Syncs the reminder button's visual state with calNotifyEnabled restored from
 // localStorage — called once from calInit() so a reload doesn't silently lose it.
@@ -5490,7 +5596,7 @@ function calToggleImpact(impact) {
         calImpactFilter.add(impact);
     }
     document.querySelectorAll('.cal-filter-btn').forEach(b => b.classList.toggle('active', calImpactFilter.has(b.dataset.impact)));
-    try { ctSafeSetItem('cal_impact_filter', JSON.stringify([...calImpactFilter])); } catch(e) {}
+    ctSafeSetItem('cal_impact_filter', JSON.stringify([...calImpactFilter]));
     calRender();
 }
 function calToggleCountry(country) {
@@ -5500,7 +5606,7 @@ function calToggleCountry(country) {
         calCountryFilter.add(country);
     }
     document.querySelectorAll('.cal-country-btn').forEach(b => b.classList.toggle('active', calCountryFilter.has(b.dataset.country)));
-    try { ctSafeSetItem('cal_country_filter', JSON.stringify([...calCountryFilter])); } catch(e) {}
+    ctSafeSetItem('cal_country_filter', JSON.stringify([...calCountryFilter]));
     calRender();
 }
 
@@ -5691,20 +5797,20 @@ function caiExtractBase(input) {
 }
 
 async function caiSafeFetch(url) {
-    try {
-        var response = await fetch(url);
-        if (response.status===429) throw new Error('RATE_LIMITED');
-        if (!response.ok) throw new Error('HTTP_ERROR_'+response.status);
-        var text = await response.text();
-        if (text.trim().indexOf('Throttled')===0) throw new Error('THROTTLED');
-        if (text.trim().indexOf('{"error":')===0) {
-            try { var ed = JSON.parse(text); throw new Error('API_ERROR: '+ed.error); } catch(pe) { if (pe.message.indexOf('API_ERROR')===0) throw pe; }
+    var response = await fetch(url);
+    if (response.status === 429) throw new Error('RATE_LIMITED');
+    if (!response.ok) throw new Error('HTTP_ERROR_' + response.status);
+    var text = await response.text();
+    if (text.trim().indexOf('Throttled') === 0) throw new Error('THROTTLED');
+    if (text.trim().indexOf('{"error":') === 0) {
+        try {
+            var ed = JSON.parse(text);
+            if (ed && ed.error) throw new Error('API_ERROR: ' + ed.error);
+        } catch(pe) {
+            if (String(pe.message).indexOf('API_ERROR') === 0) throw pe;
         }
-        try { return JSON.parse(text); } catch(pe) { throw new Error('INVALID_JSON'); }
-    } catch(e) {
-        if (['RATE_LIMITED','THROTTLED','HTTP_ERROR_429'].indexOf(e.message)!==-1) throw e;
-        throw e;
     }
+    try { return JSON.parse(text); } catch(pe) { throw new Error('INVALID_JSON'); }
 }
 
 async function caiTranslateMyMemory(text) {
@@ -5785,7 +5891,7 @@ function caiGenerateLinks(data, coinId) {
 }
 
 function caiSaveHistory() {
-    try { ctSafeSetItem('cai_history', JSON.stringify(caiSearchHistory)); } catch(e) { /* non-fatal */ }
+    ctSafeSetItem('cai_history', JSON.stringify(caiSearchHistory));
 }
 function caiAddToHistory(base) {
     if (!base) return;
@@ -5804,7 +5910,7 @@ function caiRenderHistoryChips() {
     row.style.display = 'flex';
     chips.innerHTML = caiSearchHistory.map(function(b) {
         var safe = escapeHtml(b);
-        return '<span class="cai-history-chip" onclick="caiSetInput(\''+safe+'\')">'+safe+'</span>';
+        return '<span class="cai-history-chip" onclick="caiSetInput(\''+jsAttr(b)+'\')">'+safe+'</span>';
     }).join('');
 }
 // Renders a 7-day price sparkline from CoinGecko's sparkline_7d.price array
@@ -5862,7 +5968,7 @@ function caiShowDisambiguation(coins) {
         var safeId = escapeHtml(c.id);
         var img = escapeHtml(safeUrl(c.thumb || c.large || ''));
         var rank = c.market_cap_rank ? ('#'+c.market_cap_rank) : '';
-        return '<div class="cai-disambig-item" onclick="caiSelectDisambiguated(\''+c.id+'\')">'+
+        return '<div class="cai-disambig-item" onclick="caiSelectDisambiguated(\''+jsAttr(c.id)+'\')">'+
             (img ? '<img src="'+img+'" alt="'+safeName+'" onerror="this.style.display=\'none\'">' : '') +
             '<div><div class="di-name">'+safeName+'</div><div class="di-id">'+safeId+'</div></div>'+
             '<div class="di-rank">'+escapeHtml(rank)+'</div></div>';
@@ -5918,7 +6024,7 @@ async function caiLoadCoinDetails(coinId, coinNameHint, historyBase, btn) {
     var converterHTML = caiConverterWidget();
     document.getElementById('caiResult').innerHTML =
         '<div class="cai-result-header">'+
-            '<img src="'+safeImgUrl+'" class="cai-logo" alt="'+safeName+'" onerror="this.src=\'https://via.placeholder.com/75\'">'+
+            '<img src="'+safeImgUrl+'" class="cai-logo" alt="'+safeName+'" onerror="this.onerror=null;this.src=\'data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 75 75%22%3E%3Crect width=%2275%22 height=%2275%22 rx=%2218%22 fill=%22%23151c25%22/%3E%3Ctext x=%2237.5%22 y=%2246%22 font-size=%2234%22 text-anchor=%22middle%22 fill=%22%235e6d7a%22%3E%3F%3C/text%3E%3C/svg%3E\'">'+
             '<div class="cai-result-title"><h2>'+safeName+'</h2><div class="cai-symbol">'+safeSymbol+'</div><span class="category-badge '+cat.cls+'">'+cat.icon+' '+safeCatName+'</span></div>'+
         '</div>'+
         '<div class="cai-stats">'+
