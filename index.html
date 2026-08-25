@@ -78,18 +78,10 @@
             .top-nav { flex-direction: column; height: auto; padding: 10px 12px; gap: 8px; }
             .nav-tabs { width: 100%; justify-content: flex-start; }
             .nav-tab { padding: 0 14px; font-size: 12px; min-height: 40px; display: inline-flex; align-items: center; }
-            /* The Tiger settings popup was a fixed 480px + a hard two-column row —
-               guaranteed to overflow a phone screen. Below the breakpoint its trigger
-               wrapper is stretched to the full nav width so the popup can anchor to
-               left:0/right:0 instead of a hardcoded pixel width, and the two
-               NATR/Continuation columns stack instead of sitting side by side. */
+            /* Настройки на телефоне: обёртка растягивается на всю ширину навбара
+               (сами правила панели — ниже, ПОСЛЕ её базовых стилей, иначе каскад
+               снова отдаст победу базовому width/max-width). */
             .natr-tiger-settings-wrap { width: 100%; }
-            .natr-tiger-settings-panel {
-                left: 0 !important; right: 0 !important; min-width: 0 !important; width: auto;
-                max-height: 70vh; overflow-y: auto;
-            }
-            .natr-tiger-settings-cols { flex-direction: column; gap: 16px; }
-            .natr-tiger-settings-cols > div[style*="width:1px"] { display: none; }
             .natr-tiger-settings-wrap .natr-tool-btn { padding: 0 14px; font-size: 12px; min-height: 40px; }
         }
 
@@ -99,6 +91,92 @@
         .natr-tiger-settings-wrap .natr-tool-btn {
             height: 36px; padding: 0 16px; border-radius: 10px;
             font-size: 13px; font-weight: 600;
+        }
+
+        /* ======================================================
+           ПАНЕЛЬ «НАСТРОЙКИ» — в дизайн-языке приложения
+           (карточка bg-card, золотой акцент, Space Grotesk,
+           анимация открытия как у тоста). Все стили здесь вместо
+           прежних разрозненных inline-стилей в разметке.
+           ====================================================== */
+        .natr-tiger-settings-wrap { position: relative; }
+        .natr-tiger-settings-panel {
+            position: absolute; right: 0; top: calc(100% + 8px); z-index: 50;
+            display: none; flex-direction: column;
+            width: 520px; max-width: calc(100vw - 32px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 18px 48px rgba(0,0,0,0.5);
+            overflow: hidden;
+            animation: stgIn 0.2s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes stgIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .stg-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.02);
+        }
+        .stg-header-title {
+            display: inline-flex; align-items: center; gap: 9px;
+            font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--fg);
+        }
+        .stg-header-title svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+        .stg-header-title em { color: var(--accent); font-style: normal; }
+        .stg-close {
+            margin-left: auto; width: 30px; height: 30px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+            background: transparent; border: 1px solid var(--border); color: var(--muted);
+            cursor: pointer; transition: all 0.2s;
+        }
+        .stg-close:hover { color: var(--fg); background: rgba(255,255,255,0.06); transform: rotate(90deg); }
+        .stg-close svg { width: 14px; height: 14px; }
+        .stg-body { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+        .stg-section-title {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 700; color: var(--fg);
+            text-transform: uppercase; letter-spacing: 0.07em;
+        }
+        .stg-section-title svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+        .stg-desc { font-size: 11px; color: var(--muted); line-height: 1.5; margin: 6px 0 10px; }
+        .stg-field { display: flex; flex-direction: column; gap: 6px; }
+        .stg-field > label { font-size: 11px; font-weight: 600; color: var(--muted); }
+        .stg-field .sec-select { width: 100%; }
+        .stg-divider { height: 1px; background: var(--border); }
+        .natr-tiger-settings-cols { display: flex; gap: 12px; }
+        .natr-tiger-settings-cols .stg-col {
+            flex: 1; min-width: 0;
+            display: flex; flex-direction: column; gap: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        .stg-col-title {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 700; color: var(--accent);
+        }
+        .stg-col-title::before {
+            content: ''; width: 6px; height: 6px; border-radius: 2px;
+            background: var(--accent); opacity: 0.65; flex-shrink: 0;
+        }
+
+        /* Мобильная версия панели «Настройки» — намеренно ПОСЛЕ базовых правил
+           .natr-tiger-settings-panel выше: при равной специфичности побеждает
+           позднее правило, и base width:520px/max-width иначе молча перекрыл бы
+           мобильные переопределения (тот же каскадный баг, что был с overflow
+           у таблиц скринеров). Панель = вся ширина навбара, карточки в столбец,
+           высота не более 72% экрана со своей прокруткой. */
+        @media (max-width: 640px) {
+            .natr-tiger-settings-panel {
+                left: 0; right: 0; width: auto; max-width: none;
+                max-height: 72vh; overflow-y: auto;
+            }
+            .natr-tiger-settings-cols { flex-direction: column; gap: 12px; }
         }
 
         /* === SHARED COMPONENTS === */
@@ -407,13 +485,30 @@
         .natr-empty { padding: 60px 20px; text-align: center; color: var(--muted); }
         .natr-empty p { margin-top: 12px; font-size: 14px; }
 
+        /* Полоса-«шайн» фонового обновления. Сам оверлей — НЕПОДВИЖНЫЙ
+           отсекающий слой (inset:0 + overflow:hidden), а двигается только
+           его ::before. Раньше translateX(±100%) применялся к самому
+           full-width оверлею: с overflow:hidden на контейнере это
+           обрезалось бесследно, но после перехода на overflow-x:auto
+           (мобильная прокрутка таблиц) уезжающая за правый край полоса
+           стала создавать ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ — скроллбар мигал при
+           каждом фоновом обновлении. Теперь движение клипается здесь и
+           никогда не попадает в scroll-область таблицы. */
         .bg-update-overlay {
             position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            overflow: hidden; pointer-events: none; z-index: 10;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .bg-update-overlay::before {
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
             background: linear-gradient(90deg,transparent,var(--accent),transparent);
-            opacity: 0; transition: opacity 0.3s; z-index: 10;
         }
         .natr-table-wrap.updating .bg-update-overlay {
-            opacity: 1; animation: slideRight 1.5s ease-in-out infinite;
+            opacity: 1;
+        }
+        .natr-table-wrap.updating .bg-update-overlay::before {
+            animation: slideRight 1.5s ease-in-out infinite;
         }
         @keyframes slideRight { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
 
@@ -1048,67 +1143,78 @@
         <button class="nav-tab" data-section="cal" onclick="switchSection('cal')">Calendar</button>
         <button class="nav-tab" data-section="cai" onclick="switchSection('cai')">CryptoAI</button>
     </div>
-    <div class="natr-tiger-settings-wrap" style="position:relative;">
-        <button class="natr-tool-btn" id="natrTigerSettingsBtn" style="display:inline-flex;align-items:center;gap:6px;" onclick="natrToggleTigerSettings()" title="Настройки подключения Tiger.com Terminal — на какой бирже открывать тикер">
+    <div class="natr-tiger-settings-wrap">
+        <button class="natr-tool-btn" id="natrTigerSettingsBtn" onclick="natrToggleTigerSettings()" title="Настройки — часовой пояс и подключение Tiger.com Terminal">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             <span>Настройки</span>
         </button>
-        <div id="natrTigerSettings" class="natr-tiger-settings-panel" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:480px;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="font-size:13px;font-weight:700;color:var(--fg);">Часовой пояс — Часы и Календарь</div>
-                <div style="font-size:11px;color:var(--muted);">Общий часовой пояс для вкладок Trader Clock и Calendar.</div>
-                <select class="sec-select" id="globalTZSelect" onchange="globalTZChanged(this.value)" style="width:220px;">
-                    <option value="auto">Автоопределение</option>
-                    <option value="local">Моё время (системное)</option>
-                    <option value="UTC">UTC</option>
-                    <option value="Asia/Irkutsk">Иркутск (IRKT, UTC+8)</option>
-                    <option value="Europe/Moscow">Москва (MSK, UTC+3)</option>
-                    <option value="Europe/Istanbul">Стамбул (TRT, UTC+3)</option>
-                    <option value="Asia/Dubai">Дубай (GST, UTC+4)</option>
-                    <option value="Asia/Kolkata">Мумбаи (IST, UTC+5:30)</option>
-                    <option value="Asia/Singapore">Сингапур (SGT, UTC+8)</option>
-                    <option value="Asia/Hong_Kong">Гонконг (HKT, UTC+8)</option>
-                    <option value="Asia/Shanghai">Шанхай (CST, UTC+8)</option>
-                    <option value="Asia/Tokyo">Токио (JST, UTC+9)</option>
-                    <option value="Asia/Seoul">Сеул (KST, UTC+9)</option>
-                    <option value="Australia/Sydney">Сидней (AEST, UTC+10/+11)</option>
-                    <option value="Europe/Berlin">Берлин (CET, UTC+1/+2)</option>
-                    <option value="Europe/London">Лондон (GMT, UTC+0/+1)</option>
-                    <option value="America/Sao_Paulo">Сан-Паулу (BRT, UTC-3)</option>
-                    <option value="America/New_York">Нью-Йорк (EST, UTC-5/-4)</option>
-                    <option value="America/Toronto">Торонто (EST, UTC-5/-4)</option>
-                    <option value="America/Los_Angeles">Лос-Анджелес (PST, UTC-8/-7)</option>
-                </select>
+        <div id="natrTigerSettings" class="natr-tiger-settings-panel" role="dialog" aria-label="Настройки">
+            <div class="stg-header">
+                <div class="stg-header-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><em>Настройки</em></div>
+                <button type="button" class="stg-close" onclick="natrToggleTigerSettings()" title="Закрыть" aria-label="Закрыть настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>
-            <div style="height:1px;background:var(--border);margin:6px 0;"></div>
-            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px;">Кнопка «Tiger» откроет тикер на выбранной бирже и в выбранной группе линковки.</div>
-            <div class="natr-tiger-settings-cols" style="display:flex;gap:20px;">
-                <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
-                    <div style="font-size:13px;font-weight:700;color:var(--fg);">NATR Scanner</div>
-                    <div>
-                        <label class="natr-tool-label" for="natrTigerExchangeSelect" style="display:block;margin-bottom:4px;">Биржа в Tiger:</label>
-                        <select class="sec-select" id="natrTigerExchangeSelect" onchange="natrChangeTigerExchange(this.value)" style="width:100%;"></select>
-                    </div>
-                    <div>
-                        <label class="natr-tool-label" for="natrTigerLinkGroupSelect" style="display:block;margin-bottom:4px;">Группа линковки:</label>
-                        <select class="sec-select" id="natrTigerLinkGroupSelect" onchange="natrChangeTigerLinkGroup(this.value)" style="width:100%;"></select>
+            <div class="stg-body">
+                <div class="stg-section">
+                    <div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Часовой пояс — Часы и Календарь</div>
+                    <div class="stg-desc">Общий часовой пояс для вкладок Trader Clock и Calendar. Влияет на часы бирж и отображение событий календаря.</div>
+                    <div class="stg-field">
+                        <label for="globalTZSelect">Часовой пояс</label>
+                        <select class="sec-select" id="globalTZSelect" onchange="globalTZChanged(this.value)">
+                            <option value="auto">Автоопределение</option>
+                            <option value="local">Моё время (системное)</option>
+                            <option value="UTC">UTC</option>
+                            <option value="Asia/Irkutsk">Иркутск (IRKT, UTC+8)</option>
+                            <option value="Europe/Moscow">Москва (MSK, UTC+3)</option>
+                            <option value="Europe/Istanbul">Стамбул (TRT, UTC+3)</option>
+                            <option value="Asia/Dubai">Дубай (GST, UTC+4)</option>
+                            <option value="Asia/Kolkata">Мумбаи (IST, UTC+5:30)</option>
+                            <option value="Asia/Singapore">Сингапур (SGT, UTC+8)</option>
+                            <option value="Asia/Hong_Kong">Гонконг (HKT, UTC+8)</option>
+                            <option value="Asia/Shanghai">Шанхай (CST, UTC+8)</option>
+                            <option value="Asia/Tokyo">Токио (JST, UTC+9)</option>
+                            <option value="Asia/Seoul">Сеул (KST, UTC+9)</option>
+                            <option value="Australia/Sydney">Сидней (AEST, UTC+10/+11)</option>
+                            <option value="Europe/Berlin">Берлин (CET, UTC+1/+2)</option>
+                            <option value="Europe/London">Лондон (GMT, UTC+0/+1)</option>
+                            <option value="America/Sao_Paulo">Сан-Паулу (BRT, UTC-3)</option>
+                            <option value="America/New_York">Нью-Йорк (EST, UTC-5/-4)</option>
+                            <option value="America/Toronto">Торонто (EST, UTC-5/-4)</option>
+                            <option value="America/Los_Angeles">Лос-Анджелес (PST, UTC-8/-7)</option>
+                        </select>
                     </div>
                 </div>
-                <div style="width:1px;background:var(--border);"></div>
-                <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
-                    <div style="font-size:13px;font-weight:700;color:var(--fg);">Продолжение</div>
-                    <div>
-                        <label class="natr-tool-label" for="contTigerExchangeSelect" style="display:block;margin-bottom:4px;">Биржа в Tiger:</label>
-                        <select class="sec-select" id="contTigerExchangeSelect" onchange="contChangeTigerExchange(this.value)" style="width:100%;"></select>
-                    </div>
-                    <div>
-                        <label class="natr-tool-label" for="contTigerLinkGroupSelect" style="display:block;margin-bottom:4px;">Группа линковки:</label>
-                        <select class="sec-select" id="contTigerLinkGroupSelect" onchange="contChangeTigerLinkGroup(this.value)" style="width:100%;"></select>
+                <div class="stg-divider"></div>
+                <div class="stg-section">
+                    <div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Tiger.com Terminal</div>
+                    <div class="stg-desc">Кнопка «Tiger» откроет тикер на выбранной бирже и в выбранной группе линковки (Settings → Local Signal Server, порт 7819).</div>
+                    <div class="natr-tiger-settings-cols">
+                        <div class="stg-col">
+                            <div class="stg-col-title">NATR Scanner</div>
+                            <div class="stg-field">
+                                <label for="natrTigerExchangeSelect">Биржа в Tiger</label>
+                                <select class="sec-select" id="natrTigerExchangeSelect" onchange="natrChangeTigerExchange(this.value)"></select>
+                            </div>
+                            <div class="stg-field">
+                                <label for="natrTigerLinkGroupSelect">Группа линковки</label>
+                                <select class="sec-select" id="natrTigerLinkGroupSelect" onchange="natrChangeTigerLinkGroup(this.value)"></select>
+                            </div>
+                        </div>
+                        <div class="stg-col">
+                            <div class="stg-col-title">Продолжение</div>
+                            <div class="stg-field">
+                                <label for="contTigerExchangeSelect">Биржа в Tiger</label>
+                                <select class="sec-select" id="contTigerExchangeSelect" onchange="contChangeTigerExchange(this.value)"></select>
+                            </div>
+                            <div class="stg-field">
+                                <label for="contTigerLinkGroupSelect">Группа линковки</label>
+                                <select class="sec-select" id="contTigerLinkGroupSelect" onchange="contChangeTigerLinkGroup(this.value)"></select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
+    </div>
 </nav>
 
 <!-- ========== SECTION 1: NATR SCANNER ========== -->
@@ -1249,6 +1355,29 @@
                 Сканировать
             </button>
         </div>
+    </div>
+    <div class="natr-cat-tabs" id="contCatTabs">
+        <span class="natr-cat-label">Категория:</span>
+        <button class="natr-cat-tab active" data-cat="all" onclick="contSwitchCategory('all')">Все</button>
+        <button class="natr-cat-tab" data-cat="TF_CRYPTO" onclick="contSwitchCategory('TF_CRYPTO')">Крипто</button>
+        <button class="natr-cat-tab" data-cat="TF_STOCK" onclick="contSwitchCategory('TF_STOCK')">Акции</button>
+        <button class="natr-cat-tab" data-cat="TF_ETF" onclick="contSwitchCategory('TF_ETF')">ETF</button>
+        <button class="natr-cat-tab" data-cat="TF_COMMODITY" onclick="contSwitchCategory('TF_COMMODITY')">Товары</button>
+        <button class="natr-cat-tab" data-cat="TF_INDEX" onclick="contSwitchCategory('TF_INDEX')">Индексы</button>
+        <button class="natr-cat-tab" data-cat="TF_OTHER" onclick="contSwitchCategory('TF_OTHER')">Другие</button>
+        <button class="natr-cat-tab" data-cat="TradFi" onclick="contSwitchCategory('TradFi')">TradFi</button>
+        <button class="natr-cat-tab" data-cat="Meme" onclick="contSwitchCategory('Meme')">Meme</button>
+        <button class="natr-cat-tab" data-cat="DeFi" onclick="contSwitchCategory('DeFi')">DeFi</button>
+        <button class="natr-cat-tab" data-cat="Layer-1" onclick="contSwitchCategory('Layer-1')">Layer-1</button>
+        <button class="natr-cat-tab" data-cat="AI" onclick="contSwitchCategory('AI')">AI</button>
+        <button class="natr-cat-tab" data-cat="Gaming" onclick="contSwitchCategory('Gaming')">Gaming</button>
+        <button class="natr-cat-tab" data-cat="Layer-2" onclick="contSwitchCategory('Layer-2')">Layer-2</button>
+        <button class="natr-cat-tab" data-cat="PoW" onclick="contSwitchCategory('PoW')">PoW</button>
+        <button class="natr-cat-tab" data-cat="Infrastructure" onclick="contSwitchCategory('Infrastructure')">Infra</button>
+        <button class="natr-cat-tab" data-cat="Metaverse" onclick="contSwitchCategory('Metaverse')">Metaverse</button>
+        <button class="natr-cat-tab" data-cat="NFT" onclick="contSwitchCategory('NFT')">NFT</button>
+        <button class="natr-cat-tab" data-cat="Storage" onclick="contSwitchCategory('Storage')">Storage</button>
+        <button class="natr-cat-tab" data-cat="RWA" onclick="contSwitchCategory('RWA')">RWA</button>
     </div>
     <div class="natr-tools-card">
     <div class="natr-tools" id="contTools">
@@ -1544,6 +1673,45 @@
 //     правее «Цены» были недостижимы); колонки 📌★+Тикер закреплены
 //     (sticky) — при прокрутке всегда видно, к какой монете относятся
 //     значения справа (NATR %, R, RVOL, ΔOI)
+//   • Панель «Настройки» переведена с inline-стилей на классы в дизайне
+//     приложения: шапка с заголовком и кнопкой ✕, секции с иконками,
+//     Tiger-колонки как карточки, анимация открытия, аккуратный вид
+//     на телефоне (панель на всю ширину, карточки в столбец)
+//   • Больше НЕ мигает скроллбар при фоновом обновлении скринеров: полоса-
+//     «шайн» (.bg-update-overlay) уезжала translateX(100%) за правый край
+//     и с overflow-x:auto создавала горизонтальный скролл на ~половине
+//     кадров анимации. Теперь оверлей — неподвижный клип-слой, двигается
+//     только его ::before (движение обрезается, скролл-область чиста)
+//   • Trend Continuation: добавлен ряд категорий как в NATR Scanner (Все/
+//     Крипто/Акции/ETF/Товары/Индексы/Другие/TradFi/Meme/DeFi/...) с числом
+//     пар на вкладках; выбор фильтрует уже отсканированные результаты без
+//     повторного скана, сохраняется в localStorage (cont_category) и
+//     независим от категории NATR Scanner. Подсчёт вкладок вынесен в общий
+//     updateCatTabCounts() для обоих скринеров
+//   • «Сканировать» больше НЕ стирает старые данные: таблицы NATR/Продолжения
+//     остаются на экране с полосой «обновление», новые данные подменяются
+//     АТОМАРНО — один ре-рендер по готовности (в NATR изменившиеся строки
+//     подсвечиваются). При ошибке API старые данные тоже остаются + тост.
+//     Календарь: старая сетка не заменяется спиннером, крипто/акции источники
+//     грузятся параллельно (Yahoo+MOEX тоже) и вся неделя обновляется одним
+//     рендером вместо нескольких дёргающихся частичных
+//   • Уведомления обоих скринеров стали компактными, в одном формате:
+//     «NATR - CVC 4.4%» / «Тренд - CVC +4.4%» (раньше в Продолжении было
+//     многословное «CVC: Хайп продолжается, RVOL 2.50x», которое ещё и
+//     падало с ошибкой в режиме «только сегодня», где RVOL = null)
+//   • ВСЕ остальные уведомления переведены в тот же компактный формат
+//     «Источник - суть»: «Событие - NFP 5 мин», «Binance - пауза до 10:30»,
+//     «Binance - ждём 542 с», «Binance - ошибка API», «Сеть - офлайн/онлайн»,
+//     «Tiger - CVC (BYBIT)», «Tiger - нет связи (порт 7819)»,
+//     «Календарь - ошибка, прежние данные», «Хранилище - недоступно»,
+//     «Буфер - пуст», «Ошибка - данные могли не обновиться». Убраны эмодзи
+//     и пояснения во вторую очередь — статус-бейджи при бане тоже компактны
+//   • Браузерные push-уведомления — единая точка ctNotify(«Источник», «суть»)
+//     для ВСЕГО: алерты сканеров и календаря И системные события (бан/ошибка
+//     Binance, офлайн/онлайн, Tiger, хранилище, буфер). Если разрешение на
+//     push выдано — уведомление приходит браузером с тем же компактным
+//     форматом (заголовок «Источник», тело «суть»), иначе — тост. Раньше push
+//     умели только три алерта, остальные жили лишь тостами
 // ============================================================
 //  NAVIGATION
 // ============================================================
@@ -1738,6 +1906,17 @@ function showToast(text) {
     if (ctToastTimer) clearTimeout(ctToastTimer);
     ctToastTimer = setTimeout(() => { t.classList.remove('show'); ctToastTimer = null; }, 2000);
 }
+// ЕДИНАЯ точка отправки всех уведомлений приложения. Формат всегда
+// «Источник - суть»: браузерный push (если разрешение выдано) — заголовок
+// «Источник», тело «суть»; иначе/при ошибке — тост «Источник - суть».
+// Один и тот же вид у алертов сканеров, календаря и системных сообщений
+// (Binance/Сеть/Tiger/Хранилище/Буфер/Ошибка) — и в push, и в тосте.
+function ctNotify(source, body) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        try { new Notification(source, { body: body }); return; } catch(e) { /* fall through to toast */ }
+    }
+    showToast(source + ' - ' + body);
+}
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => showToast(text + ' скопирован')).catch(() => fallbackCopy(text));
@@ -1765,7 +1944,7 @@ function ctReportUnexpectedError(err, source) {
     const now = Date.now();
     if (now - ctLastErrorToast < 5000) return; // throttle — at most one toast per 5s
     ctLastErrorToast = now;
-    showToast('⚠️ Непредвиденная ошибка — часть данных могла не обновиться');
+    ctNotify('Ошибка', 'данные могли не обновиться');
 }
 window.addEventListener('error', function(ev) {
     ctReportUnexpectedError(ev.error || ev.message, 'window.onerror');
@@ -1779,10 +1958,10 @@ window.addEventListener('unhandledrejection', function(ev) {
 // anything. This purely keeps the person informed about *why* things stopped
 // updating, and confirms the moment they're live again.
 window.addEventListener('offline', function() {
-    showToast('📡 Нет соединения с интернетом — данные не обновляются');
+    ctNotify('Сеть', 'офлайн');
 });
 window.addEventListener('online', function() {
-    showToast('✅ Соединение восстановлено');
+    ctNotify('Сеть', 'онлайн');
 });
 // Thin localStorage wrappers used everywhere settings/favorites/pins are persisted.
 // Two things this buys us over calling localStorage directly: (1) a write failure
@@ -1796,7 +1975,7 @@ function ctSafeSetItem(key, value) {
     catch(e) {
         if (!ctStorageWarned) {
             ctStorageWarned = true;
-            showToast('⚠️ Хранилище браузера недоступно — избранное/закреп/настройки не сохранятся (приватный режим?)');
+            ctNotify('Хранилище', 'недоступно (приватный режим?)');
         }
         return false;
     }
@@ -1845,13 +2024,13 @@ function natrRegisterBan(resp) {
     if (natrAbortCtrl) natrAbortCtrl.abort();
     if (contAbortCtrl) contAbortCtrl.abort();
     const until = new Date(natrBannedUntil).toLocaleTimeString('ru-RU');
-    showToast('⛔ Binance ограничил доступ (' + resp.status + ') — пауза до ' + until);
+    ctNotify('Binance', 'пауза до ' + until);
 }
 // Called after any successful (non-banning) response, to notice the streak has ended.
 function natrClearBanStreak() {
     if (natrBanStreak !== 0 && !natrIsBanned()) { natrBanStreak = 0; ctSafeSetItem('natr_ban_streak', '0'); }
 }
-function natrBanStatusText() { return '⛔ Binance ограничил — ждём ' + natrBanSecondsLeft() + 'с'; }
+function natrBanStatusText() { return 'Binance - ждём ' + natrBanSecondsLeft() + ' с'; }
 // Single choke point for every Binance request in the app (klines, OI, ticker, exchangeInfo).
 // Returns null immediately without any network call while banned — this is the actual fix,
 // not just slower batching: zero requests reach Binance until the cooldown has passed.
@@ -2102,6 +2281,7 @@ function natrStartAutoRefresh() {
 function natrInitCategories() {
     natrCategoryMap = Object.assign({}, NATR_EMBEDDED_CATEGORIES);
     natrUpdateCatTabCounts();
+    contUpdateCatTabCounts(); // Trend Continuation использует тот же список пар — считаем и его вкладки
     // No background API refresh here on purpose: Binance's www.binance.com/bapi/... web
     // endpoint doesn't send CORS headers for third-party origins, so a browser-side fetch
     // to it fails 100% of the time from here — it would only ever produce console noise
@@ -2109,7 +2289,9 @@ function natrInitCategories() {
     // The embedded map above already covers the full pair list; if Binance lists new pairs
     // later, update NATR_EMBEDDED_CATEGORIES directly instead of trying to fetch it live.
 }
-function natrUpdateCatTabCounts() {
+// Подсчёт пар по категориям для полосы вкладок — общий для обоих скринеров
+// (один и тот же список перпетуалов, просто два независимых DOM-контейнера).
+function updateCatTabCounts(containerSelector) {
     if (!natrCategoryMap) return;
     // Count perpetual USDT symbols per category, and separately per asset-type bucket
     // (Акции/ETF/Товары/Индексы/Другие read from the same underlying data, just grouped differently).
@@ -2124,7 +2306,7 @@ function natrUpdateCatTabCounts() {
         }
     }
     const tfLabels = { TF_CRYPTO: 'Крипто', TF_STOCK: 'Акции', TF_ETF: 'ETF', TF_COMMODITY: 'Товары', TF_INDEX: 'Индексы', TF_OTHER: 'Другие' };
-    document.querySelectorAll('#natrCatTabs .natr-cat-tab').forEach(btn => {
+    document.querySelectorAll(containerSelector + ' .natr-cat-tab').forEach(btn => {
         const cat = btn.dataset.cat;
         if (cat === 'all') {
             const total = Object.values(catCounts).reduce((a,b) => a+b, 0);
@@ -2140,6 +2322,8 @@ function natrUpdateCatTabCounts() {
         }
     });
 }
+function natrUpdateCatTabCounts() { updateCatTabCounts('#natrCatTabs'); }
+function contUpdateCatTabCounts() { updateCatTabCounts('#contCatTabs'); }
 function natrSwitchCategory(cat) {
     natrSelectedCategory = cat;
     document.querySelectorAll('#natrCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
@@ -2332,7 +2516,7 @@ function natrToggleWatchlistOnly() {
 async function natrToggleAlerts() {
     const btn = document.getElementById('natrAlertBtn');
     if (!natrAlertsEnabled) {
-        if (natrCompareValue === null) { showToast('Сначала укажите значение NATR слева (%)'); return; }
+        if (natrCompareValue === null) { ctNotify('NATR', 'задайте порог %'); return; }
         if ('Notification' in window && Notification.permission === 'default') {
             try { await Notification.requestPermission(); } catch(e) { /* ignore */ }
         }
@@ -2348,13 +2532,12 @@ async function natrToggleAlerts() {
     ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0');
 }
 function natrFireAlert(symbol, natr) {
+    // Компактный формат «NATR - CVC 4.4%»: только скринер, тикер и значение
+    // с одним знаком после запятой — без лишних слов. Push и тост идут через
+    // единую ctNotify с одинаковым форматом.
     const base = symbol.replace(/USDT$|USD1$/, '');
-    const pct = Math.round(natr) + '%';
     playAlertSound('natr');
-    if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification('NATR', { body: base + ' ' + pct }); return; } catch(e) { /* fall through to toast */ }
-    }
-    showToast('NATR - ' + base + ' ' + pct);
+    ctNotify('NATR', base + ' ' + natr.toFixed(1) + '%');
 }
 // results is already the currently-filtered set (natrGetFilteredResults), so when a NATR
 // threshold is active every item here already satisfies it — we just need to spot which
@@ -2459,15 +2642,15 @@ function tigerLinkSymbol(exchange, linkGroup, symbol) {
             let data = null;
             try { data = JSON.parse(ev.data); } catch(e) { /* non-JSON, ignore */ }
             if (data && data.response && data.response.type === 'successfully') {
-                showToast('Открыто в Tiger.com (' + exchange + '): ' + targetSymbol);
+                ctNotify('Tiger', targetSymbol + ' (' + exchange + ')');
             } else {
-                showToast((data && data.message) || ('Tiger.com не распознал тикер ' + targetSymbol + ' на ' + exchange));
+                ctNotify('Tiger', (data && data.message) || 'тикер не распознан');
             }
         };
         ws.addEventListener('message', onMsg);
         ws.send(JSON.stringify({ type: 'setLinkSymbol', e: exchange, m: 'FUTURES', symbol: targetSymbol, linkGroup: linkGroup }));
     }).catch(() => {
-        showToast('Нет связи с Tiger.com Terminal — включите Settings → Local Signal Server (порт 7819)');
+        ctNotify('Tiger', 'нет связи (порт 7819)');
     });
 }
 function natrOpenInTiger(symbol) {
@@ -2872,28 +3055,43 @@ async function natrStartScan() {
     if (natrIsScanning) return;
     if (natrIsBanned()) {
         natrSetStatus(natrBanStatusText());
-        showToast('Binance временно ограничил доступ — подождите ' + natrBanSecondsLeft() + ' сек, сканирование возобновится автоматически');
+        ctNotify('Binance', 'ждём ' + natrBanSecondsLeft() + ' с');
         return;
     }
     if (natrIsBgUpdating && natrAbortCtrl) { natrAbortCtrl.abort(); natrIsBgUpdating = false; natrSetTableUpdating(false); }
     natrIsScanning = true; natrAbortCtrl = new AbortController();
     natrPruneResultsCache();
     document.getElementById('natrScanBtn').classList.add('loading');
-    natrShowSkeleton(); document.getElementById('natrEmptyState').style.display = 'none';
-    natrSetStatus('Загрузка списка...', true);
+    // Пересканирование НЕ убирает старые результаты: таблица остаётся на
+    // экране с полосой «обновление», а когда новые данные готовы — всё
+    // заменяется одним махом (атомарная подмена + один ре-рендер). Скелетон —
+    // только для самого первого скана, когда показывать ещё нечего.
+    const keepOldData = natrAllResults.length > 0;
+    if (keepOldData) {
+        natrSetTableUpdating(true);
+    } else {
+        natrShowSkeleton(); document.getElementById('natrEmptyState').style.display = 'none';
+    }
+    natrSetStatus('Загрузка списка...', true, keepOldData);
     const pairs = await natrGetAllPairs();
     if (!pairs.length || natrAbortCtrl.signal.aborted) {
         if (!natrAbortCtrl.signal.aborted) {
-            // Show a visible failure state instead of a silently blank table.
             natrSetStatus('Ошибка API'); natrHideSkeleton();
-            const p = document.querySelector('#natrEmptyState p');
-            if (p) p.textContent = 'Ошибка API Binance — проверьте соединение и нажмите «Сканировать» ещё раз';
-            document.getElementById('natrEmptyState').style.display = 'block';
-        } else { natrSetStatus('Отменено'); natrHideSkeleton(); }
+            if (keepOldData) {
+                // Старые результаты остаются на экране — просто снимаем
+                // индикацию обновления и сообщаем, почему данные не обновились.
+                natrSetTableUpdating(false);
+                ctNotify('Binance', 'ошибка API');
+            } else {
+                const p = document.querySelector('#natrEmptyState p');
+                if (p) p.textContent = 'Ошибка API Binance — проверьте соединение и нажмите «Сканировать» ещё раз';
+                document.getElementById('natrEmptyState').style.display = 'block';
+            }
+        } else { natrSetStatus('Отменено'); natrHideSkeleton(); if (keepOldData) natrSetTableUpdating(false); }
         document.getElementById('natrScanBtn').classList.remove('loading');
         natrIsScanning = false; natrAbortCtrl = null; return;
     }
-    natrSetStatus('Сканирование '+pairs.length+'...', true);
+    natrSetStatus('Сканирование '+pairs.length+'...', true, keepOldData);
     const modeCfg = NATR_MODES[natrMode] || NATR_MODES['5m_14'];
     const interval = modeCfg.interval;
     const limit = modeCfg.period + 5;
@@ -2905,11 +3103,14 @@ async function natrStartScan() {
     ]);
     if (natrAbortCtrl.signal.aborted) {
         natrHideSkeleton(); document.getElementById('natrScanBtn').classList.remove('loading');
+        if (keepOldData) natrSetTableUpdating(false);
         natrIsScanning = false; natrAbortCtrl = null; return;
     }
-    natrAllResults = results.sort((a,b) => b.natr - a.natr);
+    natrAllResults = results.sort((a,b) => b.natr - a.natr); // атомарная подмена — одна операция, никакой частичной замены
     natrCheckAlerts(natrGetFilteredResults());
-    natrHideSkeleton(); natrReFilterAndRender();
+    natrHideSkeleton();
+    natrReFilterAndRender(true); // единственный ре-рендер; animate подсвечивает изменившиеся строки
+    natrSetTableUpdating(false);
     natrSetStatus('Готово: '+results.length, true);
     document.getElementById('natrScanBtn').classList.remove('loading');
     natrIsScanning = false; natrAbortCtrl = null;
@@ -2927,6 +3128,7 @@ async function natrStartScan() {
 // intraday timeframe/mode needed anymore, which also roughly halves the request count per
 // scan compared to the old 5m/1m-intraday version (helps stay under Binance's rate limit).
 let contDirection = 'all'; // 'all' | 'up' (yesterday's pumps) | 'down' (yesterday's dumps)
+let contSelectedCategory = 'all'; // категория — тот же ряд вкладок, что у NATR Scanner; своя для этого скринера и хранится отдельно
 let contPinned = new Set(); // own закреп set for this screener, separate from NATR Scanner's
 let contFavorites = new Set(); // own избранное set for this screener, separate from NATR Scanner's
 let contWatchlistOnly = false; // "show favorites only" toggle (uses contFavorites, not shared)
@@ -2949,6 +3151,8 @@ let contRawResults = []; // everything the last scan fetched, unfiltered — fil
 try {
     const savedDirection = localStorage.getItem('cont_direction');
     if (savedDirection === 'up' || savedDirection === 'down') contDirection = savedDirection;
+    const savedContCat = localStorage.getItem('cont_category');
+    if (savedContCat) contSelectedCategory = savedContCat;
     contWatchlistOnly = localStorage.getItem('cont_watchlist_only') === '1';
     contPinned = new Set(ctSafeGetJSON('cont_pinned', []));
     contFavorites = new Set(ctSafeGetJSON('cont_favorites', []));
@@ -2968,6 +3172,7 @@ function contApplyRestoredUI() {
     document.getElementById('contDirUpBtn').classList.toggle('active', contDirection === 'up');
     document.getElementById('contDirDownBtn').classList.toggle('active', contDirection === 'down');
     document.getElementById('contWatchlistBtn').classList.toggle('active', contWatchlistOnly);
+    document.querySelectorAll('#contCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === contSelectedCategory));
     const volFromEl = document.getElementById('contVolFrom');
     if (volFromEl && contVolFrom !== null) volFromEl.value = contVolFrom;
     const volToEl = document.getElementById('contVolTo');
@@ -3016,6 +3221,18 @@ function contSetDirection(dir) {
     document.getElementById('contDirDownBtn').classList.toggle('active', dir === 'down');
     ctSafeSetItem('cont_direction', dir);
     if (contRawResults.length) contReFilterAndRender();
+}
+// Переключение категории — зеркально natrSwitchCategory: тот же ряд вкладок и та же
+// логика выбора (all / тип актива TF_* / именованная категория из natrCategoryMap),
+// но состояние своё и живёт в localStorage под собственным ключом.
+function contSwitchCategory(cat) {
+    contSelectedCategory = cat;
+    document.querySelectorAll('#contCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+    ctSafeSetItem('cont_category', cat);
+    // Если результаты уже есть — перефильтровать и перерисовать без нового скана
+    if (contRawResults.length > 0) {
+        contReFilterAndRender();
+    }
 }
 
 function contToggleWatchlistOnly() {
@@ -3108,13 +3325,13 @@ async function contToggleAlerts() {
     ctSafeSetItem('cont_alerts_enabled', contAlertsEnabled ? '1' : '0');
 }
 function contFireAlert(r) {
-    const dirWord = r.refChange >= 0 ? 'Хайп' : 'Слив';
-    const msg = r.symbol.replace(/USDT$|USD1$/, '') + ': ' + dirWord + ' продолжается, RVOL ' + r.rvol.toFixed(2) + 'x';
+    // Тот же компактный формат: «Тренд - CVC +4.4%». refChange всегда валиден
+    // (RVOL в режиме «только сегодня» = null — раньше rvol.toFixed падал с
+    // ошибкой и уведомление не приходило). Push и тост — через ctNotify.
+    const base = r.symbol.replace(/USDT$|USD1$/, '');
+    const pct = (r.refChange >= 0 ? '+' : '') + r.refChange.toFixed(1) + '%';
     playAlertSound('natr');
-    if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification('🔥 Продолжение тренда', { body: msg }); return; } catch(e) { /* fall through to toast */ }
-    }
-    showToast(msg);
+    ctNotify('Тренд', base + ' ' + pct);
 }
 function contCheckAlerts(results) {
     if (!contAlertsEnabled) return;
@@ -3284,24 +3501,36 @@ async function contStartScan() {
     if (contIsScanning) { if (contAbortCtrl) contAbortCtrl.abort(); return; }
     if (natrIsBanned()) {
         contSetStatus(natrBanStatusText());
-        showToast('Binance временно ограничил доступ — подождите ' + natrBanSecondsLeft() + ' сек, сканирование возобновится автоматически');
+        ctNotify('Binance', 'ждём ' + natrBanSecondsLeft() + ' с');
         return;
     }
     if (contIsBgUpdating && contAbortCtrl) { contAbortCtrl.abort(); contIsBgUpdating = false; contSetTableUpdating(false); }
     contIsScanning = true; contAbortCtrl = new AbortController();
     const btn = document.getElementById('contScanBtn');
     btn.classList.add('loading'); btn.disabled = true;
-    document.getElementById('contEmptyState').style.display = 'none';
-    document.getElementById('contTableBody').innerHTML = '';
+    // Как в NATR Scanner: при пересканировании старые строки остаются на
+    // экране (с полосой «обновление»), новые данные заменяют всё разом.
+    const keepOldData = contRawResults.length > 0;
+    if (keepOldData) {
+        contSetTableUpdating(true);
+    } else {
+        document.getElementById('contEmptyState').style.display = 'none';
+        document.getElementById('contTableBody').innerHTML = '';
+    }
     contSetStatus('Загрузка списка пар...', true, true);
     const pairs = await natrGetAllPairs(); // same USDT perpetuals list the NATR scanner uses
     if (!pairs.length || contAbortCtrl.signal.aborted) {
         contSetStatus(contAbortCtrl.signal.aborted ? 'Остановлено' : 'Ошибка API');
         if (!contAbortCtrl.signal.aborted) {
-            // Show a visible failure state instead of a silently blank table.
-            document.getElementById('contEmptyText').textContent = 'Ошибка API Binance — проверьте соединение и попробуйте ещё раз';
-            document.getElementById('contEmptyState').style.display = 'block';
-        }
+            if (keepOldData) {
+                // Старые результаты остаются — снимаем индикацию и сообщаем.
+                contSetTableUpdating(false);
+                ctNotify('Binance', 'ошибка API');
+            } else {
+                document.getElementById('contEmptyText').textContent = 'Ошибка API Binance — проверьте соединение и попробуйте ещё раз';
+                document.getElementById('contEmptyState').style.display = 'block';
+            }
+        } else if (keepOldData) contSetTableUpdating(false);
         btn.classList.remove('loading'); btn.disabled = false;
         contIsScanning = false; contAbortCtrl = null; return;
     }
@@ -3317,11 +3546,13 @@ async function contStartScan() {
     ]);
     if (contAbortCtrl.signal.aborted) {
         contSetStatus('Остановлено'); btn.classList.remove('loading'); btn.disabled = false;
+        if (keepOldData) contSetTableUpdating(false);
         contIsScanning = false; contAbortCtrl = null; return;
     }
-    contRawResults = raw; // keep everything — filters below re-slice this in memory, no rescan needed
+    contRawResults = raw; // атомарная подмена — фильтры ниже режут это в памяти, без перескана
     contCheckAlerts(contGetFilteredResults());
-    contReFilterAndRender();
+    contReFilterAndRender(); // единственный ре-рендер после готовности всех данных
+    contSetTableUpdating(false);
     contSetStatus('Готово, отсканировано: '+raw.length, true);
     const lu = document.getElementById('contLastUpdate');
     lu.style.display = 'flex';
@@ -3407,7 +3638,23 @@ function contGetFilteredResults() {
         }
         return contRawResults.filter(r => contFavorites.has(r.symbol)).sort((a,b) => (b.bodyRatio||b.rvol||0) - (a.bodyRatio||a.rvol||0));
     }
-    let list = contRawResults.filter(r => {
+    // Категория применяется к уже отсканированным результатам (та же логика, что и
+    // у NATR Scanner): «all» — всё; TF_* — по типу актива (Крипто/Акции/ETF/Товары/
+    // Индексы/Другие); именованная — по первому тегу категории из natrCategoryMap.
+    // ★ Избранное и закреплённые строки по-прежнему обходят этот фильтр.
+    let list;
+    if (contSelectedCategory === 'all') {
+        list = contRawResults.slice();
+    } else if (NATR_TF_TAB_TO_ASSET_TYPE[contSelectedCategory]) {
+        const wantType = NATR_TF_TAB_TO_ASSET_TYPE[contSelectedCategory];
+        list = contRawResults.filter(r => natrGetAssetType(r.symbol) === wantType);
+    } else {
+        list = contRawResults.filter(r => {
+            const cat = (natrCategoryMap[r.symbol] || 'NONE').split(',')[0];
+            return cat === contSelectedCategory;
+        });
+    }
+    list = list.filter(r => {
         if (contYestFilterActive && yestActive && !inRange(Math.abs(r.refChange), yestFrom, yestTo)) return false;
         if (contRvolFilterActive && rvolActive && !inRange(r.rvol, rvolFrom, rvolTo)) return false;
         if (contTodayFilterActive && todayActive && !inRange(r.todayChange, todayFrom, todayTo)) return false;
@@ -4189,13 +4436,26 @@ function calMapImpact(apiImpact) {
 
 function calSetLoading(loading) {
     calIsLoading = loading;
-    document.getElementById('calLoadingState').style.display = loading ? 'block' : 'none';
+    // При обновлении старые события ОСТАЮТСЯ на экране: полноэкранный спиннер
+    // показываем только когда показывать ещё нечего (самая первая загрузка).
+    const hasData = calAllEvents.length > 0;
+    document.getElementById('calLoadingState').style.display = (loading && !hasData) ? 'block' : 'none';
     document.getElementById('calErrorState').style.display = 'none';
-    document.getElementById('calGrid').style.display = loading ? 'none' : '';
+    if (!hasData) document.getElementById('calGrid').style.display = loading ? 'none' : '';
 }
 
 function calSetError(msg) {
     calIsLoading = false;
+    // Если события уже показаны — не выкидываем их на экран ошибки: держим
+    // предыдущую сетку и сообщаем тостом. Полный экран ошибки — только когда
+    // данных нет совсем.
+    if (calAllEvents.length > 0) {
+        document.getElementById('calLoadingState').style.display = 'none';
+        document.getElementById('calErrorState').style.display = 'none';
+        document.getElementById('calGrid').style.display = '';
+        ctNotify('Календарь', 'ошибка, прежние данные');
+        return;
+    }
     document.getElementById('calLoadingState').style.display = 'none';
     document.getElementById('calErrorState').style.display = 'block';
     document.getElementById('calErrorText').textContent = msg || '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0434\u0430\u043d\u043d\u044b\u0435';
@@ -4945,6 +5205,8 @@ async function calFetchEvents() {
     try {
         calRawApiData = data;
         const result = calParseApiData(data);
+        const hadOldData = calAllEvents.length > 0; // ДО подмены — старая сетка ещё на экране
+        let baseEvents;
         // If FF returned 0 in-week events (whether live, cache, or stale cache),
         // the hard week-filter in calParseApiData will have dropped every record.
         // ALWAYS fall back to the embedded dataset, shifted to the current week,
@@ -4957,10 +5219,10 @@ async function calFetchEvents() {
             calRawApiData = data;
             const fallbackResult = calParseApiData(data);
             calApiWeekStart = fallbackResult.apiWeekStart || calGetWeekStart(new Date());
-            calAllEvents = fallbackResult.events;
+            baseEvents = fallbackResult.events;
         } else {
             calApiWeekStart = result.apiWeekStart || calGetWeekStart(new Date());
-            calAllEvents = result.events;
+            baseEvents = result.events;
 
             // Cache successful data to localStorage — but ONLY for fresh live
             // responses. Don't re-cache cache-restored data (it's already in
@@ -4980,12 +5242,26 @@ async function calFetchEvents() {
         }
 
         calClearStates();
-        // Fetch crypto events in background
-        calFetchCryptoEvents();
-        // Fetch stock events (RU/US/CN) — Yahoo+MOEX live with embedded fallback
-        calFetchStockEvents();
+        // Если старой сетки не было (первая загрузка) — показываем основные
+        // события сразу, не дожидаясь крипто/акций. Если старая сетка ЕСТЬ —
+        // держим её до полной готовности и обновляем всё разом.
+        if (!hadOldData) {
+            calAllEvents = baseEvents.slice();
+            calRender();
+        }
+        // Crypto and stock sources load in PARALLEL, and the calendar swaps in
+        // the complete set in ONE render. Previously each source re-rendered
+        // the grid as its data arrived (several flickering partial updates);
+        // now the previous events simply stay on screen until everything is
+        // ready and the whole week updates at once.
+        const [cryptoEvts, stockEvts] = await Promise.all([
+            calFetchCryptoEvents().catch(() => []),
+            calFetchStockEvents().catch(() => [])
+        ]);
+        calAllEvents = baseEvents.concat(cryptoEvts || [], stockEvts || [])
+            .sort((a, b) => a.utcDate - b.utcDate);
         calRender();
-        return result.events;
+        return calAllEvents;
     } catch (err) {
         console.error('Calendar parse error:', err);
         calSetError('Ошибка обработки данных: ' + (err.message || ''));
@@ -4993,14 +5269,10 @@ async function calFetchEvents() {
     }
 }
 
+// Загружает крипто-события (кэш → live → встроенный fallback) и ВОЗВРАЩАЕТ их
+// массивом — сама ничего не рендерит и не трогает calAllEvents: единый рендер
+// календаря делает calFetchEvents, когда все источники готовы.
 async function calFetchCryptoEvents() {
-    // Helper: append events to calAllEvents + re-render
-    const appendEvents = (events) => {
-        if (!events || !events.length) return false;
-        calAllEvents = calAllEvents.concat(events).sort((a, b) => a.utcDate - b.utcDate);
-        calRender();
-        return true;
-    };
     // Helper: convert raw CAL_CRYPTO_FALLBACK row → event object (same shape as live)
     const fallbackRowToEvent = (e) => {
         const utcDate = new Date(e.d);
@@ -5036,9 +5308,9 @@ async function calFetchCryptoEvents() {
                 const cachedEvents0 = parsed.events
                     .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
                     .filter(e => e.utcDate >= curWeekStart0 && e.utcDate < cwEnd0);
-                if (cachedEvents0.length && appendEvents(cachedEvents0)) {
+                if (cachedEvents0.length) {
                     console.log('[Calendar] Crypto cache hit (daily TTL):', cachedEvents0.length);
-                    return;
+                    return cachedEvents0;
                 }
             }
         }
@@ -5104,7 +5376,6 @@ async function calFetchCryptoEvents() {
                         });
                     });
                     if (newEvents.length) {
-                        appendEvents(newEvents);
                         // Cache crypto events for offline use (7-day TTL)
                         ctSafeSetItem('cal_crypto_cache_v3', JSON.stringify({
                                 ts: Date.now(),
@@ -5113,7 +5384,7 @@ async function calFetchCryptoEvents() {
                             }));
                         console.log('Crypto events loaded from ' + src.name + ':', newEvents.length);
                     }
-                    return; // success, stop trying
+                    return newEvents; // success, stop trying (даже пустой — источник ответил)
                 } catch(e2) { /* try next proxy */ }
             }
         } catch(e) { /* try next source */ }
@@ -5134,9 +5405,9 @@ async function calFetchCryptoEvents() {
                 const cachedEvents = parsed.events
                     .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
                     .filter(e => e.utcDate >= currentWeekStart && e.utcDate < currentWeekEnd);
-                if (cachedEvents.length && appendEvents(cachedEvents)) {
+                if (cachedEvents.length) {
                     console.log('Crypto events loaded from cache:', cachedEvents.length);
-                    return;
+                    return cachedEvents;
                 }
             }
         }
@@ -5149,9 +5420,8 @@ async function calFetchCryptoEvents() {
     const fwStart = calCurrentWeekStart || calGetWeekStart(new Date());
     const fwEnd = new Date(fwStart); fwEnd.setDate(fwEnd.getDate() + 7);
     const safeFallback = fallbackEvents.filter(e => e.utcDate >= fwStart && e.utcDate < fwEnd);
-    if (appendEvents(safeFallback)) {
-        console.log('Crypto events loaded from embedded fallback:', safeFallback.length);
-    }
+    console.log('Crypto events loaded from embedded fallback:', safeFallback.length);
+    return safeFallback;
 }
 
 // Fetch stock events for RU / US / CN markets. Strategy:
@@ -5167,24 +5437,13 @@ async function calFetchCryptoEvents() {
 //   5) CN — no reliable free live source exists (SSE/SZSE all CORS/auth-blocked)
 //      → always use embedded CN fallback.
 //   6) Cache the assembled merged set under cal_stocks_cache_v5 for 24h.
+// Загружает события акций РФ/США/КНР (кэш → Yahoo+MOEX live → встроенный fallback)
+// и ВОЗВРАЩАЕТ их массивом — рендер и склейку с остальными источниками делает
+// calFetchEvents одним махом, когда всё готово.
 async function calFetchStockEvents() {
     const cacheKey = 'cal_stocks_cache_v5';
     const TTL_MS = 24 * 60 * 60 * 1000; // 24h — daily refresh is plenty (user request)
 
-    // Helper: append events + re-render (same pattern as calFetchCryptoEvents)
-    const appendEvents = (events) => {
-        if (!events || !events.length) return false;
-        // Avoid duplicates: only append stock events that aren't already in calAllEvents
-        // (matched by title + utcDate). Prevents stacking on repeated calls.
-        const existing = new Set(calAllEvents
-            .filter(e => e.country === 'STOCKRU' || e.country === 'STOCKUS' || e.country === 'STOCKCN')
-            .map(e => e.title + '|' + e.utcDate.getTime()));
-        const fresh = events.filter(e => !existing.has(e.title + '|' + e.utcDate.getTime()));
-        if (!fresh.length) return false;
-        calAllEvents = calAllEvents.concat(fresh).sort((a, b) => a.utcDate - b.utcDate);
-        calRender();
-        return true;
-    };
     // Helper: convert raw CAL_STOCKS_FALLBACK row → event object
     const fallbackRowToEvent = (e) => {
         const utcDate = new Date(e.d);
@@ -5219,29 +5478,20 @@ async function calFetchStockEvents() {
                 const cachedEvents = parsed.events
                     .map(e => Object.assign({}, e, { utcDate: new Date(e.utcDate) }))
                     .filter(e => e.utcDate >= weekStart && e.utcDate < weekEnd);
-                if (cachedEvents.length && appendEvents(cachedEvents)) {
+                if (cachedEvents.length) {
                     console.log('Stock events loaded from cache:', cachedEvents.length);
-                    return;
+                    return cachedEvents;
                 }
             }
         }
     } catch(cacheErr) { /* ignore cache errors */ }
 
-    // 2) Try Yahoo Finance live earnings (US-listed only)
-    let liveUsEvents = null;
-    try {
-        liveUsEvents = await calFetchStockEventsLive(weekStart);
-    } catch(e) {
-        console.warn('Yahoo live earnings failed:', e.message);
-    }
-
-    // 3) Try MOEX ISS live news (Russian market)
-    let liveRuEvents = null;
-    try {
-        liveRuEvents = await calFetchRuEventsLive(weekStart);
-    } catch(e) {
-        console.warn('MOEX live news failed:', e.message);
-    }
+    // 2) Yahoo (US) + MOEX (RU) грузятся ПАРАЛЛЕЛЬНО — они независимы, а весь
+    // этот батч и так ждёт calFetchEvents перед единым рендером календаря.
+    const [liveUsEvents, liveRuEvents] = await Promise.all([
+        calFetchStockEventsLive(weekStart).catch(e => { console.warn('Yahoo live earnings failed:', e.message); return null; }),
+        calFetchRuEventsLive(weekStart).catch(e => { console.warn('MOEX live news failed:', e.message); return null; })
+    ]);
 
     // 5) Build the merged event list per-region
     let mergedEvents = [];
@@ -5301,14 +5551,15 @@ async function calFetchStockEvents() {
         (liveRuEvents ? liveRuEvents.length + ' live RU + ' : '') +
         'CN+RU fallback → total ' + mergedEvents.length);
 
-    if (appendEvents(mergedEvents)) {
-        // Cache for next reload / refresh (2h)
+    if (mergedEvents.length) {
+        // Cache for next reload / refresh
         ctSafeSetItem(cacheKey, JSON.stringify({
                 ts: Date.now(),
                 weekStart: weekStart.toISOString(),
                 events: mergedEvents.map(e => Object.assign({}, e, { utcDate: e.utcDate.toISOString() }))
             }));
     }
+    return mergedEvents;
 }
 
 function calRetryFetch() { calFetchEvents(); }
@@ -5535,12 +5786,10 @@ function calUpdateCountdown(evt) {
     calCountdownTimerId = setInterval(update, 1000);
 }
 function calFireReminder(evt) {
-    const msg = evt.title + ' \u2014 \u0447\u0435\u0440\u0435\u0437 5 \u043c\u0438\u043d\u0443\u0442' + (evt.forecast ? ' (\u043f\u0440\u043e\u0433\u043d\u043e\u0437: ' + evt.forecast + ')' : '');
+    // Компактный формат как у скринеров: «Событие - NFP 5 мин». Push и тост —
+    // через единую ctNotify, формат заголовка/тела идентичен остальным.
     playAlertSound('calendar');
-    if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification('\ud83d\udcc5 \u0421\u043a\u043e\u0440\u043e \u0432\u0430\u0436\u043d\u043e\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u0435', { body: msg }); return; } catch(e) { /* fall through to toast */ }
-    }
-    showToast(msg);
+    ctNotify('Событие', evt.title + ' 5 мин');
 }
 async function calToggleNotify() {
     const btn = document.getElementById('calNotifyBtn');
@@ -5752,10 +6001,10 @@ async function caiPasteFromClipboard() {
             btn.classList.add('pasted');
             setTimeout(function() { btn.classList.remove('pasted'); }, 800);
         } else {
-            showToast('Буфер обмена пуст');
+            ctNotify('Буфер', 'пуст');
         }
     } catch(e) {
-        showToast('Нет доступа к буферу обмена');
+        ctNotify('Буфер', 'нет доступа');
     }
 }
 function caiHideAll() {
