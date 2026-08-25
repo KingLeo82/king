@@ -148,6 +148,26 @@
         .stg-field { display: flex; flex-direction: column; gap: 6px; }
         .stg-field > label { font-size: 11px; font-weight: 600; color: var(--muted); }
         .stg-field .sec-select { width: 100%; }
+        /* Поле ввода в панели настроек — тот же язык дизайна, что у .sec-select
+           (та же обводка/скругление/hover), но для текстового ввода (partner_ID и т.п.) */
+        .stg-input {
+            width: 100%; background: var(--bg); color: var(--fg);
+            border: 1px solid var(--border); border-radius: 10px;
+            padding: 9px 12px; font-size: 13px; font-family: 'JetBrains Mono', monospace;
+            outline: none; transition: all 0.25s ease;
+        }
+        .stg-input:hover, .stg-input:focus { border-color: rgba(240,185,11,0.4); box-shadow: 0 4px 16px rgba(240,185,11,0.15); }
+        .stg-input::placeholder { color: var(--muted); opacity: 0.6; }
+        .stg-hint { font-size: 10.5px; color: var(--muted); opacity: 0.8; line-height: 1.4; }
+        /* Компактные варианты — эти два поля («Часовой пояс» и «ID партнёра») не
+           обязаны растягиваться на всю ширину панели настроек (520px), длинный
+           input/select там визуально ни к чему. */
+        .stg-select-sm { width: auto; min-width: 190px; max-width: 220px; }
+        .stg-field .sec-select.stg-select-sm { width: auto; min-width: 190px; max-width: 220px; }
+        .stg-input-sm { width: auto; max-width: 200px; }
+        @media (max-width: 640px) {
+            .stg-select-sm, .stg-input-sm { max-width: none; width: 100%; }
+        }
         .stg-divider { height: 1px; background: var(--border); }
         .natr-tiger-settings-cols { display: flex; gap: 12px; }
         .natr-tiger-settings-cols .stg-col {
@@ -227,12 +247,20 @@
            SHARED SECTION STYLES (all sections unified)
            ====================================================== */
         .sec-select {
-            background: var(--bg-card); color: var(--fg);
-            border: 1px solid var(--border); padding: 8px 20px;
+            background-color: var(--bg-card); color: var(--fg);
+            border: 1px solid var(--border); padding: 8px 30px 8px 14px;
             border-radius: 10px; font-size: 13px; font-weight: 600;
             cursor: pointer; outline: none; font-family: 'Space Grotesk', sans-serif;
             appearance: none; -webkit-appearance: none;
             transition: all 0.25s ease;
+            /* Длинные варианты (напр. часовые пояса) обрезаются многоточием, а не
+               растягивают select на всю ширину панели настроек. */
+            max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            /* Собственная стрелка вместо системной (appearance:none её убирает) */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e6d7a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 13px;
         }
         .sec-select:hover,.sec-select:focus {
             border-color: rgba(240,185,11,0.4); box-shadow: 0 4px 16px rgba(240,185,11,0.15);
@@ -454,10 +482,17 @@
         .natr-table-wrap tbody td { padding: 16px 18px; vertical-align: middle; }
         .natr-table-wrap tbody td:last-child { text-align: right; }
 
-        .ticker-cell { cursor: pointer; user-select: none; -webkit-user-select: none; position: relative; }
+        .ticker-cell { cursor: pointer; user-select: none; -webkit-user-select: none; position: relative; max-width: 150px; }
         .ticker-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px; }
         .cal-event-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-        .ticker-name { font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; transition: all 0.2s; display: inline-block; }
+        /* Длинные тикеры (напр. деривативы TradFi) обрезаются многоточием вместо
+           того, чтобы растягивать колонку и вызывать горизонтальную прокрутку
+           таблицы. Полное имя доступно через title (нативный tooltip) и aria-label. */
+        .ticker-name {
+            font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; transition: all 0.2s;
+            display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; vertical-align: middle;
+        }
         .ticker-cell:hover .ticker-name { color: var(--accent); transform: translateX(2px); }
         .copy-icon {
             position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
@@ -1159,37 +1194,35 @@
             <div class="stg-body">
                 <div class="stg-section">
                     <div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Часовой пояс — Часы и Календарь</div>
-                    <div class="stg-desc">Общий часовой пояс для вкладок Trader Clock и Calendar. Влияет на часы бирж и отображение событий календаря.</div>
                     <div class="stg-field">
                         <label for="globalTZSelect">Часовой пояс</label>
-                        <select class="sec-select" id="globalTZSelect" onchange="globalTZChanged(this.value)">
+                        <select class="sec-select stg-select-sm" id="globalTZSelect" onchange="globalTZChanged(this.value)">
                             <option value="auto">Автоопределение</option>
-                            <option value="local">Моё время (системное)</option>
+                            <option value="local">Моё время</option>
                             <option value="UTC">UTC</option>
-                            <option value="Asia/Irkutsk">Иркутск (IRKT, UTC+8)</option>
-                            <option value="Europe/Moscow">Москва (MSK, UTC+3)</option>
-                            <option value="Europe/Istanbul">Стамбул (TRT, UTC+3)</option>
-                            <option value="Asia/Dubai">Дубай (GST, UTC+4)</option>
-                            <option value="Asia/Kolkata">Мумбаи (IST, UTC+5:30)</option>
-                            <option value="Asia/Singapore">Сингапур (SGT, UTC+8)</option>
-                            <option value="Asia/Hong_Kong">Гонконг (HKT, UTC+8)</option>
-                            <option value="Asia/Shanghai">Шанхай (CST, UTC+8)</option>
-                            <option value="Asia/Tokyo">Токио (JST, UTC+9)</option>
-                            <option value="Asia/Seoul">Сеул (KST, UTC+9)</option>
-                            <option value="Australia/Sydney">Сидней (AEST, UTC+10/+11)</option>
-                            <option value="Europe/Berlin">Берлин (CET, UTC+1/+2)</option>
-                            <option value="Europe/London">Лондон (GMT, UTC+0/+1)</option>
-                            <option value="America/Sao_Paulo">Сан-Паулу (BRT, UTC-3)</option>
-                            <option value="America/New_York">Нью-Йорк (EST, UTC-5/-4)</option>
-                            <option value="America/Toronto">Торонто (EST, UTC-5/-4)</option>
-                            <option value="America/Los_Angeles">Лос-Анджелес (PST, UTC-8/-7)</option>
+                            <option value="Asia/Irkutsk">Иркутск, UTC+8</option>
+                            <option value="Europe/Moscow">Москва, UTC+3</option>
+                            <option value="Europe/Istanbul">Стамбул, UTC+3</option>
+                            <option value="Asia/Dubai">Дубай, UTC+4</option>
+                            <option value="Asia/Kolkata">Мумбаи, UTC+5:30</option>
+                            <option value="Asia/Singapore">Сингапур, UTC+8</option>
+                            <option value="Asia/Hong_Kong">Гонконг, UTC+8</option>
+                            <option value="Asia/Shanghai">Шанхай, UTC+8</option>
+                            <option value="Asia/Tokyo">Токио, UTC+9</option>
+                            <option value="Asia/Seoul">Сеул, UTC+9</option>
+                            <option value="Australia/Sydney">Сидней, UTC+10/11</option>
+                            <option value="Europe/Berlin">Берлин, UTC+1/2</option>
+                            <option value="Europe/London">Лондон, UTC+0/1</option>
+                            <option value="America/Sao_Paulo">Сан-Паулу, UTC-3</option>
+                            <option value="America/New_York">Нью-Йорк, UTC-5/4</option>
+                            <option value="America/Toronto">Торонто, UTC-5/4</option>
+                            <option value="America/Los_Angeles">Лос-Анджелес, UTC-8/7</option>
                         </select>
                     </div>
                 </div>
                 <div class="stg-divider"></div>
                 <div class="stg-section">
                     <div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Tiger.com Terminal</div>
-                    <div class="stg-desc">Кнопка «Tiger» откроет тикер на выбранной бирже и в выбранной группе линковки (Settings → Local Signal Server, порт 7819).</div>
                     <div class="natr-tiger-settings-cols">
                         <div class="stg-col">
                             <div class="stg-col-title">NATR Scanner</div>
@@ -1218,10 +1251,10 @@
                 <div class="stg-divider"></div>
                 <div class="stg-section">
                     <div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Vataga.Terminal</div>
-                    <div class="stg-desc">Кнопка «V» откроет тикер в Vataga.Terminal на выбранной бирже и типе инструмента (локальный сервер приложения, порт 5005). По умолчанию фьючерсы — данные скринеров берутся с Binance USDT-M.</div>
                     <div class="stg-field">
-                        <label for="vatagaPartnerIdInput">ID партнёра (partner_ID из документации)</label>
-                        <input type="text" class="natr-range-input" id="vatagaPartnerIdInput" placeholder="CryptoTerminal" maxlength="64" onchange="vatagaChangePartnerId(this.value)" style="width:100%;">
+                        <label for="vatagaPartnerIdInput">ID партнёра</label>
+                        <input type="text" class="stg-input stg-input-sm" id="vatagaPartnerIdInput" placeholder="CryptoTerminal" maxlength="64" onchange="vatagaChangePartnerId(this.value)">
+                        <div class="stg-hint">partner_ID из документации Vataga.Terminal</div>
                     </div>
                     <div class="natr-tiger-settings-cols">
                         <div class="stg-col">
@@ -1877,6 +1910,15 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+// Тикеры некоторых TradFi-инструментов (деривативы, длинные суффиксы) могут быть
+// очень длинными и растягивают колонку «Тикер», выталкивая остальные колонки
+// таблицы за пределы экрана. Обрезаем ОТОБРАЖАЕМОЕ имя до 10 символов — полное
+// имя всё равно доступно в title (tooltip) и копируется по клику как обычно.
+function natrTruncateTicker(symbol, max) {
+    max = max || 10;
+    if (!symbol || symbol.length <= max) return symbol;
+    return symbol.slice(0, max) + '…';
 }
 // Only allows http(s) URLs through into href/src attributes — blocks
 // javascript:, data:, vbscript: etc. that a malicious API field could contain.
@@ -3157,7 +3199,7 @@ function natrRenderTable(data, animate, pinnedCount) {
         return '<tr class="'+bc+' '+ra+(isPinnedRow?' natr-pinned-row':'')+'">'+
             natrPinFavCellHtml(item.symbol, isPinned, isFav, 'natrTogglePinned', 'natrToggleFavorite')+
             '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер '+displaySymbol+'" data-symbol="'+displaySymbol+'">'+
-            '<div class="ticker-name '+nc+'">'+displaySymbol+'</div>'+
+            '<div class="ticker-name '+nc+'" title="'+displaySymbol+'">'+natrTruncateTicker(displaySymbol)+'</div>'+
             '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></td>'+
             '<td>'+typeCell+'</td>'+
             '<td style="text-align:right;">'+natrCell+'</td>'+
@@ -4005,7 +4047,7 @@ function contRenderTable(data, pinnedCount) {
         return '<tr class="'+(isPinnedRow?'natr-pinned-row':'')+'">'+
             natrPinFavCellHtml(r.symbol, isPinned, isFav, 'contTogglePinned', 'contToggleFavorite')+
             '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер '+displaySymbol+'" data-symbol="'+displaySymbol+'">'+
-            '<div class="ticker-name">'+displaySymbol+'</div>'+
+            '<div class="ticker-name" title="'+displaySymbol+'">'+natrTruncateTicker(displaySymbol)+'</div>'+
             '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></td>'+
             '<td>'+typeCell+'</td>'+
             '<td>'+bodyRatioCell+'</td>'+
