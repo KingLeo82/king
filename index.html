@@ -103,7 +103,7 @@
         .natr-tiger-settings-panel {
             position: absolute; right: 0; top: calc(100% + 8px); z-index: 50;
             display: none; flex-direction: column;
-            width: 520px; max-width: calc(100vw - 32px);
+            width: 640px; max-width: calc(100vw - 32px);
             /* С добавлением секции Vataga панель стала выше экрана — ограничиваем
                высоту окном просмотра и даём собственную прокрутку. */
             max-height: calc(100vh - 110px); overflow-y: auto;
@@ -159,12 +159,11 @@
         .stg-input:hover, .stg-input:focus { border-color: rgba(240,185,11,0.4); box-shadow: 0 4px 16px rgba(240,185,11,0.15); }
         .stg-input::placeholder { color: var(--muted); opacity: 0.6; }
         .stg-hint { font-size: 10.5px; color: var(--muted); opacity: 0.8; line-height: 1.4; }
-        /* Компактные варианты — эти два поля («Часовой пояс» и «ID партнёра») не
-           обязаны растягиваться на всю ширину панели настроек (520px), длинный
-           input/select там визуально ни к чему. */
-        .stg-select-sm { width: auto; min-width: 190px; max-width: 220px; }
-        .stg-field .sec-select.stg-select-sm { width: auto; min-width: 190px; max-width: 220px; }
-        .stg-input-sm { width: auto; max-width: 200px; }
+        /* Компактные варианты — поле «Часовой пояс» и поле ID не обязаны
+           растягиваться на всю ширину панели настроек (640px). */
+        .stg-select-sm { width: auto; min-width: 210px; max-width: 230px; }
+        .stg-field .sec-select.stg-select-sm { width: auto; min-width: 210px; max-width: 230px; }
+        .stg-input-sm { width: auto; min-width: 210px; max-width: 230px; }
         @media (max-width: 640px) {
             .stg-select-sm, .stg-input-sm { max-width: none; width: 100%; }
         }
@@ -172,7 +171,7 @@
         .natr-tiger-settings-cols { display: flex; gap: 12px; }
         .natr-tiger-settings-cols .stg-col {
             flex: 1; min-width: 0;
-            display: flex; flex-direction: column; gap: 12px;
+            display: flex; flex-direction: column; gap: 10px;
             padding: 12px;
             background: rgba(255,255,255,0.02);
             border: 1px solid var(--border);
@@ -181,6 +180,7 @@
         .stg-col-title {
             display: flex; align-items: center; gap: 8px;
             font-size: 12px; font-weight: 700; color: var(--accent);
+            white-space: nowrap;
         }
         .stg-col-title::before {
             content: ''; width: 6px; height: 6px; border-radius: 2px;
@@ -413,6 +413,11 @@
         .cont-yest-up { color: var(--green); }
         .cont-yest-down { color: var(--red); }
         .cont-rvol-hot { color: var(--accent); font-weight: 700; }
+        /* Absorption Scanner — RVOL highlighted gold when no range/comparison filter
+           is active (mirrors .cont-rvol-hot). When a filter is active, the cell
+           gets .natr-range-hit / .natr-above-threshold / .natr-below-threshold
+           instead, exactly like Trend Continuation. */
+        .abs-rvol-hot { color: var(--accent); font-weight: 700; }
 
         .natr-stats {
             display: flex; justify-content: space-between; align-items: center;
@@ -1164,6 +1169,131 @@
                 background-image: linear-gradient(rgba(240,185,11,0.06), rgba(240,185,11,0.06));
             }
         }
+
+        /* ========== ABSORPTION SCANNER (Effort vs. Result — Wyckoff) ========== */
+        .abs-info-card {
+            background: linear-gradient(135deg, rgba(240,185,11,0.06), rgba(102,126,234,0.05));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+        }
+        .abs-info-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .abs-info-desc {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+        .abs-info-desc strong { color: var(--fg); font-weight: 600; }
+        .abs-info-desc em { color: var(--accent); font-style: normal; font-weight: 600; }
+        .abs-signal {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .abs-sig-long {
+            background: rgba(14,203,129,0.12);
+            color: var(--green);
+            border: 1px solid rgba(14,203,129,0.25);
+        }
+        .abs-sig-short {
+            background: rgba(246,70,93,0.12);
+            color: var(--red);
+            border: 1px solid rgba(246,70,93,0.25);
+        }
+        .abs-sig-neutral {
+            background: rgba(94,109,122,0.12);
+            color: var(--muted);
+            border: 1px solid rgba(94,109,122,0.2);
+        }
+        .abs-wick-bar {
+            display: inline-block;
+            width: 56px;
+            height: 6px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+        .abs-wick-fill {
+            display: block;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        /* === Trend Continuation favorite color picker ===
+           Floating popover anchored near the clicked star; lets the user pick
+           one of 5 colors for the favorite, or remove it. */
+        .cont-fav-picker {
+            position: fixed;
+            z-index: 10000;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px 8px;
+            box-shadow: 0 10px 32px rgba(0,0,0,0.45);
+            min-width: 168px;
+            font-family: inherit;
+        }
+        .cont-fav-picker-title {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .cont-fav-picker-colors {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .cont-fav-color {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.12s, border-color 0.12s;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .cont-fav-color:hover {
+            transform: scale(1.12);
+            border-color: var(--fg);
+        }
+        .cont-fav-color.active {
+            border-color: var(--fg);
+            box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(255,255,255,0.18);
+        }
+        .cont-fav-remove {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .cont-fav-remove:hover {
+            color: var(--red);
+            border-color: var(--red);
+            background: rgba(244,67,54,0.08);
+        }
     </style>
 </head>
 <body>
@@ -1177,6 +1307,7 @@
     <div class="nav-tabs">
         <button class="nav-tab active" data-section="natr" onclick="switchSection('natr')">NATR Scanner</button>
         <button class="nav-tab" data-section="cont" onclick="switchSection('cont')">Trend Continuation</button>
+        <button class="nav-tab" data-section="abs" onclick="switchSection('abs')">Absorption</button>
         <button class="nav-tab" data-section="tw" onclick="switchSection('tw')">Trader Clock</button>
         <button class="nav-tab" data-section="cal" onclick="switchSection('cal')">Calendar</button>
         <button class="nav-tab" data-section="cai" onclick="switchSection('cai')">CryptoAI</button>
@@ -1236,7 +1367,7 @@
                             </div>
                         </div>
                         <div class="stg-col">
-                            <div class="stg-col-title">Продолжение</div>
+                            <div class="stg-col-title">Trend Continuation</div>
                             <div class="stg-field">
                                 <label for="contTigerExchangeSelect">Биржа в Tiger</label>
                                 <select class="sec-select" id="contTigerExchangeSelect" onchange="contChangeTigerExchange(this.value)"></select>
@@ -1246,13 +1377,23 @@
                                 <select class="sec-select" id="contTigerLinkGroupSelect" onchange="contChangeTigerLinkGroup(this.value)"></select>
                             </div>
                         </div>
+                        <div class="stg-col">
+                            <div class="stg-col-title">Absorption</div>
+                            <div class="stg-field">
+                                <label for="absTigerExchangeSelect">Биржа в Tiger</label>
+                                <select class="sec-select" id="absTigerExchangeSelect" onchange="absChangeTigerExchange(this.value)"></select>
+                            </div>
+                            <div class="stg-field">
+                                <label for="absTigerLinkGroupSelect">Группа линковки</label>
+                                <select class="sec-select" id="absTigerLinkGroupSelect" onchange="absChangeTigerLinkGroup(this.value)"></select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="stg-divider"></div>
                 <div class="stg-section">
                     <div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Vataga.Terminal</div>
                     <div class="stg-field">
-                        <label for="vatagaPartnerIdInput">ID партнёра</label>
                         <input type="text" class="stg-input stg-input-sm" id="vatagaPartnerIdInput" placeholder="CryptoTerminal" maxlength="64" onchange="vatagaChangePartnerId(this.value)">
                         <div class="stg-hint">partner_ID из документации Vataga.Terminal</div>
                     </div>
@@ -1272,7 +1413,7 @@
                             </div>
                         </div>
                         <div class="stg-col">
-                            <div class="stg-col-title">Продолжение</div>
+                            <div class="stg-col-title">Trend Continuation</div>
                             <div class="stg-field">
                                 <label for="contVatagaExchangeSelect">Биржа в Vataga</label>
                                 <select class="sec-select" id="contVatagaExchangeSelect" onchange="contChangeVatagaExchange(this.value)"></select>
@@ -1280,6 +1421,20 @@
                             <div class="stg-field">
                                 <label for="contVatagaTypeSelect">Тип инструмента</label>
                                 <select class="sec-select" id="contVatagaTypeSelect" onchange="contChangeVatagaType(this.value)">
+                                    <option value="F">F — фьючерсы</option>
+                                    <option value="S">S — спот</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="stg-col">
+                            <div class="stg-col-title">Absorption</div>
+                            <div class="stg-field">
+                                <label for="absVatagaExchangeSelect">Биржа в Vataga</label>
+                                <select class="sec-select" id="absVatagaExchangeSelect" onchange="absChangeVatagaExchange(this.value)"></select>
+                            </div>
+                            <div class="stg-field">
+                                <label for="absVatagaTypeSelect">Тип инструмента</label>
+                                <select class="sec-select" id="absVatagaTypeSelect" onchange="absChangeVatagaType(this.value)">
                                     <option value="F">F — фьючерсы</option>
                                     <option value="S">S — спот</option>
                                 </select>
@@ -1416,10 +1571,6 @@
             <div class="badge-status" id="contStatusBadge">
                 <span class="status-dot"></span>
                 <span id="contStatusText">Ожидание</span>
-            </div>
-            <div class="natr-auto-refresh" id="contAutoRefresh" title="Автообновление (для алертов) — интервал выбирается ниже">
-                <svg style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span class="refresh-timer" id="contRefreshTimer">--</span>с
             </div>
             <div class="natr-last-update" id="contLastUpdate" style="display:none;">
                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -1716,12 +1867,176 @@
 </div>
 </div>
 
+<!-- ========== SECTION 6: ABSORPTION SCANNER (Effort vs. Result — Wyckoff) ========== -->
+<div class="section-panel" id="section-abs">
+<div class="natr-wrap">
+    <div class="natr-header">
+        <h1><em>Absorption</em> Scanner</h1>
+        <div class="natr-controls">
+            <div class="badge-status" id="absStatusBadge">
+                <span class="status-dot"></span>
+                <span id="absStatusText">Ожидание</span>
+            </div>
+            <div class="natr-auto-refresh" id="absAutoRefresh" title="Автообновление каждую минуту">
+                <svg style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span class="refresh-timer" id="absRefreshTimer">--</span>с
+            </div>
+            <div class="natr-last-update" id="absLastUpdate" style="display:none;">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span id="absUpdateTime">--:--:--</span>
+            </div>
+            <button class="btn-gold" id="absScanBtn" onclick="absStartScan()">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Сканировать
+            </button>
+        </div>
+    </div>
+
+    <div class="abs-info-card">
+        <div class="abs-info-title">
+            <svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Стратегия: Скрытая абсорбция (Effort vs. Result)
+        </div>
+        <div class="abs-info-desc">
+            Сканируем все USDT-M фьючерсы Binance в поисках свечей, где огромный <strong>объём</strong> (Усилие) не сдвинул цену (<strong>Результат</strong> в узком диапазоне, по умолчанию ±0.30% — настраивается фильтром «Результат ±%») — значит, рыночные ордера поглощаются лимитными. <strong>Δ taker</strong> раскрывает сторону: отрицательная + длинная нижняя тень → <em>LONG</em> сетап; положительная + длинная верхняя тень → <em>SHORT</em>.
+        </div>
+    </div>
+
+    <div class="natr-cat-tabs" id="absCatTabs">
+        <span class="natr-cat-label">Категория:</span>
+        <button class="natr-cat-tab active" data-cat="all" onclick="absSwitchCategory('all')">Все</button>
+        <button class="natr-cat-tab" data-cat="TF_CRYPTO" onclick="absSwitchCategory('TF_CRYPTO')">Крипто</button>
+        <button class="natr-cat-tab" data-cat="TF_STOCK" onclick="absSwitchCategory('TF_STOCK')">Акции</button>
+        <button class="natr-cat-tab" data-cat="TF_ETF" onclick="absSwitchCategory('TF_ETF')">ETF</button>
+        <button class="natr-cat-tab" data-cat="TF_COMMODITY" onclick="absSwitchCategory('TF_COMMODITY')">Товары</button>
+        <button class="natr-cat-tab" data-cat="TF_INDEX" onclick="absSwitchCategory('TF_INDEX')">Индексы</button>
+        <button class="natr-cat-tab" data-cat="TF_OTHER" onclick="absSwitchCategory('TF_OTHER')">Другие</button>
+        <button class="natr-cat-tab" data-cat="TradFi" onclick="absSwitchCategory('TradFi')">TradFi</button>
+        <button class="natr-cat-tab" data-cat="Meme" onclick="absSwitchCategory('Meme')">Meme</button>
+        <button class="natr-cat-tab" data-cat="DeFi" onclick="absSwitchCategory('DeFi')">DeFi</button>
+        <button class="natr-cat-tab" data-cat="Layer-1" onclick="absSwitchCategory('Layer-1')">Layer-1</button>
+        <button class="natr-cat-tab" data-cat="AI" onclick="absSwitchCategory('AI')">AI</button>
+        <button class="natr-cat-tab" data-cat="Gaming" onclick="absSwitchCategory('Gaming')">Gaming</button>
+        <button class="natr-cat-tab" data-cat="Layer-2" onclick="absSwitchCategory('Layer-2')">Layer-2</button>
+        <button class="natr-cat-tab" data-cat="PoW" onclick="absSwitchCategory('PoW')">PoW</button>
+        <button class="natr-cat-tab" data-cat="Infrastructure" onclick="absSwitchCategory('Infrastructure')">Infra</button>
+        <button class="natr-cat-tab" data-cat="Metaverse" onclick="absSwitchCategory('Metaverse')">Metaverse</button>
+        <button class="natr-cat-tab" data-cat="NFT" onclick="absSwitchCategory('NFT')">NFT</button>
+        <button class="natr-cat-tab" data-cat="Storage" onclick="absSwitchCategory('Storage')">Storage</button>
+        <button class="natr-cat-tab" data-cat="RWA" onclick="absSwitchCategory('RWA')">RWA</button>
+    </div>
+
+    <div class="natr-tabs">
+        <button class="natr-tab active" data-mode="5m"  onclick="absSwitchMode('5m')"  title="5 минут — базовый таймфрейм скрининга (2ч lookback)">5м</button>
+        <button class="natr-tab"        data-mode="15m" onclick="absSwitchMode('15m')" title="15 минут — lookback 4ч">15м</button>
+        <button class="natr-tab"        data-mode="1h"  onclick="absSwitchMode('1h')"  title="1 час — lookback 24ч">1ч</button>
+    </div>
+
+    <div class="natr-tools-card">
+    <div class="natr-tools" id="absTools">
+        <div class="natr-tool-group">
+            <label class="natr-tool-label">Показывать:</label>
+            <button class="natr-tool-btn active" id="absDirAllBtn" onclick="absSetDirection('all')">Всё</button>
+            <button class="natr-tool-btn" id="absDirLongBtn" onclick="absSetDirection('long')">▲ LONG</button>
+            <button class="natr-tool-btn" id="absDirShortBtn" onclick="absSetDirection('short')">▼ SHORT</button>
+        </div>
+        <button class="natr-tool-btn" id="absAlertBtn" onclick="absToggleAlerts()">🔔</button>
+        <button class="natr-tool-btn" id="absWatchlistBtn" onclick="absToggleWatchlistOnly()">★ Избранное</button>
+    </div>
+    <div class="natr-tools" id="absToolsFilters">
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="absRvolFrom">RVOL x:</label>
+            <input type="number" class="natr-range-input" id="absRvolFrom" placeholder="от" min="0" step="0.1" style="width:64px;" oninput="absChangeFilters()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="absRvolTo" placeholder="до" min="0" step="0.1" style="width:64px;" oninput="absChangeFilters()">
+            <button class="natr-tool-btn" id="absRvolFilterBtn" onclick="absToggleRvolFilter()">Фильтр</button>
+        </div>
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="absResultFrom">Результат ±%:</label>
+            <input type="number" class="natr-range-input" id="absResultFrom" placeholder="от" min="0" step="0.05" style="width:64px;" oninput="absChangeResultRange()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="absResultTo" placeholder="до" min="0" step="0.05" style="width:64px;" oninput="absChangeResultRange()">
+            <button class="natr-tool-btn" id="absResultFilterBtn" onclick="absToggleResultFilter()">Фильтр</button>
+        </div>
+        <div class="natr-tool-group">
+            <label class="natr-tool-label" for="absVol24hFrom">Объём 24ч:</label>
+            <input type="text" inputmode="decimal" class="natr-range-input" id="absVol24hFrom" placeholder="от, напр. 10к" oninput="absChangeVolRange()">
+            <span class="natr-range-sep">—</span>
+            <input type="text" inputmode="decimal" class="natr-range-input" id="absVol24hTo" placeholder="до, напр. 1м" oninput="absChangeVolRange()">
+            <button class="natr-tool-btn" id="absVol24hFilterBtn" onclick="absToggleVolFilter()">Фильтр</button>
+        </div>
+    </div>
+    <div class="natr-tools" id="absToolsRow2">
+        <span class="natr-tool-hint">ⓘ Все фильтры применяются сразу; смена таймфрейма — нажмите «Сканировать»</span>
+    </div>
+    </div>
+
+    <div class="natr-stats" id="absStatsBar" style="display:none;">
+        <div>Сигналов в фильтре: <strong id="absStatFound" class="mono">0</strong></div>
+        <div>Всего просканировано: <strong id="absStatTotal" class="mono">0</strong></div>
+        <div>LONG сетапов: <strong id="absStatLong" class="mono" style="color:var(--green)">0</strong></div>
+        <div>SHORT сетапов: <strong id="absStatShort" class="mono" style="color:var(--red)">0</strong></div>
+    </div>
+
+    <div class="natr-table-wrap" id="absTableWrap">
+        <div class="bg-update-overlay"></div>
+        <table>
+            <thead><tr>
+                <th style="width:78px;text-align:center;" title="Закреп и избранное">📌 ★</th>
+                <th class="sortable" data-tbl="abs" data-key="symbol">Тикер</th>
+                <th class="sortable" data-tbl="abs" data-key="type" style="width:78px;">Тип</th>
+                <th class="sortable sort-active sort-desc" data-tbl="abs" data-key="volRatio" style="width:90px;text-align:right;" title="RVOL — во сколько раз объём свечи больше среднего за lookback">RVOL</th>
+                <th class="sortable" data-tbl="abs" data-key="priceChange" style="width:100px;text-align:right;" title="Изменение цены за свечу, %">Результат %</th>
+                <th class="sortable" data-tbl="abs" data-key="delta" style="width:96px;text-align:right;" title="Δ taker quote volume (USDT): 2×buys − total. Минус = агрессивные продажи">Δ Taker</th>
+                <th style="width:64px;text-align:center;" title="Длина доминирующей тени">Тень</th>
+                <th class="sortable" data-tbl="abs" data-key="wick" style="width:70px;text-align:right;" title="Длина доминирующей тени, % от диапазона">Wick %</th>
+                <th class="sortable" data-tbl="abs" data-key="volume" style="width:90px;" title="Объём сканируемой свечи (USDT)">Объём</th>
+                <th style="width:128px;text-align:center;">Действия</th>
+            </tr></thead>
+            <tbody id="absTableBody"></tbody>
+        </table>
+        <div class="natr-empty" id="absEmptyState" style="display:none;">
+            <svg style="width:48px;height:48px;margin:0 auto;opacity:0.4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <p>Сканирование...</p>
+        </div>
+    </div>
+
+
+</div>
+</div>
+
 <!-- ========== SHARED TOAST ========== -->
 <div class="toast-global" id="globalToast">
     <svg style="width:18px;height:18px;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
     <span id="globalToastText">Скопировано!</span>
 </div>
 <textarea id="globalCopyArea" style="position:fixed;left:-9999px;top:-9999px;opacity:0;"></textarea>
+
+<!-- Trend Continuation favorite color picker (hidden, anchored near the clicked star) -->
+<div class="cont-fav-picker" id="contFavPicker" style="display:none;">
+    <div class="cont-fav-picker-title">Цвет избранного</div>
+    <div class="cont-fav-picker-colors">
+        <button type="button" class="cont-fav-color" data-color="gold"   style="background:#f0b90b" title="Золотой (по умолчанию)" onclick="contSetFavoriteColor('gold')"></button>
+        <button type="button" class="cont-fav-color" data-color="green"  style="background:#4caf50" title="Зелёный (бычий)" onclick="contSetFavoriteColor('green')"></button>
+        <button type="button" class="cont-fav-color" data-color="red"    style="background:#f44336" title="Красный (медвежий)" onclick="contSetFavoriteColor('red')"></button>
+        <button type="button" class="cont-fav-color" data-color="blue"   style="background:#2196f3" title="Синий" onclick="contSetFavoriteColor('blue')"></button>
+        <button type="button" class="cont-fav-color" data-color="purple" style="background:#9c27b0" title="Фиолетовый" onclick="contSetFavoriteColor('purple')"></button>
+    </div>
+    <button type="button" class="cont-fav-remove" id="contFavRemove" onclick="contRemoveFavorite()">Убрать из избранного</button>
+</div>
+
+<!-- Absorption favorite color picker (hidden, anchored near the clicked star) -->
+<div class="cont-fav-picker" id="absFavPicker" style="display:none;">
+    <div class="cont-fav-picker-title">Цвет избранного</div>
+    <div class="cont-fav-picker-colors">
+        <button type="button" class="cont-fav-color" data-color="gold"   style="background:#f0b90b" title="Золотой (по умолчанию)" onclick="absSetFavoriteColor('gold')"></button>
+        <button type="button" class="cont-fav-color" data-color="green"  style="background:#4caf50" title="Зелёный (бычий)" onclick="absSetFavoriteColor('green')"></button>
+        <button type="button" class="cont-fav-color" data-color="red"    style="background:#f44336" title="Красный (медвежий)" onclick="absSetFavoriteColor('red')"></button>
+        <button type="button" class="cont-fav-color" data-color="blue"   style="background:#2196f3" title="Синий" onclick="absSetFavoriteColor('blue')"></button>
+        <button type="button" class="cont-fav-color" data-color="purple" style="background:#9c27b0" title="Фиолетовый" onclick="absSetFavoriteColor('purple')"></button>
+    </div>
+    <button type="button" class="cont-fav-remove" id="absFavRemove" onclick="absRemoveFavorite()">Убрать из избранного</button>
+</div>
 
 <script>
 // ============================================================
@@ -1811,21 +2126,23 @@ function switchSection(name) {
     if (name === 'tw' && !tcInitialized) { tcInit(); tcInitialized = true; }
     else if (name === 'tw') tcResumeDraw(); // restart the paused rAF loop
     if (name === 'cal' && !calInitialized) { calInit(); calInitialized = true; }
+    if (name === 'abs' && !absInitialized) { absInit(); absInitialized = true; }
 }
 
 
 // ============================================================
-//  COLUMN SORTING (shared for NATR & Продолжение)
+//  COLUMN SORTING (shared for NATR, Продолжение & Absorption)
 // ============================================================
 const natrSortState = { key: 'natr', dir: 'desc' };
 const contSortState = { key: 'bodyRatio', dir: 'desc' };
+const absSortState  = { key: 'volRatio', dir: 'desc' };
 
 document.addEventListener('click', function(e) {
     const th = e.target.closest('th.sortable');
     if (!th) return;
     const tbl = th.dataset.tbl;
     const key = th.dataset.key;
-    const state = tbl === 'natr' ? natrSortState : contSortState;
+    const state = tbl === 'natr' ? natrSortState : tbl === 'cont' ? contSortState : absSortState;
     if (state.key === key) {
         state.dir = state.dir === 'desc' ? 'asc' : 'desc';
     } else {
@@ -1840,6 +2157,7 @@ document.addEventListener('click', function(e) {
     th.classList.add(state.dir === 'asc' ? 'sort-asc' : 'sort-desc', 'sort-active');
     // Re-render
     if (tbl === 'natr') { if (natrAllResults.length) natrReFilterAndRender(); }
+    else if (tbl === 'abs') { if (absAllResults.length) absReRender(); }
     else { if (contRawResults.length) contReFilterAndRender(); }
 });
 
@@ -2081,6 +2399,11 @@ function ctSafeGetJSON(key, fallback) {
         return JSON.parse(raw);
     } catch(e) { return fallback; }
 }
+// Mirrors ctSafeSetItem, but JSON-serializes first — pairs with ctSafeGetJSON above.
+function ctSafeSetJSON(key, value) {
+    try { return ctSafeSetItem(key, JSON.stringify(value)); }
+    catch(e) { return false; }
+}
 
 // ============================================================
 //  SECTION 1: NATR SCANNER
@@ -2211,16 +2534,20 @@ const NATR_VATAGA_SVG = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA
 // (NATR Scanner and Продолжение тренда) — same two-buttons-in-one-column pattern as the
 // CryptoAI/Tiger action links. Each caller passes its own toggle function names since the
 // two tables keep fully independent pin/favorite sets.
-function natrPinFavCellHtml(symbol, isPinned, isFav, pinFn, favFn) {
+function natrPinFavCellHtml(symbol, isPinned, isFav, pinFn, favFn, favColorHex) {
     const sym = jsAttr(symbol);          // for the JS string inside onclick=""
     const attrSym = escapeHtml(symbol); // for the data-symbol="" attribute
+    // Если задан hex цвета — красим звезду и её фон (полупрозрачный, как .accent-dim)
+    // inline-стилем. NATR Scanner вызывает без 6-го аргумента → favStyle пустой →
+    // звезда остаётся с дефолтным золотым акцентом из .natr-fav-cell.favorited.
+    const favStyle = (isFav && favColorHex) ? ' style="color:' + favColorHex + '; background:' + favColorHex + '22;"' : '';
     return '<td style="text-align:center;"><div class="natr-pinfav-cell">' +
         '<span class="natr-pin-cell' + (isPinned ? ' pinned' : '') + '" tabindex="0" role="button" aria-pressed="' + isPinned + '" aria-label="Закреп" data-symbol="' + attrSym + '" ' +
         'onclick="event.stopPropagation(); ' + pinFn + '(\'' + sym + '\')" ' +
         'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + pinFn + '(\'' + sym + '\');}">' + NATR_PIN_SVG + '</span>' +
-        '<span class="natr-fav-cell' + (isFav ? ' favorited' : '') + '" tabindex="0" role="button" aria-pressed="' + isFav + '" aria-label="Избранное" data-symbol="' + attrSym + '" ' +
-        'onclick="event.stopPropagation(); ' + favFn + '(\'' + sym + '\')" ' +
-        'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + favFn + '(\'' + sym + '\');}">' + (isFav ? '★' : '☆') + '</span>' +
+        '<span class="natr-fav-cell' + (isFav ? ' favorited' : '') + '" tabindex="0" role="button" aria-pressed="' + isFav + '" aria-label="Избранное" data-symbol="' + attrSym + '"' + favStyle + ' ' +
+        'onclick="event.stopPropagation(); ' + favFn + '(\'' + sym + '\', event)" ' +
+        'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + favFn + '(\'' + sym + '\', event);}">' + (isFav ? '★' : '☆') + '</span>' +
         '</div></td>';
 }
 try {
@@ -2284,7 +2611,7 @@ function natrApplyRestoredUI() {
     const cmpValInput = document.getElementById('natrCompareValue');
     if (cmpValInput && natrCompareValue !== null) cmpValInput.value = natrCompareValue;
     document.querySelectorAll('#natrCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === natrSelectedCategory));
-    document.querySelectorAll('.natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === natrMode));
+    document.querySelectorAll('#section-natr .natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === natrMode));
     const wlBtn = document.getElementById('natrWatchlistBtn');
     if (wlBtn) wlBtn.classList.toggle('active', natrWatchlistOnly);
     const alertBtn = document.getElementById('natrAlertBtn');
@@ -2379,7 +2706,8 @@ function natrStartAutoRefresh() {
 function natrInitCategories() {
     natrCategoryMap = Object.assign({}, NATR_EMBEDDED_CATEGORIES);
     natrUpdateCatTabCounts();
-    contUpdateCatTabCounts(); // Trend Continuation использует тот же список пар — считаем и его вкладки
+    contUpdateCatTabCounts();
+    absUpdateCatTabCounts(); // Absorption использует тот же natrCategoryMap
     // No background API refresh here on purpose: Binance's www.binance.com/bapi/... web
     // endpoint doesn't send CORS headers for third-party origins, so a browser-side fetch
     // to it fails 100% of the time from here — it would only ever produce console noise
@@ -2677,11 +3005,15 @@ let natrTigerLinkGroup = 'A';
 let natrTigerExchange = 'BYBIT';
 let contTigerExchange = 'BYBIT';
 let contTigerLinkGroup = 'B';
+let absTigerExchange = 'Binance-Fut';
+let absTigerLinkGroup = 'B';
 try {
     const savedGroup = localStorage.getItem('natr_tiger_link_group'); if (savedGroup) natrTigerLinkGroup = savedGroup;
     const savedExch = localStorage.getItem('natr_tiger_exchange'); if (savedExch) natrTigerExchange = savedExch;
     const savedContExch = localStorage.getItem('cont_tiger_exchange'); if (savedContExch) contTigerExchange = savedContExch;
     const savedContGroup = localStorage.getItem('cont_tiger_link_group'); if (savedContGroup) contTigerLinkGroup = savedContGroup;
+    const savedAbsExch = localStorage.getItem('abs_tiger_exchange'); if (savedAbsExch) absTigerExchange = savedAbsExch;
+    const savedAbsGroup = localStorage.getItem('abs_tiger_link_group'); if (savedAbsGroup) absTigerLinkGroup = savedAbsGroup;
 } catch(e) { /* non-fatal */ }
 
 // ---- Vataga.Terminal integration (local HTTP API, port 5005) — mirror of the
@@ -2694,12 +3026,16 @@ let natrVatagaExchange = 'binance';
 let contVatagaExchange = 'binance';
 let natrVatagaType = 'F';
 let contVatagaType = 'F';
+let absVatagaExchange = 'binance';
+let absVatagaType = 'F';
 try {
     const savedPid = localStorage.getItem('vataga_partner_id'); if (savedPid) vatagaPartnerId = savedPid;
     const savedNVEx = localStorage.getItem('natr_vataga_exchange'); if (savedNVEx) natrVatagaExchange = savedNVEx;
     const savedCVEx = localStorage.getItem('cont_vataga_exchange'); if (savedCVEx) contVatagaExchange = savedCVEx;
     const savedNVType = localStorage.getItem('natr_vataga_type'); if (savedNVType === 'S' || savedNVType === 'F') natrVatagaType = savedNVType;
     const savedCVType = localStorage.getItem('cont_vataga_type'); if (savedCVType === 'S' || savedCVType === 'F') contVatagaType = savedCVType;
+    const savedAVEx = localStorage.getItem('abs_vataga_exchange'); if (savedAVEx) absVatagaExchange = savedAVEx;
+    const savedAVType = localStorage.getItem('abs_vataga_type'); if (savedAVType === 'S' || savedAVType === 'F') absVatagaType = savedAVType;
 } catch(e) { /* non-fatal */ }
 // Full exchange list Tiger's local API accepts for "e" (case-insensitive on their end).
 // convert: how to turn a Binance USDT-M perpetual code like "BTCUSDT" into that exchange's
@@ -2832,6 +3168,12 @@ async function vatagaLinkSymbol(exchange, type, symbol) {
 }
 function natrOpenInVataga(symbol) { vatagaLinkSymbol(natrVatagaExchange, natrVatagaType, symbol); }
 function contOpenInVataga(symbol) { vatagaLinkSymbol(contVatagaExchange, contVatagaType, symbol); }
+function absOpenInVataga(symbol) { vatagaLinkSymbol(absVatagaExchange, absVatagaType, symbol); }
+function absOpenInTiger(symbol) { tigerLinkSymbol(absTigerExchange, absTigerLinkGroup, symbol); }
+function absChangeTigerExchange(v) { absTigerExchange = v; ctSafeSetItem('abs_tiger_exchange', v); }
+function absChangeTigerLinkGroup(v) { absTigerLinkGroup = v; ctSafeSetItem('abs_tiger_link_group', v); }
+function absChangeVatagaExchange(v) { absVatagaExchange = v; ctSafeSetItem('abs_vataga_exchange', v); }
+function absChangeVatagaType(v) { absVatagaType = v === 'S' ? 'S' : 'F'; ctSafeSetItem('abs_vataga_type', absVatagaType); }
 function natrChangeVatagaExchange(v) { natrVatagaExchange = v; ctSafeSetItem('natr_vataga_exchange', v); }
 function contChangeVatagaExchange(v) { contVatagaExchange = v; ctSafeSetItem('cont_vataga_exchange', v); }
 function natrChangeVatagaType(v) { natrVatagaType = v === 'S' ? 'S' : 'F'; ctSafeSetItem('natr_vataga_type', natrVatagaType); }
@@ -2931,6 +3273,39 @@ function natrInitTigerSettingsUI() {
     if (vTypeSel) vTypeSel.value = natrVatagaType;
     const cVTypeSel = document.getElementById('contVatagaTypeSelect');
     if (cVTypeSel) cVTypeSel.value = contVatagaType;
+    // Absorption Tiger selects
+    const aExchSel = document.getElementById('absTigerExchangeSelect');
+    if (aExchSel && !aExchSel.options.length) {
+        NATR_TIGER_EXCHANGES.forEach(x => {
+            const opt = document.createElement('option');
+            opt.value = x.value; opt.textContent = x.label;
+            aExchSel.appendChild(opt);
+        });
+    }
+    const aGroupSel = document.getElementById('absTigerLinkGroupSelect');
+    if (aGroupSel && !aGroupSel.options.length) {
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
+            const opt = document.createElement('option'); opt.value = l; opt.textContent = 'Группа ' + l; aGroupSel.appendChild(opt);
+        });
+        for (let n = 0; n <= 11; n++) {
+            const opt = document.createElement('option'); opt.value = String(n); opt.textContent = 'Группа ' + n; aGroupSel.appendChild(opt);
+        }
+    }
+    // Absorption Vataga selects
+    const aVExchSel = document.getElementById('absVatagaExchangeSelect');
+    if (aVExchSel && !aVExchSel.options.length) {
+        VATAGA_EXCHANGES.forEach(x => {
+            const opt = document.createElement('option');
+            opt.value = x.value; opt.textContent = x.label;
+            aVExchSel.appendChild(opt);
+        });
+    }
+    // Restore Absorption selected values
+    if (aExchSel) aExchSel.value = absTigerExchange;
+    if (aGroupSel) aGroupSel.value = absTigerLinkGroup;
+    if (aVExchSel) aVExchSel.value = absVatagaExchange;
+    const aVTypeSel = document.getElementById('absVatagaTypeSelect');
+    if (aVTypeSel) aVTypeSel.value = absVatagaType;
 }
 // Closes the Tiger settings popover on any click outside it, so it doesn't stay open
 // while the person interacts with the rest of the page.
@@ -3228,7 +3603,7 @@ function natrRenderTable(data, animate, pinnedCount) {
 }
 function natrSwitchMode(m) {
     natrMode = m;
-    document.querySelectorAll('.natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
+    document.querySelectorAll('#section-natr .natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
     ctSafeSetItem('natr_mode', m);
     if (natrAllResults.length) natrReFilterAndRender();
 }
@@ -3339,6 +3714,9 @@ let contSelectedCategory = 'all'; // категория — тот же ряд �
 let contPinned = new Set(); // own закреп set for this screener, separate from NATR Scanner's
 let contFavorites = new Set(); // own избранное set for this screener, separate from NATR Scanner's
 let contWatchlistOnly = false; // "show favorites only" toggle (uses contFavorites, not shared)
+let contFavColors = {}; // symbol -> color name ('gold'|'green'|'red'|'blue'|'purple') — цвет избранной звезды
+let contFavPickerSymbol = null; // символ, для которого сейчас открыт пикер цвета (или null)
+const CONT_FAV_COLOR_HEX = { gold:'#f0b90b', green:'#4caf50', red:'#f44336', blue:'#2196f3', purple:'#9c27b0' };
 let contVolFrom = null;
 let contVolTo = null;
 let contVolFilterActive = false;
@@ -3349,9 +3727,13 @@ let contYestFilterActive = false;
 let contAlertsEnabled = false;
 let contAlertedSymbols = new Set(); // tracks who we've already notified about, mirrors natrAlertedSymbols
 let contIsBgUpdating = false;
-const CONT_REFRESH_INTERVAL = 300; // seconds — fixed, always 5 min
-let contRefreshCountdown = CONT_REFRESH_INTERVAL;
-let contRefreshTimerId = null;
+// === Auto-refresh: REMOVED by user request — manual scanning is sufficient. ===
+// The countdown timer (contAutoRefresh / contRefreshTimer) was deleted from the
+// header; contStartAutoRefresh() / contUpdateTimerDisplay() / the CONT_REFRESH_INTERVAL
+// constant and contRefreshCountdown / contRefreshTimerId state were removed. The
+// bell 🔔 still works, but it only fires when the user manually presses «Сканировать»
+// — no background polling anymore. contStartBgUpdate() is kept as a utility for
+// any future manual "refresh in background" button, but nothing currently calls it.
 let contIsScanning = false;
 let contAbortCtrl = null;
 let contRawResults = []; // everything the last scan fetched, unfiltered — filters below re-slice this live, no rescan needed
@@ -3363,6 +3745,7 @@ try {
     contWatchlistOnly = localStorage.getItem('cont_watchlist_only') === '1';
     contPinned = new Set(ctSafeGetJSON('cont_pinned', []));
     contFavorites = new Set(ctSafeGetJSON('cont_favorites', []));
+    contFavColors = ctSafeGetJSON('cont_fav_colors', {}) || {};
     const cVolFrom = parseFloat(localStorage.getItem('cont_vol_from'));
     if (!isNaN(cVolFrom)) contVolFrom = cVolFrom;
     const cVolTo = parseFloat(localStorage.getItem('cont_vol_to'));
@@ -3457,16 +3840,111 @@ function contSavePinned() {
 function contSaveFavorites() {
     ctSafeSetItem('cont_favorites', JSON.stringify([...contFavorites]));
 }
+function contSaveFavColors() {
+    ctSafeSetItem('cont_fav_colors', JSON.stringify(contFavColors));
+}
 function contTogglePinned(symbol) {
     if (contPinned.has(symbol)) contPinned.delete(symbol); else contPinned.add(symbol);
     contSavePinned();
     contReFilterAndRender();
 }
-function contToggleFavorite(symbol) {
-    if (contFavorites.has(symbol)) contFavorites.delete(symbol); else contFavorites.add(symbol);
+// Открытие пикера цвета для избранной звезды. Если символ ещё не в избранном —
+// добавляем его (с цветом по умолчанию 'gold'), затем позиционируем пикер возле
+// кликнутой звезды и подсвечиваем активный цвет. Если уже в избранном — пикер
+// открывается без тогла, чтобы пользователь мог сменить цвет или убрать звезду.
+// Re-render происходит ДО позиционирования, поэтому кликнутая звезда в DOM уже
+// заменена новой — пере-цепляемся к свежему элементу через data-symbol.
+function contToggleFavorite(symbol, ev) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    const wasFav = contFavorites.has(symbol);
+    if (!wasFav) {
+        contFavorites.add(symbol);
+        if (!contFavColors[symbol]) contFavColors[symbol] = 'gold';
+        contSaveFavorites();
+        contSaveFavColors();
+        contReFilterAndRender();
+    }
+    requestAnimationFrame(() => {
+        const cell = Array.from(document.querySelectorAll('#contTableBody .natr-fav-cell'))
+            .find(el => el.getAttribute('data-symbol') === symbol);
+        contShowFavPicker(symbol, cell || (ev && ev.currentTarget) || null);
+    });
+}
+// Позиционирует пикер возле якоря (звезды), переключает класс .active на кнопке
+// текущего цвета, запоминает символ для последующих действий (смены цвета / удаления).
+function contShowFavPicker(symbol, anchorEl) {
+    const picker = document.getElementById('contFavPicker');
+    if (!picker) return;
+    contFavPickerSymbol = symbol;
+    const pw = picker.offsetWidth  || 180;
+    const ph = picker.offsetHeight || 116;
+    let left, top;
+    if (anchorEl && anchorEl.getBoundingClientRect) {
+        const r = anchorEl.getBoundingClientRect();
+        left = r.left + r.width / 2 - pw / 2;
+        top  = r.bottom + 6;
+        if (top + ph > window.innerHeight - 8) top = r.top - ph - 6;
+    } else {
+        left = window.innerWidth  - pw - 16;
+        top  = 80;
+    }
+    left = Math.max(8, Math.min(left, window.innerWidth  - pw - 8));
+    top  = Math.max(8, Math.min(top,  window.innerHeight - ph - 8));
+    picker.style.left = left + 'px';
+    picker.style.top  = top  + 'px';
+    picker.style.display = 'block';
+    const cur = contFavColors[symbol] || 'gold';
+    picker.querySelectorAll('.cont-fav-color').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-color') === cur);
+    });
+}
+function contHideFavPicker() {
+    const picker = document.getElementById('contFavPicker');
+    if (picker) picker.style.display = 'none';
+    contFavPickerSymbol = null;
+}
+// Смена цвета текущей избранной звезды. После перерисовки пикер остаётся открытым
+// у той же звезды (с подсветкой нового активного цвета) — удобно примерять цвета.
+function contSetFavoriteColor(color) {
+    if (!contFavPickerSymbol) return;
+    contFavColors[contFavPickerSymbol] = color;
+    contSaveFavColors();
+    contReFilterAndRender();
+    requestAnimationFrame(() => {
+        const sym = contFavPickerSymbol;
+        const cell = Array.from(document.querySelectorAll('#contTableBody .natr-fav-cell'))
+            .find(el => el.getAttribute('data-symbol') === sym);
+        contShowFavPicker(sym, cell || null);
+    });
+}
+function contRemoveFavorite() {
+    if (!contFavPickerSymbol) return;
+    const sym = contFavPickerSymbol;
+    contFavorites.delete(sym);
+    delete contFavColors[sym];
     contSaveFavorites();
+    contSaveFavColors();
+    contHideFavPicker();
     contReFilterAndRender();
 }
+// Глобальные слушатели для закрытия пикера: клик мимо звёзд/пикера, Esc, скролл, resize.
+// Навешиваются один раз при загрузке скрипта (вне init-блока, чтобы быть готовыми до switchSection).
+(function attachContFavPickerDismissers() {
+    if (window.__contFavPickerDismissersAttached) return;
+    window.__contFavPickerDismissersAttached = true;
+    document.addEventListener('click', (e) => {
+        const picker = document.getElementById('contFavPicker');
+        if (!picker || picker.style.display === 'none') return;
+        if (picker.contains(e.target)) return;
+        if (e.target && e.target.closest && e.target.closest('#contTableBody .natr-fav-cell')) return;
+        contHideFavPicker();
+    }, true);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') contHideFavPicker();
+    });
+    window.addEventListener('scroll',  () => contHideFavPicker(), { passive: true });
+    window.addEventListener('resize',  () => contHideFavPicker());
+})();
 // Volume 24ч filter — same shorthand parser and same underlying data (natrTicker24hMap)
 // as NATR Scanner's; contStartScan fetches that map too, so no extra endpoint needed here.
 function contChangeVolRange() {
@@ -3524,7 +4002,9 @@ async function contToggleAlerts() {
         // notifications for pairs that were already past the filters
         contAlertedSymbols = new Set(contGetFilteredResults().map(r => r.symbol));
         btn.classList.add('active');
-        if (!contIsScanning && contRawResults.length) contStartAutoRefresh();
+        // NOTE: auto-refresh was removed — alerts now only fire on manual scan.
+        // The bell still works exactly the same way; it just doesn't trigger
+        // background polling anymore.
     } else {
         contAlertsEnabled = false;
         btn.classList.remove('active');
@@ -3553,29 +4033,9 @@ function contCheckAlerts(results) {
         if (!currentSymbols.has(sym)) contAlertedSymbols.delete(sym);
     });
 }
-// Auto-refresh — same countdown-bar pattern as NATR Scanner, but the interval is
-// user-selectable (1 или 5 минут) since this screener is used to sit and wait for alerts.
-function contUpdateTimerDisplay() {
-    const el = document.getElementById('contRefreshTimer');
-    if (!el) return;
-    el.textContent = contRefreshCountdown;
-    el.style.color = contRefreshCountdown <= 5 ? 'var(--red)' : contRefreshCountdown <= 15 ? 'var(--accent)' : '';
-}
-function contStartAutoRefresh() {
-    contRefreshCountdown = CONT_REFRESH_INTERVAL;
-    contUpdateTimerDisplay();
-    if (contRefreshTimerId) clearInterval(contRefreshTimerId);
-    contRefreshTimerId = setInterval(() => {
-        contRefreshCountdown--;
-        contUpdateTimerDisplay();
-        if (contRefreshCountdown <= 0) {
-            if (!contIsScanning && !contIsBgUpdating && contRawResults.length > 0) contStartBgUpdate();
-            contRefreshCountdown = CONT_REFRESH_INTERVAL;
-        }
-    }, 1000);
-    const box = document.getElementById('contAutoRefresh');
-    if (box) { box.classList.add('active'); box.style.setProperty('--refresh-dur', CONT_REFRESH_INTERVAL + 's'); }
-}
+// Auto-refresh machinery: REMOVED by user request — manual scanning is sufficient.
+// (contUpdateTimerDisplay + contStartAutoRefresh were deleted; contAutoRefresh
+// element is gone from the HTML; the bell 🔔 now only fires on manual scan.)
 // Every filter input below calls this — it re-slices the already-fetched contRawResults
 // live, no network request needed. Only the timeframe tabs and "Дней проторговки" actually
 // change what gets fetched, so those still require pressing Сканировать again.
@@ -3601,8 +4061,7 @@ function contSetStatus(text, active, updating) {
 function contSetTableUpdating(u) {
     const wrap = document.getElementById('contTableWrap');
     if (wrap) wrap.classList.toggle('updating', u);
-    const box = document.getElementById('contAutoRefresh');
-    if (box) box.classList.toggle('updating', u);
+    // NOTE: contAutoRefresh element was removed; no badge to toggle 'updating' on.
 }
 // Shared kline fetch with a timeout guard, used for both the daily (yesterday) candle
 // and the short-interval (RVOL) candles.
@@ -3766,7 +4225,7 @@ async function contStartScan() {
     document.getElementById('contUpdateTime').textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU');
     btn.classList.remove('loading'); btn.disabled = false;
     contIsScanning = false; contAbortCtrl = null;
-    contStartAutoRefresh();
+    // NOTE: contStartAutoRefresh() call removed — auto-refresh is gone by user request.
 }
 // Background refresh — re-fetches everything with the current lookback window but without
 // resetting the table or scan button, so alerts and auto-refresh don't interrupt browsing.
@@ -3999,6 +4458,7 @@ function contRenderTable(data, pinnedCount) {
         }
         const isPinned = contPinned.has(r.symbol);
         const isFav = contFavorites.has(r.symbol);
+        const favColorHex = isFav ? (CONT_FAV_COLOR_HEX[contFavColors[r.symbol]] || CONT_FAV_COLOR_HEX.gold) : null;
         const bodyRatioCell = r.bodyRatio !== null
             ? '<span class="mono cont-rvol-hot" title="Тело вчерашней свечи ÷ среднее тело за N предыдущих дней">'+r.bodyRatio.toFixed(2)+'x</span>'
             : '<span style="color:var(--muted)">—</span>';
@@ -4045,7 +4505,7 @@ function contRenderTable(data, pinnedCount) {
         const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+contTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); contOpenInTiger(\''+jsAttr(r.symbol)+'\')">'+NATR_TIGER_SVG+'</button>';
         const vatagaLink = '<button type="button" class="natr-icon-btn natr-vataga-btn" title="Открыть в Vataga.Terminal на '+contVatagaExchange+' ('+(contVatagaType === 'S' ? 'спот' : 'фьючерсы')+', локальный сервер, порт 5005)" onclick="event.stopPropagation(); contOpenInVataga(\''+jsAttr(r.symbol)+'\')">'+NATR_VATAGA_SVG+'</button>';
         return '<tr class="'+(isPinnedRow?'natr-pinned-row':'')+'">'+
-            natrPinFavCellHtml(r.symbol, isPinned, isFav, 'contTogglePinned', 'contToggleFavorite')+
+            natrPinFavCellHtml(r.symbol, isPinned, isFav, 'contTogglePinned', 'contToggleFavorite', favColorHex)+
             '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер '+displaySymbol+'" data-symbol="'+displaySymbol+'">'+
             '<div class="ticker-name" title="'+displaySymbol+'">'+natrTruncateTicker(displaySymbol)+'</div>'+
             '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></td>'+
@@ -6535,14 +6995,936 @@ async function caiSearch() {
 }
 
 // ============================================================
-//  INIT
+//  SECTION: ABSORPTION SCANNER (Effort vs. Result — Wyckoff)
 // ============================================================
+// Strategy: find 5-min candles where volume spikes 2.5×+ above the recent
+// average (Усилие / Effort) but price barely moves (|Δ| ≤ 0.3% — Результат /
+// Result). The mismatch means large taker volume met equal-sized passive
+// liquidity — someone is absorbing. Binance klines return taker buy quote
+// asset volume at index 10; computing delta = 2*buys − total reveals the
+// SIDE: negative delta + long lower wick → absorption of sells → LONG
+// setup; positive delta + long upper wick → absorption of buys → SHORT.
+//
+// Reuses natrApiFetch / natrGetAllPairs / natrGetKlines / natrFetchTicker24h
+// for the heavy lifting, ctSafeSetItem/ctSafeGetJSON for persistence, and
+// natrPinFavCellHtml for the pinned-row UI — same look & feel as NATR Scanner.
+let absInitialized = false;
+let absMode = '5m';                 // '5m' | '15m' | '1h' — the screening candle
+// === RVOL range filter (Trend-Continuation style: от/до + Фильтр button) ===
+// RVOL is the main indicator — the volume spike ratio (candleVol / avgVol of
+// the previous `lookback` candles). The range acts as a soft highlight unless
+// absRvolFilterActive is on, in which case rows outside the range are hidden.
+let absRvolFrom = null;
+let absRvolTo = null;
+let absRvolFilterActive = false;
+// === MaxNATR-style threshold comparison (NATR-Scanner pattern: > / < + value) ===
+// Second parameter for RVOL — lets the user ask "RVOL > 3" (find big spikes)
+// or "RVOL < 1.5" (find quiet candles) in the same comparison style NATR
+// Scanner uses for its NATR % column.
+let absRvolCmpOp = 'gte';            // 'gte' (>) | 'lte' (<)
+let absRvolCmpValue = null;
+let absRvolCmpActive = false;
+// === Volume 24h range filter (Trend-Continuation style: от/до + Фильтр) ===
+// Operates on the 24h ticker volume from natrTicker24hMap, NOT on the
+// candle's own quote volume — same dimension Trend Continuation filters by.
+let absVol24hFrom = null;
+let absVol24hTo = null;
+let absVol24hFilterActive = false;
+// === Strategy-critical thresholds (constants — user adjusts via the live
+// filters above) ===
+// Internal hard cap on |price change|: any candle that moved more than this
+// is a real breakout, not absorption — gets dropped at scan time so the
+// user-visible Результат ±% range filter only ever narrows within this band.
+const ABS_MAX_PRICE_PCT = 1.0;
+// Body-size threshold for the LONG/SHORT classification logic. Decoupled from
+// the user filter: a body < ABS_SMALL_BODY_PCT is "small enough" to qualify
+// as a doji/absorption candle regardless of how the user narrows the range.
+const ABS_SMALL_BODY_PCT = 0.21;
+// === Результат ±% range filter (от/до + Фильтр) ===
+// Default on with до=0.3 — preserves the historical strategy threshold so the
+// scanner behaves the same out-of-the-box. User can flip the toggle off to
+// see the full |price change| distribution up to ABS_MAX_PRICE_PCT.
+let absResultFrom = null;
+let absResultTo = 0.3;
+let absResultFilterActive = true;
+let absDirection = 'all';
+let absSelectedCategory = 'all';            // 'all' | 'long' | 'short'
+// Internal minimum RVOL a candle must clear to even be considered an absorption
+// candidate — keeps the scanner from surfacing every noise candle. The
+// user-visible narrowing then happens via the RVOL range + comparison filters.
+const ABS_MIN_VRATIO = 1.5;
+// Internal minimum 24h ticker volume (USDT) — pre-filters illiquid pairs before
+// fetching klines, so we don't waste Binance weight on coins that will never
+// produce a meaningful signal anyway. The user-visible narrowing happens via
+// the Объём 24ч range filter on top of this.
+const ABS_MIN_VOL24H = 5e6;          // 5 M USDT
+let absAlertsEnabled = false;
+let absWatchlistOnly = false;
+let absIsScanning = false;
+let absIsBgUpdating = false;
+let absAbortCtrl = null;
+let absAllResults = [];
+let absFavorites = new Set();
+let absFavColors = {}; // symbol -> color name ('gold'|'green'|'red'|'blue'|'purple')
+let absPinned = new Set();
+let absFavPickerSymbol = null;
+let absRefreshCountdown = NATR_REFRESH_INTERVAL;
+let absRefreshTimerId = null;
+let absAlertedSymbols = new Set();
+// Lookback = how many PREVIOUS candles to average over (excluding current).
+// 5m → 24 × 5m = 2h, 15m → 16 × 15m ≈ 4h, 1h → 24 × 1h = 24h.
+const ABS_LOOKBACK = { '5m': 24, '15m': 16, '1h': 24 };
+try {
+    const sf = ctSafeGetJSON('abs_filters', null);
+    if (sf) {
+        if (typeof sf.resultFrom === 'number') absResultFrom = sf.resultFrom;
+        if (typeof sf.resultTo   === 'number') absResultTo   = sf.resultTo;
+        if (typeof sf.direction === 'string') absDirection  = sf.direction;
+        // New range / comparison / 24h-volume state
+        if (typeof sf.rvolFrom === 'number') absRvolFrom = sf.rvolFrom;
+        if (typeof sf.rvolTo   === 'number') absRvolTo   = sf.rvolTo;
+        if (typeof sf.rvolCmpOp === 'string' && (sf.rvolCmpOp === 'gte' || sf.rvolCmpOp === 'lte')) absRvolCmpOp = sf.rvolCmpOp;
+        if (typeof sf.rvolCmpValue === 'number') absRvolCmpValue = sf.rvolCmpValue;
+        if (typeof sf.vol24hFrom === 'number') absVol24hFrom = sf.vol24hFrom;
+        if (typeof sf.vol24hTo   === 'number') absVol24hTo   = sf.vol24hTo;
+    }
+    absRvolFilterActive  = localStorage.getItem('abs_rvol_filter_active')  === '1';
+    absRvolCmpActive     = localStorage.getItem('abs_rvol_cmp_active')     === '1';
+    absVol24hFilterActive = localStorage.getItem('abs_vol24h_filter_active') === '1';
+    // Результат ±% range filter toggle — defaults to '1' (ON) so a brand-new
+    // user sees the strategy-critical ±0.3% threshold active, same as the old
+    // behavior. Once toggled, the choice persists across reloads.
+    const savedResultFilter = localStorage.getItem('abs_result_filter_active');
+    absResultFilterActive = savedResultFilter === null ? true : savedResultFilter === '1';
+    absFavorites = new Set(ctSafeGetJSON('abs_favorites', []));
+    absFavColors = ctSafeGetJSON('abs_fav_colors', {}) || {};
+    absPinned = new Set(ctSafeGetJSON('abs_pinned', []));
+    absWatchlistOnly = localStorage.getItem('abs_watchlist_only') === '1';
+    absAlertsEnabled = localStorage.getItem('abs_alerts_enabled') === '1';
+    const savedAbsCat = localStorage.getItem('abs_category');
+    if (savedAbsCat) absSelectedCategory = savedAbsCat;
+    const savedMode = localStorage.getItem('abs_mode');
+    if (savedMode && ABS_LOOKBACK[savedMode]) absMode = savedMode;
+} catch(e) { /* defaults are fine */ }
+
+function absUpdateCatTabCounts() { updateCatTabCounts('#absCatTabs'); }
+function absSwitchCategory(cat) {
+    absSelectedCategory = cat;
+    document.querySelectorAll('#absCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+    ctSafeSetItem('abs_category', cat);
+    if (absAllResults.length > 0) absReRender();
+}
+function absInit() {
+    // Sync the toolbar controls with whatever was restored from localStorage.
+    const rfEl = document.getElementById('absResultFrom');
+    if (rfEl && absResultFrom !== null) rfEl.value = absResultFrom;
+    const rtEl = document.getElementById('absResultTo');
+    if (rtEl && absResultTo   !== null) rtEl.value = absResultTo;
+    const resBtn = document.getElementById('absResultFilterBtn');
+    if (resBtn) resBtn.classList.toggle('active', absResultFilterActive);
+    document.getElementById('absDirAllBtn').classList.toggle('active', absDirection === 'all');
+    document.getElementById('absDirLongBtn').classList.toggle('active', absDirection === 'long');
+    document.getElementById('absDirShortBtn').classList.toggle('active', absDirection === 'short');
+    // RVOL range inputs (от/до)
+    const rvolFromEl = document.getElementById('absRvolFrom');
+    if (rvolFromEl && absRvolFrom !== null) rvolFromEl.value = absRvolFrom;
+    const rvolToEl = document.getElementById('absRvolTo');
+    if (rvolToEl && absRvolTo !== null) rvolToEl.value = absRvolTo;
+    // RVOL threshold comparison (> / < + value)
+    const cmpOpEl = document.getElementById('absRvolCmpOp');
+    if (cmpOpEl) cmpOpEl.value = absRvolCmpOp;
+    const cmpValEl = document.getElementById('absRvolCmpValue');
+    if (cmpValEl && absRvolCmpValue !== null) cmpValEl.value = absRvolCmpValue;
+    // Volume 24h range inputs (text — supports 10к / 1м shorthand)
+    const v24FromEl = document.getElementById('absVol24hFrom');
+    if (v24FromEl && absVol24hFrom !== null) v24FromEl.value = absVol24hFrom;
+    const v24ToEl = document.getElementById('absVol24hTo');
+    if (v24ToEl && absVol24hTo !== null) v24ToEl.value = absVol24hTo;
+    // Active state of the three "Фильтр" toggle buttons
+    const rvolBtn = document.getElementById('absRvolFilterBtn');
+    if (rvolBtn) rvolBtn.classList.toggle('active', absRvolFilterActive);
+    const cmpBtn = document.getElementById('absRvolCmpBtn');
+    if (cmpBtn) cmpBtn.classList.toggle('active', absRvolCmpActive);
+    const volBtn = document.getElementById('absVol24hFilterBtn');
+    if (volBtn) volBtn.classList.toggle('active', absVol24hFilterActive);
+    document.querySelectorAll('#section-abs .natr-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.mode === absMode);
+    });
+    if (absAlertsEnabled) document.getElementById('absAlertBtn').classList.add('active');
+    if (absWatchlistOnly) document.getElementById('absWatchlistBtn').classList.add('active');
+    document.querySelectorAll('#absCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === absSelectedCategory));
+    // Request Notification permission up-front only if the user previously
+    // turned alerts on — no surprise "allow notifications" prompt otherwise.
+    if (absAlertsEnabled && 'Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    absStartScan();
+}
+
+function absSetStatus(text, active, updating) {
+    const b = document.getElementById('absStatusBadge');
+    if (!b) return;
+    document.getElementById('absStatusText').textContent = text;
+    b.classList.toggle('active', !!active);
+    b.classList.toggle('updating', !!updating);
+}
+
+function absSetTableUpdating(u) {
+    const wrap = document.getElementById('absTableWrap');
+    if (wrap) wrap.classList.toggle('updating', u);
+    const ar = document.getElementById('absAutoRefresh');
+    if (ar) ar.classList.toggle('updating', u);
+    const lu = document.getElementById('absLastUpdate');
+    if (lu) lu.classList.toggle('updating', u);
+}
+
+function absUpdateLastTime() {
+    const el = document.getElementById('absUpdateTime');
+    if (!el) return;
+    el.textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const lu = document.getElementById('absLastUpdate');
+    if (lu) lu.style.display = 'flex';
+}
+
+function absUpdateTimerDisplay() {
+    const el = document.getElementById('absRefreshTimer');
+    if (!el) return;
+    el.textContent = absRefreshCountdown;
+    el.style.color = absRefreshCountdown <= 5 ? 'var(--red)' : absRefreshCountdown <= 15 ? 'var(--accent)' : '';
+}
+
+function absSwitchMode(m) {
+    if (!ABS_LOOKBACK[m]) return;
+    absMode = m;
+    ctSafeSetItem('abs_mode', m);
+    document.querySelectorAll('#section-abs .natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
+    absStartScan();
+}
+
+// All RVOL range / RVOL comparison inputs call this on every
+// keystroke — re-slices absAllResults live, no network request needed.
+// Результат ±% range has its own handler (absChangeResultRange) for parity
+// with absChangeVolRange — its inputs share the same live-filter semantics.
+// Volume 24h text-input has its own handler too because it parses shorthand
+// ("10к" → 10000) via natrParseShorthand, like Trend Continuation.
+// Only the timeframe tabs actually change what gets fetched, so those still
+// require pressing Сканировать again (the hint in #absToolsRow2 reminds the
+// user of this).
+const absReRenderDebounced = debounce(absReRender, 180);
+function absChangeFilters() {
+    // RVOL range (от / до) — read live from the inputs
+    const rf = document.getElementById('absRvolFrom').value.trim();
+    const rt = document.getElementById('absRvolTo').value.trim();
+    absRvolFrom = rf !== '' ? parseFloat(rf) : null;
+    absRvolTo   = rt !== '' ? parseFloat(rt) : null;
+    // RVOL threshold comparison (> or < + value)
+    const cmpOpEl = document.getElementById('absRvolCmpOp');
+    if (cmpOpEl) absRvolCmpOp = cmpOpEl.value === 'lte' ? 'lte' : 'gte';
+    const cmpValEl = document.getElementById('absRvolCmpValue');
+    const cmpVal = cmpValEl ? cmpValEl.value.trim() : '';
+    absRvolCmpValue = cmpVal !== '' ? parseFloat(cmpVal) : null;
+    // direction is set by absSetDirection() buttons, not read here
+    // Persist everything in one blob (separate keys for the boolean toggles
+    // so the "Фильтр" buttons can stay in sync with absRvolFilterActive etc.)
+    ctSafeSetJSON('abs_filters', {
+        resultFrom: absResultFrom, resultTo: absResultTo, direction: absDirection,
+        rvolFrom: absRvolFrom, rvolTo: absRvolTo,
+        rvolCmpOp: absRvolCmpOp, rvolCmpValue: absRvolCmpValue,
+        vol24hFrom: absVol24hFrom, vol24hTo: absVol24hTo
+    });
+    if (absAllResults.length) absReRenderDebounced();
+}
+
+// Результат ±% range — separate handler because the от/до inputs use the
+// same live-filter pattern as RVOL x. Both inputs are plain numbers (%),
+// so no shorthand parsing is needed. Mirrors absChangeFilters / absChangeVolRange.
+function absChangeResultRange() {
+    const rf = document.getElementById('absResultFrom').value.trim();
+    const rt = document.getElementById('absResultTo').value.trim();
+    absResultFrom = rf !== '' ? Math.max(0, parseFloat(rf)) : null;
+    absResultTo   = rt !== '' ? Math.max(0, parseFloat(rt)) : null;
+    ctSafeSetJSON('abs_filters', {
+        resultFrom: absResultFrom, resultTo: absResultTo, direction: absDirection,
+        rvolFrom: absRvolFrom, rvolTo: absRvolTo,
+        rvolCmpOp: absRvolCmpOp, rvolCmpValue: absRvolCmpValue,
+        vol24hFrom: absVol24hFrom, vol24hTo: absVol24hTo
+    });
+    if (absAllResults.length) absReRenderDebounced();
+}
+
+// Результат ±% "Фильтр" toggle — same semantics as RVOL / Volume toggles:
+// when off, the от/до values only color-highlight matching rows; when on,
+// rows outside the range are hidden entirely.
+function absToggleResultFilter() {
+    absResultFilterActive = !absResultFilterActive;
+    const btn = document.getElementById('absResultFilterBtn');
+    if (btn) btn.classList.toggle('active', absResultFilterActive);
+    ctSafeSetItem('abs_result_filter_active', absResultFilterActive ? '1' : '0');
+    if (absAllResults.length) absReRender();
+}
+
+// RVOL range "Фильтр" toggle — when off, the от/до values only color-highlight
+// matching rows (and out-of-range ones); when on, the rows outside the range
+// are hidden entirely. Same UX as Trend Continuation's contToggleRvolFilter.
+function absToggleRvolFilter() {
+    absRvolFilterActive = !absRvolFilterActive;
+    const btn = document.getElementById('absRvolFilterBtn');
+    if (btn) btn.classList.toggle('active', absRvolFilterActive);
+    ctSafeSetItem('abs_rvol_filter_active', absRvolFilterActive ? '1' : '0');
+    if (absAllResults.length) absReRender();
+}
+
+// RVOL threshold comparison "Фильтр" toggle — same semantics: when off, the
+// >/< + value just color-highlights the cells; when on, rows that don't match
+// are hidden. The second RVOL parameter the user requested ("maxnatr"-style).
+function absToggleRvolCmp() {
+    absRvolCmpActive = !absRvolCmpActive;
+    const btn = document.getElementById('absRvolCmpBtn');
+    if (btn) btn.classList.toggle('active', absRvolCmpActive);
+    ctSafeSetItem('abs_rvol_cmp_active', absRvolCmpActive ? '1' : '0');
+    if (absAllResults.length) absReRender();
+}
+
+// Volume 24h range — separate handler because the inputs are text and accept
+// shorthand suffixes (10к / 1м / тыс / млн). Mirrors contChangeVolRange.
+function absChangeVolRange() {
+    absVol24hFrom = natrParseShorthand(document.getElementById('absVol24hFrom').value);
+    absVol24hTo   = natrParseShorthand(document.getElementById('absVol24hTo').value);
+    ctSafeSetJSON('abs_filters', {
+        resultFrom: absResultFrom, resultTo: absResultTo, direction: absDirection,
+        rvolFrom: absRvolFrom, rvolTo: absRvolTo,
+        rvolCmpOp: absRvolCmpOp, rvolCmpValue: absRvolCmpValue,
+        vol24hFrom: absVol24hFrom, vol24hTo: absVol24hTo
+    });
+    if (absAllResults.length) absReRenderDebounced();
+}
+
+// Volume 24h "Фильтр" toggle — when on, rows whose 24h ticker volume falls
+// outside the от/до range are hidden. Identical UX to contToggleVolFilter.
+function absToggleVolFilter() {
+    absVol24hFilterActive = !absVol24hFilterActive;
+    const btn = document.getElementById('absVol24hFilterBtn');
+    if (btn) btn.classList.toggle('active', absVol24hFilterActive);
+    ctSafeSetItem('abs_vol24h_filter_active', absVol24hFilterActive ? '1' : '0');
+    if (absAllResults.length) absReRender();
+}
+
+function absSavePinned() {
+    ctSafeSetJSON('abs_pinned', Array.from(absPinned));
+}
+function absSaveFavorites() {
+    ctSafeSetItem('abs_favorites', JSON.stringify([...absFavorites]));
+}
+function absSaveFavColors() {
+    ctSafeSetItem('abs_fav_colors', JSON.stringify(absFavColors));
+}
+function absTogglePinned(symbol) {
+    if (absPinned.has(symbol)) absPinned.delete(symbol); else absPinned.add(symbol);
+    absSavePinned();
+    absReRender();
+}
+// Absorption favorite toggle with color picker — same UX as Trend Continuation.
+function absToggleFavorite(symbol, ev) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    const wasFav = absFavorites.has(symbol);
+    if (!wasFav) {
+        absFavorites.add(symbol);
+        if (!absFavColors[symbol]) absFavColors[symbol] = 'gold';
+        absSaveFavorites();
+        absSaveFavColors();
+        absReRender();
+    }
+    requestAnimationFrame(() => {
+        const cell = Array.from(document.querySelectorAll('#absTableBody .natr-fav-cell'))
+            .find(el => el.getAttribute('data-symbol') === symbol);
+        absShowFavPicker(symbol, cell || (ev && ev.currentTarget) || null);
+    });
+}
+function absShowFavPicker(symbol, anchorEl) {
+    const picker = document.getElementById('absFavPicker');
+    if (!picker) return;
+    absFavPickerSymbol = symbol;
+    const pw = picker.offsetWidth  || 180;
+    const ph = picker.offsetHeight || 116;
+    let left, top;
+    if (anchorEl && anchorEl.getBoundingClientRect) {
+        const r = anchorEl.getBoundingClientRect();
+        left = r.left + r.width / 2 - pw / 2;
+        top  = r.bottom + 6;
+        if (top + ph > window.innerHeight - 8) top = r.top - ph - 6;
+    } else {
+        left = window.innerWidth  - pw - 16;
+        top  = 80;
+    }
+    left = Math.max(8, Math.min(left, window.innerWidth  - pw - 8));
+    top  = Math.max(8, Math.min(top,  window.innerHeight - ph - 8));
+    picker.style.left = left + 'px';
+    picker.style.top  = top  + 'px';
+    picker.style.display = 'block';
+    const cur = absFavColors[symbol] || 'gold';
+    picker.querySelectorAll('.cont-fav-color').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-color') === cur);
+    });
+}
+function absHideFavPicker() {
+    const picker = document.getElementById('absFavPicker');
+    if (picker) picker.style.display = 'none';
+    absFavPickerSymbol = null;
+}
+function absSetFavoriteColor(color) {
+    if (!absFavPickerSymbol) return;
+    absFavColors[absFavPickerSymbol] = color;
+    absSaveFavColors();
+    absReRender();
+    requestAnimationFrame(() => {
+        const sym = absFavPickerSymbol;
+        const cell = Array.from(document.querySelectorAll('#absTableBody .natr-fav-cell'))
+            .find(el => el.getAttribute('data-symbol') === sym);
+        absShowFavPicker(sym, cell || null);
+    });
+}
+function absRemoveFavorite() {
+    if (!absFavPickerSymbol) return;
+    const sym = absFavPickerSymbol;
+    absFavorites.delete(sym);
+    delete absFavColors[sym];
+    absSaveFavorites();
+    absSaveFavColors();
+    absHideFavPicker();
+    absReRender();
+}
+// Dismissers for abs fav picker (same pattern as cont)
+(function attachAbsFavPickerDismissers() {
+    if (window.__absFavPickerDismissersAttached) return;
+    window.__absFavPickerDismissersAttached = true;
+    document.addEventListener('click', (e) => {
+        const picker = document.getElementById('absFavPicker');
+        if (!picker || picker.style.display === 'none') return;
+        if (picker.contains(e.target)) return;
+        if (e.target && e.target.closest && e.target.closest('#absTableBody .natr-fav-cell')) return;
+        absHideFavPicker();
+    }, true);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') absHideFavPicker();
+    });
+    window.addEventListener('scroll',  () => absHideFavPicker(), { passive: true });
+    window.addEventListener('resize',  () => absHideFavPicker(), { passive: true });
+})();
+function absToggleWatchlistOnly() {
+    absWatchlistOnly = !absWatchlistOnly;
+    ctSafeSetItem('abs_watchlist_only', absWatchlistOnly ? '1' : '0');
+    document.getElementById('absWatchlistBtn').classList.toggle('active', absWatchlistOnly);
+    absReRender();
+}
+
+function absSetDirection(dir) {
+    absDirection = dir;
+    document.getElementById('absDirAllBtn').classList.toggle('active', dir === 'all');
+    document.getElementById('absDirLongBtn').classList.toggle('active', dir === 'long');
+    document.getElementById('absDirShortBtn').classList.toggle('active', dir === 'short');
+    ctSafeSetItem('abs_direction', dir);
+    if (absAllResults.length) absReRenderDebounced();
+}
+
+function absToggleAlerts() {
+    absAlertsEnabled = !absAlertsEnabled;
+    ctSafeSetItem('abs_alerts_enabled', absAlertsEnabled ? '1' : '0');
+    document.getElementById('absAlertBtn').classList.toggle('active', absAlertsEnabled);
+    if (absAlertsEnabled) {
+        if ('Notification' in window && Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+        playAlertSound('natr');
+        showToast('Алерты абсорбции включены');
+    } else {
+        showToast('Алерты абсорбции выключены');
+    }
+}
+
+// Analyses the most recent candle of a klines array against the average of
+// the `lookback` candles preceding it. Returns null when filters reject.
+function absAnalyzeCandles(symbol, klines, lookback) {
+    const lastIdx = klines.length - 1;
+    if (lastIdx < 1) return null;
+    const last = klines[lastIdx];
+    // Baseline over previous `lookback` candles (excluding the current one).
+    const baselineStart = Math.max(0, lastIdx - lookback);
+    let volSum = 0, n = 0;
+    for (let i = baselineStart; i < lastIdx; i++) {
+        volSum += +klines[i][7];   // quote asset volume (USDT)
+        n++;
+    }
+    if (n === 0) return null;
+    const avgVol = volSum / n;
+    if (!avgVol) return null;
+
+    const open = +last[1], close = +last[4], high = +last[2], low = +last[3];
+    const quoteVol = +last[7];
+    const takerBuyQAV = +last[10];  // taker buy quote asset volume (USDT)
+    const priceChangePct = (close - open) / open * 100;
+    const volRatio = quoteVol / avgVol;
+
+    // Effort / Result filters — volume spike must clear the bar AND price
+    // change stay inside the ±range. Both must hold for "absorption".
+    // ABS_MIN_VRATIO is the INTERNAL floor (1.5×) so the scanner doesn't
+    // surface every noise candle; the user-visible narrowing happens via
+    // the RVOL range + comparison filters in absReRender.
+    if (volRatio < ABS_MIN_VRATIO) return null;
+    if (Math.abs(priceChangePct) > ABS_MAX_PRICE_PCT) return null;
+
+    // Taker delta (USDT): 2*buys − total. Negative => aggressive sells
+    // overwhelmed buys — sellers were trying to break price down but couldn't.
+    const delta = 2 * takerBuyQAV - quoteVol;
+
+    // Wick / body geometry — small body + long absorption-side wick confirms
+    // the directional read; a big body cancels it (real break, not absorption).
+    const body = Math.abs(close - open);
+    const bodyPct = body / open * 100;
+    const upperWick = high - Math.max(open, close);
+    const lowerWick = Math.min(open, close) - low;
+    const range = high - low || 1e-10;
+    const upperWickPct = upperWick / range * 100;
+    const lowerWickPct = lowerWick / range * 100;
+    const bodyIsSmall = bodyPct < ABS_SMALL_BODY_PCT;
+
+    let signal = 'NEUTRAL';
+    if (delta < 0 && lowerWickPct >= 45 && bodyIsSmall) signal = 'LONG';
+    else if (delta > 0 && upperWickPct >= 45 && bodyIsSmall) signal = 'SHORT';
+    else if (delta < 0 && bodyIsSmall) signal = 'LONG?';   // ambiguous
+    else if (delta > 0 && bodyIsSmall) signal = 'SHORT?';   // ambiguous
+
+    // NOTE: direction filter (long/short/all) is applied in absReRender, not
+    // here — so switching direction doesn't require a rescan. Same live-filter
+    // philosophy as Trend Continuation's contGetFilteredResults.
+
+    // Pull 24h ticker volume from natrTicker24hMap (populated by
+    // natrFetchTicker24h() in absStartScan before the klines loop starts).
+    // Falls back to null when the ticker map isn't populated yet — the
+    // Volume 24h filter then just skips that row, same as Trend Continuation.
+    const t24 = natrTicker24hMap ? natrTicker24hMap.get(symbol) : null;
+    const vol24h = t24 && typeof t24.volume === 'number' ? t24.volume : null;
+
+    return {
+        symbol, signal,
+        volRatio, priceChangePct, delta,
+        bodyPct, upperWickPct, lowerWickPct,
+        quoteVol, price: close, avgVol,
+        vol24h,
+        open, high, low, close,
+        candleTime: +last[0]
+    };
+}
+
+async function absStartScan() {
+    if (absIsScanning) return;
+    if (natrIsBanned()) {
+        absSetStatus(natrBanStatusText());
+        ctNotify('Binance', 'ждём ' + natrBanSecondsLeft() + ' с');
+        return;
+    }
+    if (absIsBgUpdating && absAbortCtrl) {
+        absAbortCtrl.abort(); absIsBgUpdating = false; absSetTableUpdating(false);
+    }
+    absIsScanning = true;
+    absAbortCtrl = new AbortController();
+
+    const btn = document.getElementById('absScanBtn');
+    btn.classList.add('loading');
+    const keepOldData = absAllResults.length > 0;
+    if (keepOldData) absSetTableUpdating(true);
+    absSetStatus('Загрузка списка...', true, keepOldData);
+
+    const pairs = await natrGetAllPairs();
+    if (!pairs.length || absAbortCtrl.signal.aborted) {
+        if (!absAbortCtrl.signal.aborted) {
+            absSetStatus('Ошибка API');
+            if (keepOldData) {
+                absSetTableUpdating(false);
+                ctNotify('Binance', 'ошибка API');
+            } else {
+                const p = document.querySelector('#absEmptyState p');
+                if (p) p.textContent = 'Ошибка API Binance — проверьте соединение';
+                document.getElementById('absEmptyState').style.display = 'block';
+            }
+        } else absSetStatus('Отменено');
+        btn.classList.remove('loading');
+        absIsScanning = false; absAbortCtrl = null;
+        return;
+    }
+    absSetStatus('Сканирование ' + pairs.length + '...', true, keepOldData);
+
+    // Fetch 24h ticker data (used by the Объём 24ч live-filter in absReRender)
+    try { await natrFetchTicker24h(); } catch(e) { /* non-critical */ }
+    const scanPairs = pairs;
+
+    const lookback = ABS_LOOKBACK[absMode] || 24;
+    const limit = lookback + 2; // +1 buffer for partial candle +1 safety
+    const results = [];
+    let processed = 0;
+    const batchSize = NATR_SCAN_CFG.batchSize;
+
+    for (let i = 0; i < scanPairs.length; i += batchSize) {
+        if (absAbortCtrl.signal.aborted || natrIsBanned()) break;
+        const batch = scanPairs.slice(i, Math.min(i + batchSize, scanPairs.length));
+        const batchResults = await Promise.all(batch.map(async sym => {
+            try {
+                const klines = await natrGetKlines(sym, absMode, limit);
+                if (!klines || klines.length < 2) return null;
+                return absAnalyzeCandles(sym, klines, lookback);
+            } catch(e) { return null; }
+        }));
+        results.push(...batchResults.filter(Boolean));
+        processed += batch.length;
+        if (!absAbortCtrl.signal.aborted)
+            absSetStatus(processed + '/' + scanPairs.length, true, keepOldData);
+        if (NATR_SCAN_CFG.batchDelay > 0 && i + batchSize < scanPairs.length)
+            await new Promise(r => setTimeout(r, NATR_SCAN_CFG.batchDelay));
+    }
+
+    if (absAbortCtrl.signal.aborted) {
+        btn.classList.remove('loading');
+        if (keepOldData) absSetTableUpdating(false);
+        absIsScanning = false; absAbortCtrl = null;
+        return;
+    }
+
+    // Atomic swap — one assignment, one re-render. No partial states visible.
+    absAllResults = results.sort((a, b) => b.volRatio - a.volRatio);
+    absCheckAlerts();
+    absUpdateCatTabCounts();
+    absReRender();
+    absSetTableUpdating(false);
+    absSetStatus('Готово: ' + results.length, true);
+    btn.classList.remove('loading');
+    absIsScanning = false; absAbortCtrl = null;
+    absUpdateLastTime();
+    absStartAutoRefresh();
+}
+
+function absStartAutoRefresh() {
+    absRefreshCountdown = NATR_REFRESH_INTERVAL;
+    absUpdateTimerDisplay();
+    if (absRefreshTimerId) clearInterval(absRefreshTimerId);
+    absRefreshTimerId = setInterval(() => {
+        absRefreshCountdown--;
+        absUpdateTimerDisplay();
+        if (absRefreshCountdown <= 0) {
+            if (!absIsScanning && absAllResults.length > 0) absStartBgUpdate();
+            absRefreshCountdown = NATR_REFRESH_INTERVAL;
+        }
+    }, 1000);
+    const ar = document.getElementById('absAutoRefresh');
+    if (ar) ar.classList.add('active');
+}
+
+async function absStartBgUpdate() {
+    if (absIsScanning || absIsBgUpdating || natrIsBanned()) return;
+    absIsBgUpdating = true; absAbortCtrl = new AbortController();
+    absSetTableUpdating(true);
+    absSetStatus('Фоновое обновление...', true, true);
+    await absStartScan();
+    absIsBgUpdating = false; absAbortCtrl = null;
+    absSetTableUpdating(false);
+}
+
+function absCheckAlerts() {
+    if (!absAlertsEnabled) return;
+    // Only alert for items that pass the CURRENT user-visible filters — same
+    // philosophy as Trend Continuation's contCheckAlerts. Otherwise flipping
+    // a filter off wouldn't stop the background tab from spamming alerts.
+    const filtered = absGetFilteredResults().filter(r => r.signal === 'LONG' || r.signal === 'SHORT');
+    const current = new Set(filtered.map(r => r.symbol));
+    filtered.forEach(r => {
+        if (!absAlertedSymbols.has(r.symbol)) {
+            absAlertedSymbols.add(r.symbol);
+            const dirIcon = r.signal === 'LONG' ? '▲' : '▼';
+            ctNotify('Absorption ' + r.signal,
+                dirIcon + ' ' + r.symbol.replace(/USDT$|USD1$/, '') +
+                ' • RVOL ' + r.volRatio.toFixed(1) + 'x' +
+                ' • Δ ' + (r.delta / 1000).toFixed(0) + 'K' +
+                ' • Wick ' + (r.signal === 'LONG' ? r.lowerWickPct : r.upperWickPct).toFixed(0) + '%'
+            );
+            playAlertSound('natr');
+        }
+    });
+    // Forget symbols that dropped out of the filter so they can re-alert
+    // if they cross again later (same pattern as NATR's natrCheckAlerts).
+    [...absAlertedSymbols].forEach(sym => {
+        if (!current.has(sym)) absAlertedSymbols.delete(sym);
+    });
+}
+
+// Applies all user-visible filters to absAllResults and returns the
+// filtered list (without sorting — absSortData handles that).
+// Mirrors Trend Continuation's contGetFilteredResults philosophy: every
+// filter input re-slices the already-fetched data live, no rescan needed.
+function absGetFilteredResults() {
+    let list = absAllResults.slice();
+    // Favorites-only bypasses every other filter (пороги, RVOL, Δ Taker,
+    // объём, направление) — same "show me exactly this list, full stop"
+    // semantics pinned rows already have.
+    if (absWatchlistOnly) {
+        if (absAllResults.length === 0) {
+            return [...absFavorites].map(sym => ({ symbol: sym, volRatio: null, priceChangePct: null, delta: null, upperWickPct: 0, lowerWickPct: 0, signal: '—', quoteVol: null, vol24h: null, price: null }));
+        }
+        return list.filter(r => absFavorites.has(r.symbol));
+    }
+    // Category filter — same logic as NATR/Cont scanners: TF_* tabs (Крипто/Акции/
+    // ETF/Товары/Индексы/Другие) match by resolved asset type; everything else
+    // matches the raw category tag from natrCategoryMap.
+    if (absSelectedCategory !== 'all') {
+        if (NATR_TF_TAB_TO_ASSET_TYPE[absSelectedCategory]) {
+            const wantType = NATR_TF_TAB_TO_ASSET_TYPE[absSelectedCategory];
+            list = list.filter(r => natrGetAssetType(r.symbol) === wantType);
+        } else {
+            list = list.filter(r => {
+                const cat = (natrCategoryMap[r.symbol] || 'NONE').split(',')[0];
+                return cat === absSelectedCategory;
+            });
+        }
+    }
+    // RVOL range filter (от / до) — active only when absRvolFilterActive is on.
+    if (absRvolFilterActive && (absRvolFrom !== null || absRvolTo !== null)) {
+        list = list.filter(r => {
+            if (absRvolFrom !== null && r.volRatio < absRvolFrom) return false;
+            if (absRvolTo   !== null && r.volRatio > absRvolTo)   return false;
+            return true;
+        });
+    }
+    // Результат ±% range filter (от / до) — operates on |price change|, so the
+    // от/до inputs are interpreted as positive numbers (the user types "0.1"
+    // meaning |change| ≥ 0.1%, not as a signed value). Default ON with до=0.3,
+    // preserving the historical strategy-critical threshold as the out-of-the-box
+    // behavior. When toggled off, the range still colors the Результат % cell
+    // but doesn't hide anything.
+    if (absResultFilterActive && (absResultFrom !== null || absResultTo !== null)) {
+        list = list.filter(r => {
+            const absPct = Math.abs(r.priceChangePct);
+            if (absResultFrom !== null && absPct < absResultFrom) return false;
+            if (absResultTo   !== null && absPct > absResultTo)   return false;
+            return true;
+        });
+    }
+    // RVOL threshold comparison (> / < + value) — the second "maxnatr"-style
+    // parameter. Matches when:
+    //   • absRvolCmpOp === 'gte' (">") AND r.volRatio >= absRvolCmpValue, OR
+    //   • absRvolCmpOp === 'lte' ("<") AND r.volRatio <= absRvolCmpValue.
+    if (absRvolCmpActive && absRvolCmpValue !== null) {
+        list = list.filter(r => absRvolCmpOp === 'lte'
+            ? r.volRatio <= absRvolCmpValue
+            : r.volRatio >= absRvolCmpValue);
+    }
+    // Volume 24h range filter — operates on the 24h ticker volume from
+    // natrTicker24hMap (cached on the result row as `vol24h` when the
+    // scan ran). Rows with no 24h volume available are kept by default,
+    // same as Trend Continuation's behavior on missing ticker data.
+    if (absVol24hFilterActive && (absVol24hFrom !== null || absVol24hTo !== null)) {
+        list = list.filter(r => {
+            if (r.vol24h === null || r.vol24h === undefined) return false;
+            if (absVol24hFrom !== null && r.vol24h < absVol24hFrom) return false;
+            if (absVol24hTo   !== null && r.vol24h > absVol24hTo)   return false;
+            return true;
+        });
+    }
+    // Direction filter (long/short/all) — applied last so flipping the
+    // select doesn't recompute the more expensive filters above.
+    if (absDirection === 'long')  list = list.filter(r => r.signal.startsWith('LONG'));
+    else if (absDirection === 'short') list = list.filter(r => r.signal.startsWith('SHORT'));
+    return list;
+}
+
+function absSortData(data) {
+    const { key, dir } = absSortState;
+    const mult = dir === 'asc' ? 1 : -1;
+    return data.slice().sort((a, b) => {
+        let va, vb;
+        switch (key) {
+            case 'symbol':      return mult * a.symbol.localeCompare(b.symbol);
+            case 'volRatio':    va = a.volRatio;     vb = b.volRatio;     break;
+            case 'priceChange': va = a.priceChangePct; vb = b.priceChangePct; break;
+            case 'delta':      va = a.delta;        vb = b.delta;        break;
+            case 'wick':
+                va = a.signal.startsWith('LONG')  ? a.lowerWickPct
+                   : a.signal.startsWith('SHORT') ? a.upperWickPct
+                   : Math.max(a.upperWickPct, a.lowerWickPct);
+                vb = b.signal.startsWith('LONG')  ? b.lowerWickPct
+                   : b.signal.startsWith('SHORT') ? b.upperWickPct
+                   : Math.max(b.upperWickPct, b.lowerWickPct);
+                break;
+            case 'volume':     va = a.quoteVol;     vb = b.quoteVol;     break;
+            case 'price':      va = a.price;        vb = b.price;        break;
+            default: return 0;
+        }
+        return mult * ((va || 0) - (vb || 0));
+    });
+}
+
+function absReRender() {
+    const body = document.getElementById('absTableBody');
+    const empty = document.getElementById('absEmptyState');
+
+    let shown = absGetFilteredResults();
+    shown = absSortData(shown);
+
+    // Pinned rows to top — same pattern as NATR/Cont
+    let pinnedRows = [];
+    if (absPinned.size > 0) {
+        if (absAllResults.length === 0) {
+            pinnedRows = [...absPinned].map(sym => ({ symbol: sym, volRatio: null, priceChangePct: null, delta: null, upperWickPct: 0, lowerWickPct: 0, signal: '—', quoteVol: null, vol24h: null, price: null }));
+        } else {
+            pinnedRows = absSortData(absAllResults.filter(r => absPinned.has(r.symbol)));
+        }
+        const pinnedSet = new Set(pinnedRows.map(r => r.symbol));
+        shown = pinnedRows.concat(shown.filter(r => !pinnedSet.has(r.symbol)));
+    }
+
+    // Stats — total scanned (raw), found (after filters), and per-side counts
+    // computed from the filtered list so they reflect what the user actually
+    // sees (same as NATR Scanner's stat bar behaviour).
+    document.getElementById('absStatTotal').textContent = absAllResults.length;
+    document.getElementById('absStatFound').textContent = shown.length;
+    document.getElementById('absStatLong').textContent =
+        shown.filter(r => r.signal.startsWith('LONG')).length;
+    document.getElementById('absStatShort').textContent =
+        shown.filter(r => r.signal.startsWith('SHORT')).length;
+    document.getElementById('absStatsBar').style.display = 'flex';
+
+    if (shown.length === 0) {
+        body.innerHTML = '';
+        const p = empty.querySelector('p');
+        if (p) {
+            if (absWatchlistOnly) {
+                p.textContent = absFavorites.size === 0
+                    ? 'Список избранного пуст — добавляйте тикеры звёздочкой ★'
+                    : 'Ни один избранный тикер не прошёл фильтры';
+            } else {
+                p.textContent = absAllResults.length === 0
+                    ? 'Сканирование...' : 'Нет сигналов по текущим фильтрам';
+            }
+        }
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    body.innerHTML = shown.map(item => {
+        const isStub = item.volRatio === null;
+        const isLong  = !isStub && item.signal.startsWith('LONG');
+        const isShort = !isStub && item.signal.startsWith('SHORT');
+        const sigClass = isLong ? 'abs-sig-long' : isShort ? 'abs-sig-short' : 'abs-sig-neutral';
+        const sigIcon  = isLong ? '▲' : isShort ? '▼' : '◆';
+        const wickPct  = isStub ? 0
+                      : isLong ? item.lowerWickPct
+                      : isShort ? item.upperWickPct
+                      : Math.max(item.upperWickPct, item.lowerWickPct);
+        const wickColor = isStub ? 'var(--muted)'
+                        : wickPct > 60 ? 'var(--accent)'
+                        : wickPct > 45 ? 'rgba(240,185,11,0.55)'
+                        : 'var(--muted)';
+
+        // RVOL / price / delta cell colors — skip for stub rows
+        let rvolCellClass = isStub ? '' : (function() {
+            let rvolColorClass = '';
+            let rvolMatchesCmp = absRvolCmpValue === null ? true : (
+                absRvolCmpOp === 'lte'
+                    ? item.volRatio <= absRvolCmpValue
+                    : item.volRatio >= absRvolCmpValue
+            );
+            const rvolInRange = !((absRvolFrom !== null && item.volRatio < absRvolFrom) ||
+                                  (absRvolTo   !== null && item.volRatio > absRvolTo));
+            if (absRvolFilterActive && (absRvolFrom !== null || absRvolTo !== null)) {
+                if (!rvolInRange) rvolColorClass = (absRvolFrom !== null && item.volRatio < absRvolFrom)
+                    ? ' natr-below-threshold' : ' natr-above-threshold';
+                else rvolColorClass = ' natr-range-hit';
+            } else if (absRvolCmpActive && absRvolCmpValue !== null) {
+                rvolColorClass = rvolMatchesCmp ? ' natr-range-hit' : ' natr-below-threshold';
+            }
+            return rvolColorClass || ' abs-rvol-hot';
+        })();
+
+        let priceClass = isStub ? '' : (function() {
+            const absPct = Math.abs(item.priceChangePct);
+            if (absResultFilterActive && (absResultFrom !== null || absResultTo !== null)) return 'natr-range-hit';
+            if (absResultFrom !== null || absResultTo !== null) {
+                if (absResultFrom !== null && absPct < absResultFrom) return 'natr-below-threshold';
+                if (absResultTo !== null && absPct > absResultTo) return 'natr-above-threshold';
+                return 'natr-range-hit';
+            }
+            return item.priceChangePct > 0.05  ? 'natr-above-threshold'
+                 : item.priceChangePct < -0.05 ? 'natr-below-threshold' : '';
+        })();
+
+        const deltaColor = isStub ? 'var(--muted)'
+                         : item.delta > 0 ? 'var(--green)'
+                         : item.delta < 0 ? 'var(--red)' : 'var(--muted)';
+        const deltaStr = isStub ? '—'
+            : Math.abs(item.delta) >= 1e6 ? (item.delta / 1e6).toFixed(2) + 'M'
+            : Math.abs(item.delta) >= 1e3 ? (item.delta / 1e3).toFixed(1) + 'K'
+            : item.delta.toFixed(0);
+        const volStr   = isStub ? '—' : natrFmtVolShort(item.quoteVol);
+        // Asset type badge — same column NATR Scanner & Trend Continuation have.
+        // Absorption only scans USDT-M futures, so this is always "Крипто", but
+        // the column is kept for layout parity with the other screeners.
+        const typeCell  = natrAssetTypeBadge(item.symbol);
+        const isFav    = absFavorites.has(item.symbol);
+        const isPinned = absPinned.has(item.symbol);
+        const favColorHex = isFav ? (CONT_FAV_COLOR_HEX[absFavColors[item.symbol]] || CONT_FAV_COLOR_HEX.gold) : null;
+        const displaySymbol = escapeHtml(item.symbol.replace(/USDT$|USD1$/, ''));
+
+        return '<tr class="' + (isPinned ? 'natr-pinned-row' : '') + '">' +
+            natrPinFavCellHtml(item.symbol, isPinned, isFav, 'absTogglePinned', 'absToggleFavorite', favColorHex) +
+            '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер ' + displaySymbol + '" data-symbol="' + escapeHtml(item.symbol) + '">' +
+                '<div class="ticker-name" title="' + displaySymbol + '">' + natrTruncateTicker(displaySymbol) + '</div>' +
+                '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
+            '</td>' +
+            '<td>' + typeCell + '</td>' +
+            '<td class="natr-price-cell mono"><span class="mono' + rvolCellClass + '" title="RVOL: объём свечи ÷ средний объём за ' + (ABS_LOOKBACK[absMode] || 24) + ' предыдущих свечей">' + (isStub ? '—' : item.volRatio.toFixed(2) + 'x') + '</span></td>' +
+            '<td class="natr-price-cell mono ' + priceClass + '">' + (isStub ? '—' : (item.priceChangePct > 0 ? '+' : '') + item.priceChangePct.toFixed(3) + '%') + '</td>' +
+            '<td class="natr-price-cell mono" style="color:' + deltaColor + '">' + (isStub ? '' : item.delta > 0 ? '+' : '') + deltaStr + '</td>' +
+            '<td style="text-align:center;"><span class="abs-wick-bar"><span class="abs-wick-fill" style="width:' + wickPct.toFixed(0) + '%;background:' + wickColor + ';"></span></span></td>' +
+            '<td class="natr-price-cell mono" style="color:' + wickColor + '">' + wickPct.toFixed(0) + '%</td>' +
+            '<td class="natr-price-cell mono" title="Объём сканируемой свечи (USDT)">' + volStr + '</td>' +
+            '<td style="text-align:center;"><div class="natr-actions-cell">' +
+                '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\'' + jsAttr(item.symbol) + '\')">AI</button>' +
+                '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на ' + absTigerExchange + ' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); absOpenInTiger(\'' + jsAttr(item.symbol) + '\')">' + NATR_TIGER_SVG + '</button>' +
+                '<button type="button" class="natr-icon-btn natr-vataga-btn" title="Открыть в Vataga.Terminal на ' + absVatagaExchange + ' (' + (absVatagaType === 'S' ? 'спот' : 'фьючерсы') + ', локальный сервер, порт 5005)" onclick="event.stopPropagation(); absOpenInVataga(\'' + jsAttr(item.symbol) + '\')">' + NATR_VATAGA_SVG + '</button>' +
+            '</div></td>' +
+        '</tr>';
+    }).join('');
+
+    // Wire up copy-on-click for ticker cells (same handler as NATR Scanner).
+    document.querySelectorAll('#absTableBody .ticker-cell').forEach(cell => {
+        const activate = function() {
+            copyToClipboard(cell.getAttribute('data-symbol'));
+            cell.classList.add('copied');
+            setTimeout(() => cell.classList.remove('copied'), 800);
+        };
+        cell.addEventListener('click', activate);
+        cell.addEventListener('keydown', function(e) {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target === cell) { e.preventDefault(); activate(); }
+        });
+    });
+
+    // Reflect current sort state in the header visuals.
+    document.querySelectorAll('#absTableWrap thead th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc', 'sort-active');
+        if (th.dataset.key === absSortState.key) {
+            th.classList.add(absSortState.dir === 'asc' ? 'sort-asc' : 'sort-desc', 'sort-active');
+        }
+    });
+}
+
+// ============================================================
+//  INIT
+// ===========================================================
+
 // Keeps both scanners' status badges showing a live "⛔ ждём Xс" countdown while a Binance
 // ban is active, even though neither scanner is actively running during that time.
 setInterval(() => {
     if (!natrIsBanned()) return;
     if (!natrIsScanning) natrSetStatus(natrBanStatusText());
     if (!contIsScanning) contSetStatus(natrBanStatusText());
+    if (typeof absIsScanning !== 'undefined' && !absIsScanning) absSetStatus(natrBanStatusText());
 }, 1000);
 document.addEventListener('DOMContentLoaded', function() {
     let saved = null;
@@ -6560,13 +7942,13 @@ document.addEventListener('DOMContentLoaded', function() {
     natrApplyRestoredUI();
     contApplyRestoredUI();
     natrUpdateTimerDisplay();
-    contUpdateTimerDisplay();
     caiRenderHistoryChips();
     // If "★ Избранное" was left on from the previous session, render the favorites list
     // immediately — without waiting for the auto-scan to complete — so the user can
     // quickly recall what they added before. Auto-scan will refresh with real data later.
     if (natrWatchlistOnly) natrReFilterAndRender();
     if (contWatchlistOnly) contReFilterAndRender();
+    if (absWatchlistOnly) absReRender();
     natrStartScan();
 });
 </script>
