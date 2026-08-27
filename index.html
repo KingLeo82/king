@@ -1942,6 +1942,7 @@
         </div>
         <button class="natr-tool-btn" id="absAlertBtn" onclick="absToggleAlerts()">🔔</button>
         <button class="natr-tool-btn" id="absWatchlistBtn" onclick="absToggleWatchlistOnly()">★ Избранное</button>
+        <button class="natr-tool-btn" id="absAccumOnlyBtn" onclick="absToggleAccumOnly()" title="Показывать только тикеры с подтверждённым многосвечным накоплением (объём растёт, цена стоит на месте)">📊 Накопление</button>
     </div>
     <div class="natr-tools" id="absToolsFilters">
         <div class="natr-tool-group">
@@ -1991,6 +1992,9 @@
                 <th style="width:64px;text-align:center;" title="Длина доминирующей тени">Тень</th>
                 <th class="sortable" data-tbl="abs" data-key="wick" style="width:70px;text-align:right;" title="Длина доминирующей тени, % от диапазона">Wick %</th>
                 <th class="sortable" data-tbl="abs" data-key="volume" style="width:90px;" title="Объём сканируемой свечи (USDT)">Объём</th>
+                <th class="sortable" data-tbl="abs" data-key="accumRange" style="width:88px;text-align:right;" title="Диапазон high-low за окно (baseline + текущая свеча), % от средней цены — чем меньше, тем плотнее цена стоит на месте">Диапазон%</th>
+                <th class="sortable" data-tbl="abs" data-key="accumVol" style="width:80px;text-align:right;" title="Отношение объёма во второй (недавней) половине окна к первой — растущее значение = объём накапливается">Vol окно</th>
+                <th style="width:118px;text-align:center;" title="Многосвечное накопление: устойчивый рост объёма при плоской цене и направленной дельте taker — см. подсказку в ячейке">Накопление</th>
                 <th style="width:128px;text-align:center;">Действия</th>
             </tr></thead>
             <tbody id="absTableBody"></tbody>
@@ -7060,6 +7064,7 @@ const ABS_MIN_VRATIO = 1.5;
 const ABS_MIN_VOL24H = 5e6;          // 5 M USDT
 let absAlertsEnabled = false;
 let absWatchlistOnly = false;
+let absAccumOnly = false; // "Только накопление" — показывать только строки с подтверждённым многосвечным accumSignal
 let absIsScanning = false;
 let absIsBgUpdating = false;
 let absAbortCtrl = null;
@@ -7100,6 +7105,7 @@ try {
     absFavColors = ctSafeGetJSON('abs_fav_colors', {}) || {};
     absPinned = new Set(ctSafeGetJSON('abs_pinned', []));
     absWatchlistOnly = localStorage.getItem('abs_watchlist_only') === '1';
+    absAccumOnly = localStorage.getItem('abs_accum_only') === '1';
     absAlertsEnabled = localStorage.getItem('abs_alerts_enabled') === '1';
     const savedAbsCat = localStorage.getItem('abs_category');
     if (savedAbsCat) absSelectedCategory = savedAbsCat;
@@ -7152,6 +7158,7 @@ function absInit() {
     });
     if (absAlertsEnabled) document.getElementById('absAlertBtn').classList.add('active');
     if (absWatchlistOnly) document.getElementById('absWatchlistBtn').classList.add('active');
+    if (absAccumOnly) document.getElementById('absAccumOnlyBtn').classList.add('active');
     document.querySelectorAll('#absCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === absSelectedCategory));
     // Request Notification permission up-front only if the user previously
     // turned alerts on — no surprise "allow notifications" prompt otherwise.
@@ -7416,6 +7423,15 @@ function absToggleWatchlistOnly() {
     document.getElementById('absWatchlistBtn').classList.toggle('active', absWatchlistOnly);
     absReRender();
 }
+// "Только накопление" — фильтрует по подтверждённому многосвечному accumSignal
+// (устойчивый рост объёма во второй половине окна при плоской цене и
+// стабильно направленной дельте), в отличие от посвечного RVOL/wick сигнала выше.
+function absToggleAccumOnly() {
+    absAccumOnly = !absAccumOnly;
+    ctSafeSetItem('abs_accum_only', absAccumOnly ? '1' : '0');
+    document.getElementById('absAccumOnlyBtn').classList.toggle('active', absAccumOnly);
+    if (absAllResults.length) absReRender();
+}
 
 function absSetDirection(dir) {
     absDirection = dir;
@@ -7511,8 +7527,58 @@ function absAnalyzeCandles(symbol, klines, lookback) {
         quoteVol, price: close, avgVol,
         vol24h,
         open, high, low, close,
-        candleTime: +last[0]
+        candleTime: +last[0],
+        ...absCalcAccumMetrics(klines, baselineStart, lastIdx, close)
     };
+}
+
+// Rolling-window "накопление" (accumulation) metrics — reuses the same
+// candles already fetched for the single-candle RVOL baseline (baselineStart
+// .. lastIdx inclusive), so this costs zero extra API weight. Idea: a large
+// player building a position shows up not as one anomalous candle but as a
+// *sustained* volume ramp while price stays range-bound over several candles.
+// We split that window into an older and a recent half and compare them —
+// this catches "volume is quietly increasing while price goes nowhere" even
+// when no single candle would trip the per-candle RVOL/wick signal above.
+const ABS_ACCUM_MAX_RANGE_PCT = 2.0;   // window high-low must stay within this % of avg price to count as "flat"
+const ABS_ACCUM_MIN_VOLRATIO = 1.3;    // recent half must have at least 30% more volume than the older half
+const ABS_ACCUM_MIN_DELTA_PCT = 6;     // |net taker delta| over the window must be at least this % of window volume
+function absCalcAccumMetrics(klines, baselineStart, lastIdx, lastClose) {
+    const window = klines.slice(baselineStart, lastIdx + 1); // baseline candles + the current one
+    if (window.length < 4) {
+        return { accumRangePct: null, accumVolRatio: null, accumDeltaPct: null, accumPricePos: null, accumSignal: null };
+    }
+    const splitAt = Math.ceil(window.length / 2);
+    const olderHalf = window.slice(0, splitAt);
+    const recentHalf = window.slice(splitAt);
+
+    let volOlder = 0, volRecent = 0, deltaSum = 0, volSum = 0;
+    let rangeHigh = -Infinity, rangeLow = Infinity, closeSum = 0;
+    for (const c of window) {
+        const h = +c[2], l = +c[3], cl = +c[4], qv = +c[7], takerBuyQAV = +c[10];
+        if (h > rangeHigh) rangeHigh = h;
+        if (l < rangeLow) rangeLow = l;
+        closeSum += cl;
+        volSum += qv;
+        deltaSum += 2 * takerBuyQAV - qv;
+    }
+    for (const c of olderHalf) volOlder += +c[7];
+    for (const c of recentHalf) volRecent += +c[7];
+
+    const avgClose = closeSum / window.length;
+    const accumRangePct = avgClose > 0 ? (rangeHigh - rangeLow) / avgClose * 100 : null;
+    const accumVolRatio = volOlder > 0 ? volRecent / volOlder : null;
+    const accumDeltaPct = volSum > 0 ? deltaSum / volSum * 100 : null;
+    const accumPricePos = rangeHigh > rangeLow ? (lastClose - rangeLow) / (rangeHigh - rangeLow) * 100 : 50;
+
+    let accumSignal = null;
+    if (accumRangePct !== null && accumVolRatio !== null && accumDeltaPct !== null &&
+        accumRangePct <= ABS_ACCUM_MAX_RANGE_PCT &&
+        accumVolRatio >= ABS_ACCUM_MIN_VOLRATIO &&
+        Math.abs(accumDeltaPct) >= ABS_ACCUM_MIN_DELTA_PCT) {
+        accumSignal = accumDeltaPct > 0 ? 'LONG' : 'SHORT';
+    }
+    return { accumRangePct, accumVolRatio, accumDeltaPct, accumPricePos, accumSignal };
 }
 
 async function absStartScan() {
@@ -7683,6 +7749,11 @@ function absGetFilteredResults() {
             });
         }
     }
+    // "Только накопление" — независимый от прочих фильтров срез: показывает
+    // только тикеры, где accumSignal подтверждён (см. absCalcAccumMetrics).
+    if (absAccumOnly) {
+        list = list.filter(r => r.accumSignal !== null && r.accumSignal !== undefined);
+    }
     // RVOL range filter (от / до) — active only when absRvolFilterActive is on.
     if (absRvolFilterActive && (absRvolFrom !== null || absRvolTo !== null)) {
         list = list.filter(r => {
@@ -7752,6 +7823,8 @@ function absSortData(data) {
                    : Math.max(b.upperWickPct, b.lowerWickPct);
                 break;
             case 'volume':     va = a.quoteVol;     vb = b.quoteVol;     break;
+            case 'accumRange': va = a.accumRangePct; vb = b.accumRangePct; break;
+            case 'accumVol':   va = a.accumVolRatio; vb = b.accumVolRatio; break;
             case 'price':      va = a.price;        vb = b.price;        break;
             default: return 0;
         }
@@ -7862,6 +7935,24 @@ function absReRender() {
             : Math.abs(item.delta) >= 1e3 ? (item.delta / 1e3).toFixed(1) + 'K'
             : item.delta.toFixed(0);
         const volStr   = isStub ? '—' : natrFmtVolShort(item.quoteVol);
+        // Накопление (multi-candle accumulation) cell — badge + tooltip with the
+        // underlying numbers, computed in absCalcAccumMetrics (see absAnalyzeCandles).
+        const accumRangeStr = (isStub || item.accumRangePct === null || item.accumRangePct === undefined)
+            ? '—' : item.accumRangePct.toFixed(2) + '%';
+        const accumRangeColor = (isStub || item.accumRangePct === null || item.accumRangePct === undefined) ? 'var(--muted)'
+            : item.accumRangePct <= ABS_ACCUM_MAX_RANGE_PCT ? 'var(--accent)' : 'var(--muted)';
+        const accumVolStr = (isStub || item.accumVolRatio === null || item.accumVolRatio === undefined)
+            ? '—' : item.accumVolRatio.toFixed(2) + 'x';
+        const accumVolColor = (isStub || item.accumVolRatio === null || item.accumVolRatio === undefined) ? 'var(--muted)'
+            : item.accumVolRatio >= ABS_ACCUM_MIN_VOLRATIO ? 'var(--green)' : 'var(--muted)';
+        const accumSig = isStub ? null : item.accumSignal;
+        const accumBadgeClass = accumSig === 'LONG' ? 'abs-sig-long' : accumSig === 'SHORT' ? 'abs-sig-short' : 'abs-sig-neutral';
+        const accumBadgeIcon  = accumSig === 'LONG' ? '▲' : accumSig === 'SHORT' ? '▼' : '—';
+        const accumBadgeText  = accumSig ? 'Накопление' : 'нет';
+        const accumTooltip = (isStub || item.accumDeltaPct === null || item.accumDeltaPct === undefined) ? 'Недостаточно данных за окно'
+            : 'Диапазон окна: ' + item.accumRangePct.toFixed(2) + '% · Vol недавно/раньше: ' + item.accumVolRatio.toFixed(2) + 'x · '
+              + 'Δ окна: ' + (item.accumDeltaPct > 0 ? '+' : '') + item.accumDeltaPct.toFixed(1) + '% · '
+              + 'Цена в диапазоне: ' + item.accumPricePos.toFixed(0) + '%';
         // Asset type badge — same column NATR Scanner & Trend Continuation have.
         // Absorption only scans USDT-M futures, so this is always "Крипто", but
         // the column is kept for layout parity with the other screeners.
@@ -7884,6 +7975,9 @@ function absReRender() {
             '<td style="text-align:center;"><span class="abs-wick-bar"><span class="abs-wick-fill" style="width:' + wickPct.toFixed(0) + '%;background:' + wickColor + ';"></span></span></td>' +
             '<td class="natr-price-cell mono" style="color:' + wickColor + '">' + wickPct.toFixed(0) + '%</td>' +
             '<td class="natr-price-cell mono" title="Объём сканируемой свечи (USDT)">' + volStr + '</td>' +
+            '<td class="natr-price-cell mono" style="color:' + accumRangeColor + '">' + accumRangeStr + '</td>' +
+            '<td class="natr-price-cell mono" style="color:' + accumVolColor + '">' + accumVolStr + '</td>' +
+            '<td style="text-align:center;" title="' + escapeHtml(accumTooltip) + '"><span class="abs-signal ' + accumBadgeClass + '">' + accumBadgeIcon + ' ' + accumBadgeText + '</span></td>' +
             '<td style="text-align:center;"><div class="natr-actions-cell">' +
                 '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\'' + jsAttr(item.symbol) + '\')">AI</button>' +
                 '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на ' + absTigerExchange + ' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); absOpenInTiger(\'' + jsAttr(item.symbol) + '\')">' + NATR_TIGER_SVG + '</button>' +
