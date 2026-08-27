@@ -1615,6 +1615,14 @@
         </div>
         <button class="natr-tool-btn" id="contAlertBtn" onclick="contToggleAlerts()" title="Уведомлять (звук + пуш) о новых тикерах, проходящих текущие фильтры">🔔</button>
         <button class="natr-tool-btn" id="contWatchlistBtn" onclick="contToggleWatchlistOnly()" title="Показывать только избранное (своё для Продолжения тренда)">★ Избранное</button>
+        <div class="natr-tool-group" id="contFavColorFilterGroup" title="Оставить только избранные определённого цвета (можно выбрать несколько). Ничего не выбрано — фильтр по цвету не действует.">
+            <label class="natr-tool-label">Цвет:</label>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="gold"   style="background:#f0b90b" title="Золотой" onclick="contToggleFavColorFilter('gold')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="green"  style="background:#4caf50" title="Зелёный" onclick="contToggleFavColorFilter('green')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="red"    style="background:#f44336" title="Красный" onclick="contToggleFavColorFilter('red')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="blue"   style="background:#2196f3" title="Синий" onclick="contToggleFavColorFilter('blue')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="purple" style="background:#9c27b0" title="Фиолетовый" onclick="contToggleFavColorFilter('purple')"></button>
+        </div>
     </div>
     <div class="natr-tools" id="contToolsFilters">
         <div class="natr-tool-group">
@@ -1675,8 +1683,7 @@
         <div class="bg-update-overlay"></div>
         <table>
             <thead><tr>
-                <th style="width:78px;text-align:center;" title="Закреп и избранное">📌 ★</th>
-                <th class="sortable" data-tbl="cont" data-key="symbol">Тикер</th>
+                <th class="sortable" data-tbl="cont" data-key="favorite" style="width:78px;text-align:center;" title="Закреп и избранное — клик сортирует по цвету звезды (gold→green→red→blue→purple)">📌 ★</th>
                 <th class="sortable" data-tbl="cont" data-key="type" style="width:78px;">Тип</th>
                 <th class="sortable" data-tbl="cont" data-key="bodyRatio" style="width:100px;" title="Тело вчерашней свечи (|закрытие-открытие|) ÷ среднее тело свечи за N предыдущих дней">R коэфф.</th>
                 <th class="sortable" data-tbl="cont" data-key="refChange" style="width:100px;">Вчера %</th>
@@ -1942,6 +1949,14 @@
         </div>
         <button class="natr-tool-btn" id="absAlertBtn" onclick="absToggleAlerts()">🔔</button>
         <button class="natr-tool-btn" id="absWatchlistBtn" onclick="absToggleWatchlistOnly()">★ Избранное</button>
+        <div class="natr-tool-group" id="absFavColorFilterGroup" title="Оставить только избранные определённого цвета (можно выбрать несколько). Ничего не выбрано — фильтр по цвету не действует.">
+            <label class="natr-tool-label">Цвет:</label>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="gold"   style="background:#f0b90b" title="Золотой" onclick="absToggleFavColorFilter('gold')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="green"  style="background:#4caf50" title="Зелёный" onclick="absToggleFavColorFilter('green')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="red"    style="background:#f44336" title="Красный" onclick="absToggleFavColorFilter('red')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="blue"   style="background:#2196f3" title="Синий" onclick="absToggleFavColorFilter('blue')"></button>
+            <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="purple" style="background:#9c27b0" title="Фиолетовый" onclick="absToggleFavColorFilter('purple')"></button>
+        </div>
         <button class="natr-tool-btn" id="absAccumOnlyBtn" onclick="absToggleAccumOnly()" title="Показывать только тикеры с подтверждённым многосвечным накоплением (объём растёт, цена стоит на месте)">📊 Накопление</button>
     </div>
     <div class="natr-tools" id="absToolsFilters">
@@ -1983,7 +1998,7 @@
         <div class="bg-update-overlay"></div>
         <table>
             <thead><tr>
-                <th style="width:78px;text-align:center;" title="Закреп и избранное">📌 ★</th>
+                <th class="sortable" data-tbl="abs" data-key="favorite" style="width:78px;text-align:center;" title="Закреп и избранное — клик сортирует по цвету звезды (gold→green→red→blue→purple)">📌 ★</th>
                 <th class="sortable" data-tbl="abs" data-key="symbol">Тикер</th>
                 <th class="sortable" data-tbl="abs" data-key="type" style="width:78px;">Тип</th>
                 <th class="sortable sort-active sort-desc" data-tbl="abs" data-key="volRatio" style="width:90px;text-align:right;" title="RVOL — во сколько раз объём свечи больше среднего за lookback">RVOL</th>
@@ -2198,6 +2213,15 @@ function contSortData(data) {
         let va, vb;
         switch (key) {
             case 'symbol': return mult * a.symbol.localeCompare(b.symbol);
+            case 'favorite': {
+                // Rank follows the same left-to-right order as the color picker
+                // (gold, green, red, blue, purple); non-favorited rows rank 0.
+                const COLOR_RANK = { gold: 1, green: 2, red: 3, blue: 4, purple: 5 };
+                const ra = contFavorites.has(a.symbol) ? (COLOR_RANK[contFavColors[a.symbol] || 'gold'] || 1) : 0;
+                const rb = contFavorites.has(b.symbol) ? (COLOR_RANK[contFavColors[b.symbol] || 'gold'] || 1) : 0;
+                if (ra !== rb) return mult * (ra - rb);
+                return a.symbol.localeCompare(b.symbol);
+            }
             case 'type': {
                 const typeCache = new Map();
                 const typeOf = s => { let t = typeCache.get(s); if (t === undefined) { t = natrGetAssetType(s); typeCache.set(s, t); } return t; };
@@ -3718,6 +3742,7 @@ let contSelectedCategory = 'all'; // категория — тот же ряд �
 let contPinned = new Set(); // own закреп set for this screener, separate from NATR Scanner's
 let contFavorites = new Set(); // own избранное set for this screener, separate from NATR Scanner's
 let contWatchlistOnly = false; // "show favorites only" toggle (uses contFavorites, not shared)
+let contFavColorFilter = new Set(); // непустой набор = показывать только избранные этих цветов
 let contFavColors = {}; // symbol -> color name ('gold'|'green'|'red'|'blue'|'purple') — цвет избранной звезды
 let contFavPickerSymbol = null; // символ, для которого сейчас открыт пикер цвета (или null)
 const CONT_FAV_COLOR_HEX = { gold:'#f0b90b', green:'#4caf50', red:'#f44336', blue:'#2196f3', purple:'#9c27b0' };
@@ -3750,6 +3775,10 @@ try {
     contPinned = new Set(ctSafeGetJSON('cont_pinned', []));
     contFavorites = new Set(ctSafeGetJSON('cont_favorites', []));
     contFavColors = ctSafeGetJSON('cont_fav_colors', {}) || {};
+    try {
+        const savedContColors = ctSafeGetJSON('cont_fav_color_filter', []);
+        if (Array.isArray(savedContColors)) contFavColorFilter = new Set(savedContColors);
+    } catch(e) { /* defaults are fine */ }
     const cVolFrom = parseFloat(localStorage.getItem('cont_vol_from'));
     if (!isNaN(cVolFrom)) contVolFrom = cVolFrom;
     const cVolTo = parseFloat(localStorage.getItem('cont_vol_to'));
@@ -3766,6 +3795,11 @@ function contApplyRestoredUI() {
     document.getElementById('contDirUpBtn').classList.toggle('active', contDirection === 'up');
     document.getElementById('contDirDownBtn').classList.toggle('active', contDirection === 'down');
     document.getElementById('contWatchlistBtn').classList.toggle('active', contWatchlistOnly);
+    if (contFavColorFilter.size > 0) {
+        document.querySelectorAll('#contFavColorFilterGroup .abs-color-filter-dot').forEach(btn => {
+            btn.classList.toggle('active', contFavColorFilter.has(btn.dataset.color));
+        });
+    }
     document.querySelectorAll('#contCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === contSelectedCategory));
     const volFromEl = document.getElementById('contVolFrom');
     if (volFromEl && contVolFrom !== null) volFromEl.value = contVolFrom;
@@ -3836,6 +3870,18 @@ function contToggleWatchlistOnly() {
     // Always re-render — even if no scan has been done yet, the user wants to see
     // what's in their favorites list right now (stub rows with "—" for unknown data).
     // When a scan already happened, the existing contRawResults path takes over.
+    contReFilterAndRender();
+}
+// Цветовой фильтр избранного — то же самое, что и в Absorption Scanner: оставляет
+// видимыми только избранные тикеры с выбранным(и) цветом(ами) звезды (contFavColors).
+// Несколько цветов можно выбрать одновременно (ИЛИ между ними); пустой набор =
+// фильтр не действует. Комбинируется со всеми остальными фильтрами через AND.
+function contToggleFavColorFilter(color) {
+    if (contFavColorFilter.has(color)) contFavColorFilter.delete(color);
+    else contFavColorFilter.add(color);
+    ctSafeSetJSON('cont_fav_color_filter', Array.from(contFavColorFilter));
+    const btn = document.querySelector('#contFavColorFilterGroup .abs-color-filter-dot[data-color="' + color + '"]');
+    if (btn) btn.classList.toggle('active', contFavColorFilter.has(color));
     contReFilterAndRender();
 }
 function contSavePinned() {
@@ -4295,23 +4341,19 @@ function contGetFilteredResults() {
     const lbRaw = document.getElementById('contLookbackDays').value.trim();
     const lookbackDays = lbRaw === '' ? 0 : Math.max(0, parseInt(lbRaw) || 0);
 
-    // Favorites-only bypasses every other filter (пороги, RVOL, ΔOI,
-    // направление, объём) — same "show me exactly this list, full stop" semantics pinned
-    // rows already have. Previously a favorited symbol could silently disappear just
-    // because it didn't currently pass, say, the RVOL or breakout filter.
-    if (contWatchlistOnly) {
-        // No scan yet — synthesize "stub" rows from contFavorites so the user can
-        // still see what they've added before, even before hitting Сканировать.
-        // All numeric fields render as "—" via the null-checks in contRenderTable.
-        if (contRawResults.length === 0) {
-            return contBuildFavoriteStubs();
-        }
-        return contRawResults.filter(r => contFavorites.has(r.symbol)).sort((a,b) => (b.bodyRatio||b.rvol||0) - (a.bodyRatio||a.rvol||0));
+    // Favorites-only: combines with every other filter below (категория, RVOL,
+    // ΔOI, вчера/сегодня %, объём, направление) so the user can narrow within
+    // their watchlist, not just see the raw list — same fix already applied to
+    // the Absorption Scanner. Before the first scan there's no data to filter
+    // against yet, so show a plain preview of the watchlist.
+    if (contWatchlistOnly && contRawResults.length === 0) {
+        return contBuildFavoriteStubs();
     }
     // Категория применяется к уже отсканированным результатам (та же логика, что и
     // у NATR Scanner): «all» — всё; TF_* — по типу актива (Крипто/Акции/ETF/Товары/
     // Индексы/Другие); именованная — по первому тегу категории из natrCategoryMap.
-    // ★ Избранное и закреплённые строки по-прежнему обходят этот фильтр.
+    // Закреплённые строки (📌) по-прежнему обходят этот фильтр — они рендерятся
+    // отдельным блоком поверх таблицы в contReFilterAndRender.
     let list;
     if (contSelectedCategory === 'all') {
         list = contRawResults.slice();
@@ -4342,6 +4384,17 @@ function contGetFilteredResults() {
     if (contVolFilterActive) {
         if (contVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= contVolFrom; });
         if (contVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume <= contVolTo; });
+    }
+    if (contWatchlistOnly) list = list.filter(r => contFavorites.has(r.symbol));
+    // Цвет избранного — оставляет только избранные тикеры с одним из выбранных
+    // цветов звезды (см. contToggleFavColorFilter). Неизбранные автоматически
+    // отсеиваются, как только выбран хоть один цвет.
+    if (contFavColorFilter.size > 0) {
+        list = list.filter(r => {
+            if (!contFavorites.has(r.symbol)) return false;
+            const c = contFavColors[r.symbol] || 'gold';
+            return contFavColorFilter.has(c);
+        });
     }
     list.sort((a,b) => (b.bodyRatio||b.rvol||0) - (a.bodyRatio||a.rvol||0));
     return list;
@@ -4414,6 +4467,8 @@ function contRenderTable(data, pinnedCount) {
             msg = contFavorites.size === 0
                 ? 'Список избранного пуст — добавляйте тикеры звёздочкой ★ в любой строке после сканирования'
                 : 'Ни один избраный тикер не прошёл фильтры — попробуйте ослабить пороги или выключить фильтры';
+        } else if (contFavColorFilter.size > 0) {
+            msg = 'Нет избранных тикеров выбранного цвета';
         } else {
             msg = contRawResults.length
                 ? 'Ничего не проходит текущие фильтры — попробуйте ослабить пороги или выключить фильтры'
@@ -7065,6 +7120,7 @@ const ABS_MIN_VOL24H = 5e6;          // 5 M USDT
 let absAlertsEnabled = false;
 let absWatchlistOnly = false;
 let absAccumOnly = false; // "Только накопление" — показывать только строки с подтверждённым многосвечным accumSignal
+let absFavColorFilter = new Set(); // непустой набор = показывать только избранные этих цветов
 let absIsScanning = false;
 let absIsBgUpdating = false;
 let absAbortCtrl = null;
@@ -7106,6 +7162,10 @@ try {
     absPinned = new Set(ctSafeGetJSON('abs_pinned', []));
     absWatchlistOnly = localStorage.getItem('abs_watchlist_only') === '1';
     absAccumOnly = localStorage.getItem('abs_accum_only') === '1';
+    try {
+        const savedColors = ctSafeGetJSON('abs_fav_color_filter', []);
+        if (Array.isArray(savedColors)) absFavColorFilter = new Set(savedColors);
+    } catch(e) { /* defaults are fine */ }
     absAlertsEnabled = localStorage.getItem('abs_alerts_enabled') === '1';
     const savedAbsCat = localStorage.getItem('abs_category');
     if (savedAbsCat) absSelectedCategory = savedAbsCat;
@@ -7159,6 +7219,11 @@ function absInit() {
     if (absAlertsEnabled) document.getElementById('absAlertBtn').classList.add('active');
     if (absWatchlistOnly) document.getElementById('absWatchlistBtn').classList.add('active');
     if (absAccumOnly) document.getElementById('absAccumOnlyBtn').classList.add('active');
+    if (absFavColorFilter.size > 0) {
+        document.querySelectorAll('#absFavColorFilterGroup .abs-color-filter-dot').forEach(btn => {
+            btn.classList.toggle('active', absFavColorFilter.has(btn.dataset.color));
+        });
+    }
     document.querySelectorAll('#absCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === absSelectedCategory));
     // Request Notification permission up-front only if the user previously
     // turned alerts on — no surprise "allow notifications" prompt otherwise.
@@ -7430,6 +7495,19 @@ function absToggleAccumOnly() {
     absAccumOnly = !absAccumOnly;
     ctSafeSetItem('abs_accum_only', absAccumOnly ? '1' : '0');
     document.getElementById('absAccumOnlyBtn').classList.toggle('active', absAccumOnly);
+    if (absAllResults.length) absReRender();
+}
+// Цветовой фильтр избранного: оставляет видимыми только избранные тикеры с
+// выбранным(и) цветом(ами) звезды (absFavColors). Несколько цветов можно
+// выбрать одновременно (логика ИЛИ между ними); пустой набор = фильтр не
+// действует. Комбинируется со всеми остальными фильтрами через AND, как и
+// absAccumOnly/absWatchlistOnly.
+function absToggleFavColorFilter(color) {
+    if (absFavColorFilter.has(color)) absFavColorFilter.delete(color);
+    else absFavColorFilter.add(color);
+    ctSafeSetJSON('abs_fav_color_filter', Array.from(absFavColorFilter));
+    const btn = document.querySelector('#absFavColorFilterGroup .abs-color-filter-dot[data-color="' + color + '"]');
+    if (btn) btn.classList.toggle('active', absFavColorFilter.has(color));
     if (absAllResults.length) absReRender();
 }
 
@@ -7726,14 +7804,15 @@ function absCheckAlerts() {
 // filter input re-slices the already-fetched data live, no rescan needed.
 function absGetFilteredResults() {
     let list = absAllResults.slice();
-    // Favorites-only bypasses every other filter (пороги, RVOL, Δ Taker,
-    // объём, направление) — same "show me exactly this list, full stop"
-    // semantics pinned rows already have.
+    // Favorites-only: combines with every other filter below (category, RVOL,
+    // результат, объём, направление, накопление) so the user can narrow within
+    // their watchlist, not just see the raw list. Before the first scan there's
+    // no data to filter against yet, so show a plain preview of the watchlist.
     if (absWatchlistOnly) {
         if (absAllResults.length === 0) {
             return [...absFavorites].map(sym => ({ symbol: sym, volRatio: null, priceChangePct: null, delta: null, upperWickPct: 0, lowerWickPct: 0, signal: '—', quoteVol: null, vol24h: null, price: null }));
         }
-        return list.filter(r => absFavorites.has(r.symbol));
+        list = list.filter(r => absFavorites.has(r.symbol));
     }
     // Category filter — same logic as NATR/Cont scanners: TF_* tabs (Крипто/Акции/
     // ETF/Товары/Индексы/Другие) match by resolved asset type; everything else
@@ -7753,6 +7832,16 @@ function absGetFilteredResults() {
     // только тикеры, где accumSignal подтверждён (см. absCalcAccumMetrics).
     if (absAccumOnly) {
         list = list.filter(r => r.accumSignal !== null && r.accumSignal !== undefined);
+    }
+    // Цвет избранного — оставляет только избранные тикеры с одним из выбранных
+    // цветов звезды (см. absToggleFavColorFilter). Неизбранные тикеры цвета не
+    // имеют, поэтому автоматически отсеиваются, как только выбран хоть один цвет.
+    if (absFavColorFilter.size > 0) {
+        list = list.filter(r => {
+            if (!absFavorites.has(r.symbol)) return false;
+            const c = absFavColors[r.symbol] || 'gold';
+            return absFavColorFilter.has(c);
+        });
     }
     // RVOL range filter (от / до) — active only when absRvolFilterActive is on.
     if (absRvolFilterActive && (absRvolFrom !== null || absRvolTo !== null)) {
@@ -7811,6 +7900,15 @@ function absSortData(data) {
         let va, vb;
         switch (key) {
             case 'symbol':      return mult * a.symbol.localeCompare(b.symbol);
+            case 'favorite': {
+                // Rank follows the same left-to-right order as the color picker
+                // (gold, green, red, blue, purple); non-favorited rows rank 0.
+                const COLOR_RANK = { gold: 1, green: 2, red: 3, blue: 4, purple: 5 };
+                const ra = absFavorites.has(a.symbol) ? (COLOR_RANK[absFavColors[a.symbol] || 'gold'] || 1) : 0;
+                const rb = absFavorites.has(b.symbol) ? (COLOR_RANK[absFavColors[b.symbol] || 'gold'] || 1) : 0;
+                if (ra !== rb) return mult * (ra - rb);
+                return a.symbol.localeCompare(b.symbol);
+            }
             case 'volRatio':    va = a.volRatio;     vb = b.volRatio;     break;
             case 'priceChange': va = a.priceChangePct; vb = b.priceChangePct; break;
             case 'delta':      va = a.delta;        vb = b.delta;        break;
@@ -7870,6 +7968,8 @@ function absReRender() {
                 p.textContent = absFavorites.size === 0
                     ? 'Список избранного пуст — добавляйте тикеры звёздочкой ★'
                     : 'Ни один избранный тикер не прошёл фильтры';
+            } else if (absFavColorFilter.size > 0) {
+                p.textContent = 'Нет избранных тикеров выбранного цвета';
             } else {
                 p.textContent = absAllResults.length === 0
                     ? 'Сканирование...' : 'Нет сигналов по текущим фильтрам';
