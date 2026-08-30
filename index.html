@@ -270,7 +270,7 @@
         /* Section toggle button */
         .abs-sec-toggle {
             margin-left: auto;
-            padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+            height: 36px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
             cursor: pointer; border: 1px solid var(--border);
             background: transparent; color: var(--muted);
             font-family: 'Space Grotesk', sans-serif;
@@ -1203,34 +1203,10 @@
             }
         }
 
-        /* ========== ABSORPTION SCANNER (Effort vs. Result — Wyckoff) ========== */
-        .abs-info-card {
-            background: linear-gradient(135deg, rgba(240,185,11,0.06), rgba(102,126,234,0.05));
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 18px;
-            margin-bottom: 12px;
-        }
-        .abs-info-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--accent);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .abs-info-desc {
-            font-size: 0.8rem;
-            color: var(--muted);
-            line-height: 1.55;
-        }
-        .abs-info-desc strong { color: var(--fg); font-weight: 600; }
-        .abs-info-desc em { color: var(--accent); font-style: normal; font-weight: 600; }
-        /* === Super Screener: карточки секций «Контекст»/«Триггер» === */
+        /* === Super Screener: карточки секций === */
         .abs-sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px; margin-bottom: 14px; }
         .abs-sec-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px 8px; }
-        .abs-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .abs-sec-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         .abs-sec-name { font-size: 0.95rem; font-weight: 700; }
         .abs-sec-badge {
             font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 7px;
@@ -1239,16 +1215,34 @@
         .abs-sec-badge.trig { background: rgba(14,203,129,0.10); color: var(--green); }
         .abs-sec-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         .abs-sec-row .natr-tool-label { min-width: 88px; }
-        .abs-tf-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-        .abs-tf-tab {
-            height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
-            cursor: pointer; background: transparent; border: 1px solid transparent;
-            color: var(--muted); transition: all 0.15s; font-family: 'Space Grotesk', sans-serif;
+        .abs-tf-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; margin-bottom: 10px; }
+        .abs-tf-row .natr-tool-label { min-width: unset; width: auto; min-width: 42px; text-align: right; padding-right: 4px; }
+        .abs-tf-row .abs-tf-select { width: 64px; min-width: 64px; flex-shrink: 0; }
+        .abs-tf-row .abs-count-input { width: 64px; flex-shrink: 0; }
+
+        .abs-global-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .abs-global-filters .natr-tool-label { min-width: unset; }
+        .abs-tf-select {
+            height: 36px; padding: 0 22px 0 8px; border-radius: 8px; font-size: 12px; font-weight: 600;
+            background: var(--bg); border: 1px solid var(--border); color: var(--accent);
+            font-family: 'JetBrains Mono', monospace; outline: none; cursor: pointer;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235e6d7a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 8px center;
         }
-        .abs-tf-tab:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
-        .abs-tf-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(240,185,11,0.25); }
+        .abs-tf-select:focus { border-color: var(--accent); }
+        .abs-tf-select option { background: var(--bg-card); color: var(--fg); }
+
+        .abs-metric-toggle {
+            width: 90px; height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+            cursor: pointer; background: transparent; border: 1px solid var(--border);
+            color: var(--muted); transition: all 0.15s; font-family: 'Space Grotesk', sans-serif;
+            white-space: nowrap; text-align: center;
+        }
+        .abs-metric-toggle:hover { color: var(--fg); border-color: rgba(255,255,255,0.15); }
+        .abs-metric-toggle.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(240,185,11,0.25); }
         .abs-count-input {
-            width: 70px; padding: 7px 10px; border-radius: 8px; font-size: 13px;
+            width: 90px; padding: 8px 10px; border-radius: 8px; font-size: 12px;
             background: var(--bg); border: 1px solid var(--border); color: var(--fg);
             font-family: 'JetBrains Mono', monospace; outline: none;
         }
@@ -1263,14 +1257,19 @@
         .abs-rvol-warm { color: rgba(240,185,11,0.65); font-weight: 600; }
 /* === Super Screener v30: линковка секций (якорь / До / После / Внутри) === */
 .abs-link-row {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;
     padding: 8px 10px; background: rgba(255,255,255,0.025);
     border: 1px solid var(--border); border-radius: 10px;
 }
-.abs-link-row .natr-tool-label { min-width: 74px; }
+.abs-link-row .abs-link-line {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.abs-link-row > .abs-logic-tabs {
+    margin-bottom: 2px;
+}
 .abs-link-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 .abs-link-tab {
-    height: 26px; padding: 0 9px; border-radius: 7px; font-size: 11.5px; font-weight: 600;
+    height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
     cursor: pointer; background: transparent; border: 1px solid transparent; color: var(--muted);
     transition: all 0.15s; font-family: 'Space Grotesk', sans-serif; white-space: nowrap;
 }
@@ -1279,20 +1278,13 @@
 .abs-link-tab.active.lm-after  { background: rgba(14,203,129,0.10); color: var(--green); border-color: rgba(14,203,129,0.25); }
 .abs-link-tab.active.lm-inside { background: rgba(156,39,176,0.14); color: #ce93d8; border-color: rgba(156,39,176,0.30); }
 .abs-ref-select, .abs-offset-input {
-    height: 28px; padding: 0 8px; border-radius: 8px; font-size: 12px;
+    height: 36px; padding: 8px 10px; border-radius: 8px; font-size: 12px;
     background: var(--bg); border: 1px solid var(--border); color: var(--fg);
     font-family: 'JetBrains Mono', monospace; outline: none;
 }
 .abs-ref-select:focus, .abs-offset-input:focus { border-color: var(--accent); }
 .abs-offset-input { width: 64px; }
-.abs-pctkind-tabs { display: flex; gap: 4px; }
-.abs-pctkind-tab {
-    height: 24px; padding: 0 9px; border-radius: 6px; font-size: 11px; font-weight: 600;
-    cursor: pointer; background: transparent; border: 1px solid transparent; color: var(--muted);
-    transition: all 0.15s; font-family: 'Space Grotesk', sans-serif;
-}
-.abs-pctkind-tab:hover { color: var(--fg); }
-.abs-pctkind-tab.active { background: rgba(255,255,255,0.07); color: var(--fg); border-color: var(--border); }
+/* pctkind tabs removed — replaced by abs-pct-toggle */
 .abs-sec-badge.pred { background: rgba(156,39,176,0.14); color: #ce93d8; }
 .abs-sec-badge.lm { font-weight: 700; white-space: nowrap; }
 .abs-sec-badge.lm-anchor { background: rgba(255,255,255,0.06); color: var(--fg); }
@@ -1306,25 +1298,24 @@
 .abs-group-th.g-s6 { color: #b0bec5; }
 .abs-group-th.g-s7 { color: #ba68c8; }
 /* === Super Screener v31: произвольное число секций + логика И/ИЛИ/НЕ === */
-.abs-sec-grid-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 .abs-sec-add-btn {
-    height: 32px; padding: 0 14px; border-radius: 9px; font-size: 12.5px; font-weight: 700;
-    cursor: pointer; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(240,185,11,0.25);
+    height: 100%; min-height: 48px; padding: 0 14px; border-radius: 14px; font-size: 13px; font-weight: 700;
+    cursor: pointer; background: rgba(255,255,255,0.02); color: var(--muted); border: 1px dashed var(--border);
     font-family: 'Space Grotesk', sans-serif; transition: all 0.15s;
 }
-.abs-sec-add-btn:hover { background: rgba(240,185,11,0.2); }
+.abs-sec-add-btn:hover { background: var(--accent-dim); color: var(--accent); border-color: rgba(240,185,11,0.25); }
 .abs-sec-name[contenteditable], .abs-sec-name.renamable { cursor: text; border-bottom: 1px dashed transparent; }
 .abs-sec-name.renamable:hover { border-bottom-color: var(--muted); }
 .abs-sec-del {
-    width: 26px; height: 26px; border-radius: 7px; font-size: 13px; font-weight: 700; line-height: 1;
+    width: 36px; height: 36px; border-radius: 8px; font-size: 14px; font-weight: 700; line-height: 1;
     cursor: pointer; background: transparent; color: var(--muted); border: 1px solid var(--border);
-    transition: all 0.15s; margin-left: auto; flex-shrink: 0;
+    transition: all 0.15s; margin-left: 0; flex-shrink: 0;
 }
 .abs-sec-del:hover { color: var(--red); border-color: rgba(246,70,93,0.35); background: rgba(246,70,93,0.08); }
 .abs-sec-del[disabled] { opacity: 0.25; pointer-events: none; }
 .abs-logic-tabs { display: flex; gap: 3px; }
 .abs-logic-tab {
-    height: 24px; padding: 0 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700;
+    height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
     cursor: pointer; background: transparent; border: 1px solid transparent; color: var(--muted);
     transition: all 0.15s; font-family: 'Space Grotesk', sans-serif;
 }
@@ -1856,20 +1847,6 @@
         </div>
     </div>
 
-    <div class="abs-info-card">
-        <div class="abs-info-title">
-            <svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            Стратегия: цепочка секций с линковкой окон
-        </div>
-        <div class="abs-info-desc">
-            <strong>Привязка</strong> у каждой карточки задаёт, ГДЕ искать: якорь <strong>«Сейчас»</strong> (последние свечи, включая формирующуюся), якорь <strong>«Закрытые»</strong> + «свечей назад» (окно в прошлом) или позиция относительно любой другой секции — <strong>«До»</strong>, <strong>«После»</strong>, <strong>«Внутри»</strong>. Пример: Триггер «Закрытые», «назад» 3 — импульс был; секция «После» с ссылкой на него ищет реакцию, «Внутри» — структуру импульса, «До» — проторговку перед ним. Кнопка <strong>ВКЛ/ВЫКЛ</strong> включает/выключает секцию, «% метрика» переключает Диапазон/Δ. Секций может быть сколько угодно — кнопка <strong>«+ Добавить секцию»</strong> создаёт новую (двойной клик по названию — переименовать, ✕ — удалить). Метка <strong>И/ИЛИ/НЕ</strong> у каждой включённой секции задаёт, как её фильтр комбинируется с остальными: «И» — обязательна, «ИЛИ» — достаточно совпадения любой секции из группы ИЛИ, «НЕ» — исключает тикеры, которые ей соответствуют.
-        </div>
-    </div>
-
-    <div class="abs-sec-grid-toolbar">
-        <button type="button" class="abs-sec-add-btn" onclick="absAddSection()" title="Добавить новую секцию с настраиваемой привязкой">+ Добавить секцию</button>
-    </div>
-
     <div class="natr-cat-tabs" id="absCatTabs">
         <span class="natr-cat-label">Категория:</span>
         <button class="natr-cat-tab active" data-cat="all" onclick="absSwitchCategory('all')">Все</button>
@@ -1898,16 +1875,6 @@
 
     <div class="natr-tools-card">
     <div class="natr-tools" id="absTools">
-        <div class="natr-tool-group" title="Какие фьючерсы сканировать: пары с оборотом 24ч ниже порога пропускаются. По умолчанию сканируются ВСЕ пары; порог можно поднять, чтобы ускорить скан и разгрузить лимиты Binance (сейчас торгуется 700+ перпетуалов)">
-            <label class="natr-tool-label" for="absLiqSelect">Оборот 24ч:</label>
-            <select class="abs-liq-select" id="absLiqSelect" onchange="absChangeLiq(this.value)">
-                <option value="0" selected>Все пары</option>
-                <option value="1000000">&gt; $1M</option>
-                <option value="2000000">&gt; $2M</option>
-                <option value="5000000">&gt; $5M</option>
-                <option value="10000000">&gt; $10M</option>
-            </select>
-        </div>
         <button type="button" class="natr-tool-btn" id="absAlertBtn" onclick="absToggleAlerts()" title="Уведомления о новых монетах в текущем фильтре">🔔</button>
         <button type="button" class="natr-tool-btn" id="absWatchlistBtn" onclick="absToggleWatchlistOnly()" title="Показывать только избранные тикеры">★ Избранное</button>
         <div class="natr-tool-group" id="absFavColorFilterGroup" title="Оставить только избранные определённого цвета (можно выбрать несколько). Ничего не выбрано — фильтр по цвету не действует.">
@@ -1918,9 +1885,26 @@
             <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="blue"   style="background:#2196f3" title="Синий" onclick="absToggleFavColorFilter('blue')"></button>
             <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="purple" style="background:#9c27b0" title="Фиолетовый" onclick="absToggleFavColorFilter('purple')"></button>
         </div>
-    </div>
-    <div class="natr-tools" id="absToolsRow2">
-        <span class="natr-tool-hint">ⓘ Привязка карточки задаёт, ГДЕ искать: «Сейчас»/«Закрытые» — окно у текущего момента («свечей назад» сдвигает его в прошлое), «До»/«После»/«Внутри» + выпадающий список — позиция относительно окна другой секции (циклы запрещены). Ввод «от/до» подсвечивает значения (в диапазоне — золотым), а кнопка «Фильтр» скрывает строки вне диапазона. Смена ТФ или привязки — авто-скан; смена числа свечей/% метрики — мгновенный пересчёт. RVOL = средний объём окна ÷ средний объём 50 свечей до окна. OI Δ% — изменение открытого интереса за окно (история Binance — 30 дней). В таблице показываются только метрики, у которых в фильтрах заданы данные. По умолчанию сканируются все пары; пары с оборотом 24ч ниже порога «Оборот 24ч» пропускаются</span>
+        <div class="abs-global-filters">
+            <button type="button" class="abs-metric-toggle" id="absVolFilterBtn" onclick="absToggleGlobalVolFilter()" title="Включить фильтр по объёму (иначе значения в диапазоне просто подсвечиваются)">Объём 24ч</button>
+            <input type="number" class="natr-range-input" id="absVolFrom" placeholder="от" min="0" step="100000" oninput="absChangeGlobalVol()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="absVolTo" placeholder="до" min="0" step="100000" oninput="absChangeGlobalVol()">
+            <button type="button" class="abs-metric-toggle" id="absTradesFilterBtn" onclick="absToggleGlobalTradesFilter()" title="Включить фильтр по сделкам (иначе значения в диапазоне просто подсвечиваются)">Сделки</button>
+            <input type="number" class="natr-range-input" id="absTradesFrom" placeholder="от" min="0" step="1000" oninput="absChangeGlobalTrades()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="absTradesTo" placeholder="до" min="0" step="1000" oninput="absChangeGlobalTrades()">
+        </div>
+        <div class="natr-tool-group" title="Какие фьючерсы сканировать: пары с оборотом 24ч ниже порога пропускаются. По умолчанию сканируются ВСЕ пары; порог можно поднять, чтобы ускорить скан и разгрузить лимиты Binance (сейчас торгуется 700+ перпетуалов)">
+            <label class="natr-tool-label" for="absLiqSelect">Оборот 24ч:</label>
+            <select class="abs-liq-select" id="absLiqSelect" onchange="absChangeLiq(this.value)">
+                <option value="0" selected>Все пары</option>
+                <option value="1000000">&gt; $1M</option>
+                <option value="2000000">&gt; $2M</option>
+                <option value="5000000">&gt; $5M</option>
+                <option value="10000000">&gt; $10M</option>
+            </select>
+        </div>
     </div>
     </div>
 
@@ -7456,6 +7440,9 @@ let absSecIdSeq = ABS_SEC_IDS.length + 1;
 let absAlertsEnabled = false;
 let absWatchlistOnly = false;
 let absFavColorFilter = new Set(); // непустой набор = показывать только избранные этих цветов
+
+let absVolFrom = null, absVolTo = null, absVolFilterActive = false;
+let absTradesFrom = null, absTradesTo = null, absTradesFilterActive = false;
 let absIsScanning = false;
 let absIsBgUpdating = false;
 let absAbortCtrl = null;
@@ -7519,12 +7506,14 @@ try {
             ABS_SEC_IDS.forEach(id => absRestoreSec(id, sf.secs[id]));
             if (sf.secEnabled && typeof sf.secEnabled === 'object')
                 ABS_SEC_IDS.forEach(id => { if (typeof sf.secEnabled[id] === 'boolean') absSecEnabled[id] = sf.secEnabled[id]; });
-            // Восстанавливаем порядок карточек/колонок как было сохранено
-            const known = new Set(ABS_SEC_IDS);
-            const ordered = sf.order.filter(id => known.has(id));
-            ABS_SEC_IDS.forEach(id => { if (!ordered.includes(id)) ordered.push(id); });
+            // Восстанавливаем состав и порядок секций из сохранения.
+            // Сохранённый order — единственный источник правды для v4:
+            // удалённые пользователем секции НЕ возвращаем.
+            const savedSet = new Set(sf.order.filter(id => absSecs[id]));
             ABS_SEC_IDS.length = 0;
-            ordered.forEach(id => ABS_SEC_IDS.push(id));
+            sf.order.forEach(id => { if (savedSet.has(id)) ABS_SEC_IDS.push(id); });
+            // Удаляем из памяти секции, которых нет в сохранении
+            Object.keys(absSecs).forEach(id => { if (!savedSet.has(id)) { delete absSecs[id]; delete absSecEnabled[id]; } });
             if (Number.isInteger(sf.nextId) && sf.nextId > absSecIdSeq) absSecIdSeq = sf.nextId;
         } else if (sf.v === 3 && sf.secs && typeof sf.secs === 'object') {
             ABS_SEC_IDS.forEach(id => absRestoreSec(id, sf.secs[id]));
@@ -7570,6 +7559,17 @@ try {
     if (!isNaN(savedLiq) && ABS_LIQ_OPTIONS.includes(savedLiq)) absMinVol24h = savedLiq;
     const savedAbsCat = localStorage.getItem('abs_category');
     if (savedAbsCat) absSelectedCategory = savedAbsCat;
+    // Глобальные фильтры: объём 24ч и сделки
+    const gvf = parseFloat(localStorage.getItem('abs_vol_from'));
+    if (!isNaN(gvf) && gvf >= 0) absVolFrom = gvf;
+    const gvt = parseFloat(localStorage.getItem('abs_vol_to'));
+    if (!isNaN(gvt) && gvt >= 0) absVolTo = gvt;
+    if (localStorage.getItem('abs_vol_filter_active') === '1') absVolFilterActive = true;
+    const gtf = parseFloat(localStorage.getItem('abs_trades_from'));
+    if (!isNaN(gtf) && gtf >= 0) absTradesFrom = gtf;
+    const gttr = parseFloat(localStorage.getItem('abs_trades_to'));
+    if (!isNaN(gttr) && gttr >= 0) absTradesTo = gttr;
+    if (localStorage.getItem('abs_trades_filter_active') === '1') absTradesFilterActive = true;
 } catch(e) { /* defaults are fine */ }
 
 function absUpdateCatTabCounts() { updateCatTabCounts('#absCatTabs'); }
@@ -7585,6 +7585,8 @@ function absInit() {
     absBuildCards();
     absBuildThead();
     ABS_SEC_IDS.forEach(id => absSyncCard(id));
+
+    absRestoreGlobalFilters();
     const liq = document.getElementById('absLiqSelect');
     if (liq) liq.value = String(absMinVol24h);
     absUpdateGroupHeaders();
@@ -7705,7 +7707,7 @@ function absUpdateColumns() {
     // Инлайн-стиль перекрывает статический min-width из CSS (он остаётся
     // fallback'ом до первого вызова).
     const table = document.querySelector('#absTableWrap table');
-    if (table) table.style.minWidth = (420 + nTotal * 90) + 'px';
+    if (table) table.style.minWidth = (604 + nTotal * 90) + 'px';
     // Сортировка по скрытой колонке сбрасывается на дефолт (RVOL триггера →
     // RVOL контекста → RVOL предтренда → тикер), иначе порядок строк
     // управлялся бы невидимым столбцом.
@@ -7721,19 +7723,23 @@ function absPersistFilters() {
     ABS_SEC_IDS.forEach(id => { secs[id] = absSecs[id]; });
     ctSafeSetJSON('abs_filters', { v: 4, order: ABS_SEC_IDS.slice(), nextId: absSecIdSeq, secs: secs, secEnabled: absSecEnabled });
 }
-// Смена ТФ секции — нужны другие килайны, поэтому сразу авто-скан
+// Смена ТФ секции — нужны другие килайны, пересчитываем из кэша
+// (если кэша нет — предложим нажать «Сканировать»)
 function absSwitchTf(id, tf) {
     if (!ABS_TFS.includes(tf)) return;
     const S = absSecs[id];
     if (S.tf === tf) return;
     S.tf = tf;
     absPersistFilters();
-    const tabs = document.getElementById('abs' + id.toUpperCase() + 'TfTabs');
-    if (tabs) tabs.querySelectorAll('.abs-tf-tab').forEach(t => t.classList.toggle('active', t.dataset.tf === tf));
+    const sel = document.getElementById('abs' + id.toUpperCase() + 'TfSelect');
+    if (sel) sel.value = tf;
     absUpdateGroupHeaders();
-    absRawCache.clear();                        // старые килайны больше не годятся
-    if (absRefreshTimerId) absStopAutoRefresh();
-    absStartScan();
+    // Килайны другого ТФ могут быть в кэше (от других секций).
+    // Если нет — absTryRecompute покажет подсказку.
+    if (absRawCache.size) absRecomputeDebounced();
+    else if (absAllResults.length) {
+        absSetStatus('ТФ изменён — нажмите «Сканировать»');
+    }
 }
 // Смена числа свечей — килайны те же (пока хватает глубины выборки):
 // пересчитываем метрики локально из сырого кэша, без запросов к Binance.
@@ -7791,6 +7797,11 @@ function absChangeMetric(id, kind) {
     const lo = (kind === 'oi' || (kind === 'pct' && S.pctKind === 'delta')) ? -Infinity : 0;
     S[kind + 'From'] = (f.value.trim() !== '' && !isNaN(fv)) ? Math.max(lo, fv) : null;
     S[kind + 'To']   = (t.value.trim() !== '' && !isNaN(tv)) ? Math.max(lo, tv) : null;
+    // pct: кнопка теперь переключает H,L/O,C, а не Active —
+    // авто-активируем фильтр при вводе значений
+    if (kind === 'pct' && !S.pctActive && (S.pctFrom !== null || S.pctTo !== null)) {
+        S.pctActive = true;
+    }
     absPersistFilters();
     absUpdateColumns();   // набор данных в фильтрах изменился — колонки тоже
     // Первое появление диапазона OI при кэше без OI — фоновый рескан за данными
@@ -7842,6 +7853,8 @@ function absRebuildSectionsUI(rescan) {
         absRawCache.clear();
         if (absRefreshTimerId) absStopAutoRefresh();
         absStartScan();
+    } else if (absRawCache.size) {
+        absRecomputeDebounced();
     } else if (absAllResults.length) {
         absReRender();
     }
@@ -7855,7 +7868,7 @@ function absAddSection() {
     absSecs[id].note = 'Новая секция — задайте привязку, таймфрейм и фильтры. Двойной клик по названию — переименовать.';
     absSecEnabled[id] = true;
     absPersistFilters();
-    absRebuildSectionsUI(true);   // новая секция ни на что не влияет по данным, но авто-скан подтягивает её метрики сразу
+    absRebuildSectionsUI(false);   // пересчитаем из кэша, не перезапрашивая Binance
     showToast('Секция добавлена');
 }
 function absRemoveSection(id) {
@@ -7878,7 +7891,7 @@ function absRemoveSection(id) {
         if (!S.ref) { S.linkMode = 'now'; S.offset = 0; }
     });
     absPersistFilters();
-    absRebuildSectionsUI(true);
+    absRebuildSectionsUI(false);
     showToast('Секция удалена');
 }
 function absRenameSection(id) {
@@ -7979,8 +7992,18 @@ function absChangeOffset(id) {
     S.offset = v;
     absAfterStructureChange(id);
 }
-// «% метрика» секции: Диапазон (high−low) или Δ (закрытие−открытие).
-// Значения пересчитываются из кэша килайнов без новых запросов.
+// «% метрика» секции: H,L (high−low) или O,C (закрытие−открытие).
+// Переключается одной кнопкой-тогглом.
+function absTogglePctKind(id) {
+    const S = absSecs[id];
+    const newPk = S.pctKind === 'range' ? 'delta' : 'range';
+    S.pctKind = newPk;
+    absPersistFilters();
+    absSyncCard(id);
+    absUpdateGroupHeaders();
+    if (absRawCache.size) absRecomputeDebounced();
+    else if (absAllResults.length) absReRenderDebounced();
+}
 function absSetPctKind(id, pk) {
     if (pk !== 'range' && pk !== 'delta') return;
     const S = absSecs[id];
@@ -7992,38 +8015,84 @@ function absSetPctKind(id, pk) {
     if (absRawCache.size) absRecomputeDebounced();
     else if (absAllResults.length) absReRenderDebounced();
 }
-// Любая смена структуры (привязка/ссылка/сдвиг) меняет глубину выборки —
-// полный авто-скан, как при смене ТФ.
+// Смена структуры (привязка/ссылка/сдвиг) — килайны в кэше те же,
+// пересчитываем локально без запросов к Binance.
 function absAfterStructureChange(id) {
     absPersistFilters();
     absSyncCard(id);
     absUpdateGroupHeaders();
     absUpdateColumns();
-    absRawCache.clear();
-    if (absRefreshTimerId) absStopAutoRefresh();
-    absStartScan();
+    // Смена привязки/ссылки/сдвига — килайны те же, пересчитываем из кэша
+    if (absRawCache.size) absRecomputeDebounced();
+    else if (absAllResults.length) absReRenderDebounced();
 }
 
 // === Карточки секций: генерация из ABS_SEC_DEF ============================
 // Семь карточек собираются из одного шаблона — ID вида absS3RvolFrom
 // единообразны для всех секций.
 const ABS_TF_TITLE = { '1m':'1 минута','3m':'3 минуты','5m':'5 минут','15m':'15 минут','30m':'30 минут','1h':'1 час','2h':'2 часа','4h':'4 часа','1d':'1 день — дневной таймфрейм' };
+function absChangeGlobalVol() {
+    const f = document.getElementById('absVolFrom');
+    const t = document.getElementById('absVolTo');
+    absVolFrom = (f && f.value.trim() !== '') ? Math.max(0, parseFloat(f.value)) : null;
+    absVolTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
+    ctSafeSetItem('abs_vol_from', absVolFrom !== null ? String(absVolFrom) : '');
+    ctSafeSetItem('abs_vol_to', absVolTo !== null ? String(absVolTo) : '');
+    if (absAllResults.length) absReRenderDebounced();
+}
+function absChangeGlobalTrades() {
+    const f = document.getElementById('absTradesFrom');
+    const t = document.getElementById('absTradesTo');
+    absTradesFrom = (f && f.value.trim() !== '') ? Math.max(0, parseFloat(f.value)) : null;
+    absTradesTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
+    ctSafeSetItem('abs_trades_from', absTradesFrom !== null ? String(absTradesFrom) : '');
+    ctSafeSetItem('abs_trades_to', absTradesTo !== null ? String(absTradesTo) : '');
+    if (absAllResults.length) absReRenderDebounced();
+}
+function absToggleGlobalVolFilter() {
+    absVolFilterActive = !absVolFilterActive;
+    const btn = document.getElementById('absVolFilterBtn');
+    if (btn) btn.classList.toggle('active', absVolFilterActive);
+    ctSafeSetItem('abs_vol_filter_active', absVolFilterActive ? '1' : '0');
+    if (absAllResults.length) absReRender();
+}
+function absToggleGlobalTradesFilter() {
+    absTradesFilterActive = !absTradesFilterActive;
+    const btn = document.getElementById('absTradesFilterBtn');
+    if (btn) btn.classList.toggle('active', absTradesFilterActive);
+    ctSafeSetItem('abs_trades_filter_active', absTradesFilterActive ? '1' : '0');
+    if (absAllResults.length) absReRender();
+}
+function absRestoreGlobalFilters() {
+    const vf = document.getElementById('absVolFrom');
+    const vt = document.getElementById('absVolTo');
+    if (vf && absVolFrom !== null) vf.value = absVolFrom;
+    if (vt && absVolTo !== null) vt.value = absVolTo;
+    const tf = document.getElementById('absTradesFrom');
+    const tt = document.getElementById('absTradesTo');
+    if (tf && absTradesFrom !== null) tf.value = absTradesFrom;
+    if (tt && absTradesTo !== null) tt.value = absTradesTo;
+    const vBtn = document.getElementById('absVolFilterBtn');
+    if (vBtn) vBtn.classList.toggle('active', absVolFilterActive);
+    const tBtn = document.getElementById('absTradesFilterBtn');
+    if (tBtn) tBtn.classList.toggle('active', absTradesFilterActive);
+}
+
 function absBuildCards() {
     const grid = document.getElementById('absSecGrid');
     if (!grid) return;
     grid.innerHTML = ABS_SEC_IDS.map((id, idx) => {
         const cap = id.toUpperCase();
-        const tfTabs = ABS_TFS.map(tf =>
-            '<button type="button" class="abs-tf-tab" data-tf="' + tf + '" onclick="absSwitchTf(\'' + id + '\',\'' + tf + '\')" title="' + ABS_TF_TITLE[tf] + '">' + ABS_TF_LABEL[tf] + '</button>'
+        const tfOptions = ABS_TFS.map(tf =>
+            '<option value="' + tf + '">' + ABS_TF_LABEL[tf] + '</option>'
         ).join('');
         const metricRow = (k, label, title, step) => {
             const K = k.charAt(0).toUpperCase() + k.slice(1);
             return '<div class="abs-sec-row">' +
-                '<label class="natr-tool-label" for="abs' + cap + K + 'From" title="' + title + '">' + label + '</label>' +
-                '<input type="number" class="natr-range-input" id="abs' + cap + K + 'From" placeholder="от" ' + (k === 'oi' ? '' : 'min="0" ') + 'step="' + step + '" style="width:70px;" oninput="absChangeMetric(\'' + id + '\',\'' + k + '\')">' +
+                '<button type="button" class="abs-metric-toggle" id="abs' + cap + K + 'Btn" onclick="absToggleMetric(\'' + id + '\',\'' + k + '\')" title="' + title + '">' + label + '</button>' +
+                '<input type="number" class="natr-range-input" id="abs' + cap + K + 'From" placeholder="от" ' + (k === 'oi' ? '' : 'min="0" ') + 'step="' + step + '" oninput="absChangeMetric(\'' + id + '\',\'' + k + '\')">' +
                 '<span class="natr-range-sep">—</span>' +
-                '<input type="number" class="natr-range-input" id="abs' + cap + K + 'To" placeholder="до" ' + (k === 'oi' ? '' : 'min="0" ') + 'step="' + step + '" style="width:70px;" oninput="absChangeMetric(\'' + id + '\',\'' + k + '\')">' +
-                '<button type="button" class="natr-tool-btn" id="abs' + cap + K + 'Btn" onclick="absToggleMetric(\'' + id + '\',\'' + k + '\')" title="Включить фильтр (иначе значения в диапазоне просто подсвечиваются)">Фильтр</button>' +
+                '<input type="number" class="natr-range-input" id="abs' + cap + K + 'To" placeholder="до" ' + (k === 'oi' ? '' : 'min="0" ') + 'step="' + step + '" oninput="absChangeMetric(\'' + id + '\',\'' + k + '\')">' +
             '</div>';
         };
         const oiTitle = 'Изменение открытого интереса за окно: (OI в конце окна − OI в начале) ÷ OI начала × 100. Может быть отрицательным (закрытие позиций). Данные OI Binance: история 30 дней, минимальный период 5м';
@@ -8031,56 +8100,45 @@ function absBuildCards() {
         '<div class="abs-sec-card" id="abs' + cap + 'Card">' +
             '<div class="abs-sec-head">' +
                 '<span class="abs-sec-name renamable" id="abs' + cap + 'Name" ondblclick="absRenameSection(\'' + id + '\')" title="Двойной клик — переименовать">Секция ' + (idx + 1) + ' · ' + escapeHtml(absSecName(id)) + '</span>' +
-                '<span class="abs-sec-badge' + (id === 's1' ? ' pred' : '') + '" id="abs' + cap + 'Badge">' + escapeHtml(absSecBadge(id)) + '</span>' +
-                '<span class="abs-sec-badge lm" id="abs' + cap + 'LmBadge"></span>' +
-                '<div class="abs-logic-tabs" id="abs' + cap + 'LogicTabs" title="Как эта секция комбинируется с другими включёнными секциями: И — обязательна, ИЛИ — достаточно совпадения любой секции из группы ИЛИ, НЕ — исключает совпавшие тикеры">' +
-                    '<button type="button" class="abs-logic-tab" data-lg="and" onclick="absSetSectionLogic(\'' + id + '\',\'and\')">И</button>' +
-                    '<button type="button" class="abs-logic-tab" data-lg="or" onclick="absSetSectionLogic(\'' + id + '\',\'or\')">ИЛИ</button>' +
-                    '<button type="button" class="abs-logic-tab" data-lg="not" onclick="absSetSectionLogic(\'' + id + '\',\'not\')">НЕ</button>' +
-                '</div>' +
                 '<button type="button" class="abs-sec-toggle active" id="abs' + cap + 'Toggle" onclick="absToggleSection(\'' + id + '\')" title="Включить/выключить секцию">ВКЛ</button>' +
                 '<button type="button" class="abs-sec-del" id="abs' + cap + 'Del" onclick="absRemoveSection(\'' + id + '\')" title="Удалить секцию">✕</button>' +
             '</div>' +
             '<div class="abs-link-row">' +
-                '<label class="natr-tool-label">Привязка</label>' +
-                '<div class="abs-link-tabs" id="abs' + cap + 'LinkTabs">' +
-                    '<button type="button" class="abs-link-tab lm-now" data-lm="now" onclick="absSetSectionLink(\'' + id + '\',\'now\')" title="Якорь: последние свечи, включая формирующуюся (как триггер раньше)">Сейчас</button>' +
-                    '<button type="button" class="abs-link-tab lm-closed" data-lm="closed" onclick="absSetSectionLink(\'' + id + '\',\'closed\')" title="Якорь: последние закрытые свечи; поле «назад» сдвигает окно в прошлое">Закрытые</button>' +
-                    '<button type="button" class="abs-link-tab lm-before" data-lm="before" onclick="absSetSectionLink(\'' + id + '\',\'before\')" title="Окно из N свечей, полностью закрытых ДО начала окна секции-ссылки (как контекст/предтренд раньше)">До</button>' +
-                    '<button type="button" class="abs-link-tab lm-after" data-lm="after" onclick="absSetSectionLink(\'' + id + '\',\'after\')" title="Окно из N свечей ПОСЛЕ конца окна секции-ссылки (пост-импульсная реакция)">После</button>' +
-                    '<button type="button" class="abs-link-tab lm-inside" data-lm="inside" onclick="absSetSectionLink(\'' + id + '\',\'inside\')" title="Последние N свечей ВНУТРИ диапазона окна секции-ссылки (структура внутри окна)">Внутри</button>' +
+                '<div class="abs-logic-tabs" id="abs' + cap + 'LogicTabs" title="И — обязательна, ИЛИ — достаточно совпадения любой из группы ИЛИ, НЕ — исключает совпавшие">' +
+                    '<button type="button" class="abs-logic-tab" data-lg="and" onclick="absSetSectionLogic(\'' + id + '\',\'and\')">И</button>' +
+                    '<button type="button" class="abs-logic-tab" data-lg="or" onclick="absSetSectionLogic(\'' + id + '\',\'or\')">ИЛИ</button>' +
+                    '<button type="button" class="abs-logic-tab" data-lg="not" onclick="absSetSectionLogic(\'' + id + '\',\'not\')">НЕ</button>' +
                 '</div>' +
-                '<select class="abs-ref-select" id="abs' + cap + 'Ref" onchange="absSetSectionRef(\'' + id + '\', this.value)" title="Секция, относительно которой позиционируется окно"></select>' +
-                '<input type="number" class="abs-offset-input" id="abs' + cap + 'Offset" min="0" max="' + ABS_MAX_OFFSET + '" step="1" value="0" title="Сдвиг окна назад на K закрытых свечей (0 — прижато к текущему моменту)" oninput="absChangeOffset(\'' + id + '\')">' +
+                '<div class="abs-link-line">' +
+                    '<div class="abs-link-tabs" id="abs' + cap + 'LinkTabs">' +
+                        '<button type="button" class="abs-link-tab lm-now" data-lm="now" onclick="absSetSectionLink(\'' + id + '\',\'now\')" title="Свечи от текущего момента; «назад» сдвигает">Сейчас</button>' +
+                        '<button type="button" class="abs-link-tab lm-before" data-lm="before" onclick="absSetSectionLink(\'' + id + '\',\'before\')" title="Окно закрытых ДО начала окна секции-ссылки">До</button>' +
+                        '<button type="button" class="abs-link-tab lm-after" data-lm="after" onclick="absSetSectionLink(\'' + id + '\',\'after\')" title="Окно ПОСЛЕ конца окна секции-ссылки">После</button>' +
+                        '<button type="button" class="abs-link-tab lm-inside" data-lm="inside" onclick="absSetSectionLink(\'' + id + '\',\'inside\')" title="N свечей ВНУТРИ окна секции-ссылки">Внутри</button>' +
+                    '</div>' +
+                    '<select class="abs-ref-select" id="abs' + cap + 'Ref" onchange="absSetSectionRef(\'' + id + '\', this.value)" title="Секция-ссылка"></select>' +
+                    '<input type="number" class="abs-offset-input" id="abs' + cap + 'Offset" min="0" max="' + ABS_MAX_OFFSET + '" step="1" value="0" title="Сдвиг окна назад на K свечей" oninput="absChangeOffset(\'' + id + '\')">' +
+                '</div>' +
             '</div>' +
-            '<div class="abs-sec-row">' +
-                '<label class="natr-tool-label">Таймфрейм</label>' +
-                '<div class="abs-tf-tabs" id="abs' + cap + 'TfTabs">' + tfTabs + '</div>' +
-            '</div>' +
-            '<div class="abs-sec-row">' +
-                '<label class="natr-tool-label" for="abs' + cap + 'Count" title="Сколько свечей анализируется в окне секции (1–50)">Свечей в окне</label>' +
+            '<div class="abs-tf-row">' +
+                '<label class="natr-tool-label" title="Таймфрейм">ТФ</label>' +
+                '<select class="abs-tf-select" id="abs' + cap + 'TfSelect" onchange="absSwitchTf(\'' + id + '\' , this.value)" title="Таймфрейм">' + tfOptions + '</select>' +
+                '<label class="natr-tool-label" for="abs' + cap + 'Count" title="Свечей (1–50)">Свечей</label>' +
                 '<input type="number" class="abs-count-input" id="abs' + cap + 'Count" min="1" max="' + ABS_MAX_WINDOW + '" step="1" oninput="absChangeCount(\'' + id + '\')">' +
-            '</div>' +
-            '<div class="abs-sec-row">' +
-                '<label class="natr-tool-label">% метрика</label>' +
-                '<div class="abs-pctkind-tabs" id="abs' + cap + 'PctTabs">' +
-                    '<button type="button" class="abs-pctkind-tab" data-pk="range" onclick="absSetPctKind(\'' + id + '\',\'range\')" title="(high − low) окна ÷ средняя цена × 100 — плотность/диапазон окна">Диапазон</button>' +
-                    '<button type="button" class="abs-pctkind-tab" data-pk="delta" onclick="absSetPctKind(\'' + id + '\',\'delta\')" title="(закрытие − открытие окна) ÷ открытие × 100 — направленное движение окна">Δ</button>' +
-                '</div>' +
             '</div>' +
             metricRow('rvol', 'RVOL', 'Средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна', '0.1') +
             metricRow('natr', 'NATR %', 'ATR (до 14 периодов) по окну ÷ цена × 100', '0.05') +
             '<div class="abs-sec-row">' +
-                '<label class="natr-tool-label" for="abs' + cap + 'PctFrom" id="abs' + cap + 'PctLabel" title="(high − low) окна ÷ средняя цена × 100">Диапазон %</label>' +
-                '<input type="number" class="natr-range-input" id="abs' + cap + 'PctFrom" placeholder="от" min="0" step="0.05" style="width:70px;" oninput="absChangeMetric(\'' + id + '\',\'pct\')">' +
+                '<button type="button" class="abs-metric-toggle" id="abs' + cap + 'PctBtn" onclick="absTogglePctKind(\'' + id + '\' )"  title="H,L = (high−low)÷цена; O,C = (close−open)÷цена">H,L</button>' +
+                '<input type="number" class="natr-range-input" id="abs' + cap + 'PctFrom" placeholder="от" min="0" step="0.05" oninput="absChangeMetric(\'' + id + '\' ,\' pct\' )">' +
                 '<span class="natr-range-sep">—</span>' +
-                '<input type="number" class="natr-range-input" id="abs' + cap + 'PctTo" placeholder="до" min="0" step="0.05" style="width:70px;" oninput="absChangeMetric(\'' + id + '\',\'pct\')">' +
-                '<button type="button" class="natr-tool-btn" id="abs' + cap + 'PctBtn" onclick="absToggleMetric(\'' + id + '\',\'pct\')" title="Включить фильтр (иначе значения в диапазоне просто подсвечиваются)">Фильтр</button>' +
+                '<input type="number" class="natr-range-input" id="abs' + cap + 'PctTo" placeholder="до" min="0" step="0.05" oninput="absChangeMetric(\'' + id + '\' ,\' pct\' )">' +
             '</div>' +
             metricRow('oi', 'OI Δ%', oiTitle, '0.1') +
             '<div class="abs-sec-note">' + escapeHtml(absSecNote(id)) + '</div>' +
         '</div>';
-    }).join('');
+    }).join('') +
+    '<button type="button" class="abs-sec-add-btn" onclick="absAddSection()" title="Добавить секцию">+ Добавить секцию</button>';
 }
 
 // === Thead таблицы: генерация под 7 секций ================================
@@ -8094,7 +8152,7 @@ function absBuildThead() {
     ABS_SEC_IDS.forEach(id => {
         groupRow += '<th colspan="4" class="abs-group-th" id="abs' + id.toUpperCase() + 'GroupTh" style="color:' + absSecColor(id) + '"></th>';
     });
-    groupRow += '<th></th></tr>';
+    groupRow += '<th colspan="3"></th></tr>';
     let mRow = '<tr>' +
         '<th class="sortable" data-tbl="abs" data-key="favorite" style="width:78px;text-align:center;" title="Закреп и избранное — клик сортирует по цвету звезды (gold→green→red→blue→purple)">📌 ★</th>' +
         '<th class="sortable" data-tbl="abs" data-key="symbol">Тикер</th>' +
@@ -8108,7 +8166,9 @@ function absBuildThead() {
             '<th class="sortable" data-tbl="abs" data-key="' + id + 'Pct" id="absTh' + cap + 'Pct" style="width:86px;text-align:right;" title="% метрика ' + low + ' (Диапазон или Δ — переключается на карточке)">%</th>' +
             '<th class="sortable" data-tbl="abs" data-key="' + id + 'Oi" id="absTh' + cap + 'Oi" style="width:84px;text-align:right;" title="Δ открытого интереса окна ' + low + ': (OI в конце − OI в начале) ÷ OI начала × 100. История OI Binance — 30 дней, минимальный период 5м">OI Δ%</th>';
     });
-    mRow += '<th style="width:128px;text-align:center;">Действия</th></tr>';
+    mRow += '<th class="sortable" data-tbl="abs" data-key="vol24h" style="width:100px;text-align:right;">Объём 24ч</th>' +
+        '<th class="sortable" data-tbl="abs" data-key="trades" style="width:84px;text-align:right;">Сделки</th>' +
+    '<th style="width:128px;text-align:center;">Действия</th></tr>';
     thead.innerHTML = groupRow + mRow;
 }
 
@@ -8123,12 +8183,14 @@ function absSyncCard(id) {
         const K = k.charAt(0).toUpperCase() + k.slice(1);
         num(K + 'From', S[k + 'From']);
         num(K + 'To', S[k + 'To']);
+        // pct — кнопка теперь показывает H,L/O,C, а не Active; пропускаем
+        if (k === 'pct') return;
         const b = document.getElementById('abs' + cap + K + 'Btn');
         if (b) b.classList.toggle('active', !!S[k + 'Active']);
     });
     num('Count', S.count);
-    const tabs = document.getElementById('abs' + cap + 'TfTabs');
-    if (tabs) tabs.querySelectorAll('.abs-tf-tab').forEach(t => t.classList.toggle('active', t.dataset.tf === S.tf));
+    const tfSel = document.getElementById('abs' + cap + 'TfSelect');
+    if (tfSel) tfSel.value = S.tf;
     const lt = document.getElementById('abs' + cap + 'LinkTabs');
     if (lt) lt.querySelectorAll('.abs-link-tab').forEach(t => t.classList.toggle('active', t.dataset.lm === S.linkMode));
     // Ссылка: видима только у линкованных секций; варианты — все остальные
@@ -8143,30 +8205,20 @@ function absSyncCard(id) {
         if (S.ref && ABS_SEC_IDS.includes(S.ref) && S.ref !== id) ref.value = S.ref;
         else if (ref.selectedIndex === -1) ref.selectedIndex = 0;
     }
-    // «Свечей назад» — только у якоря «Закрытые»
+    // «Свечей назад» — у якоря «Сейчас»
     const off = document.getElementById('abs' + cap + 'Offset');
-    if (off) { off.style.display = S.linkMode === 'closed' ? '' : 'none'; off.value = S.offset; }
-    // «% метрика»: табы, подпись и допустимость отрицательных значений
-    const pt = document.getElementById('abs' + cap + 'PctTabs');
-    if (pt) pt.querySelectorAll('.abs-pctkind-tab').forEach(t => t.classList.toggle('active', t.dataset.pk === S.pctKind));
-    const pl = document.getElementById('abs' + cap + 'PctLabel');
-    if (pl) {
-        const isR = S.pctKind === 'range';
-        pl.textContent = isR ? 'Диапазон %' : 'Δ %';
-        pl.setAttribute('for', 'abs' + cap + 'PctFrom');
-        pl.title = isR ? '(high − low) окна ÷ средняя цена × 100 — плотность проторговки' : '(закрытие − открытие окна) ÷ открытие × 100 — направленное движение';
+    if (off) { off.style.display = (S.linkMode === 'now' || S.linkMode === 'closed') ? '' : 'none'; off.value = S.offset; }
+    // Кнопка %: показывает H,L или O,C, active = O,C (delta)
+    const pctBtn = document.getElementById('abs' + cap + 'PctBtn');
+    if (pctBtn) {
+        pctBtn.textContent = S.pctKind === 'delta' ? 'O,C' : 'H,L';
+        pctBtn.classList.toggle('active', S.pctKind === 'delta');
     }
     ['PctFrom', 'PctTo'].forEach(suf => {
         const el = document.getElementById('abs' + cap + suf);
         if (!el) return;
         if (S.pctKind === 'delta') el.removeAttribute('min'); else el.setAttribute('min', '0');
     });
-    // Бейдж привязки
-    const badge = document.getElementById('abs' + cap + 'LmBadge');
-    if (badge) {
-        badge.textContent = absLinkLabel(id);
-        badge.className = 'abs-sec-badge lm ' + ((S.linkMode === 'now' || S.linkMode === 'closed') ? 'lm-anchor' : 'lm-' + S.linkMode);
-    }
     // И/ИЛИ/НЕ — комбинирование фильтра секции с остальными
     const lgt = document.getElementById('abs' + cap + 'LogicTabs');
     if (lgt) lgt.querySelectorAll('.abs-logic-tab').forEach(t => t.classList.toggle('active', t.dataset.lg === (S.logic || 'and')));
@@ -8646,9 +8698,8 @@ async function absFetchAndAnalyze(symbol) {
     return absAnalyzeRaw(symbol, raw);
 }
 
-// Мгновенный пересчёт из сырого кэша после смены числа свечей/% метрики
-// (и только — смена ТФ или привязки требует других килайнов и уходит в
-// полный скан).
+// Мгновенный пересчёт из сырого кэша после смены настроек
+// (число свечей, % метрика, привязка, ТФ если кэш содержит нужный ТФ).
 function absTryRecompute() {
     if (!absRawCache.size) {
         absSetStatus('Настройки изменены — нажмите «Сканировать»');
@@ -8956,6 +9007,15 @@ function absGetFilteredResults() {
             return absFavColorFilter.has(c);
         });
     }
+    // Глобальные фильтры: объём 24ч и сделки
+    if (absVolFilterActive) {
+        if (absVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= absVolFrom; });
+        if (absVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume <= absVolTo; });
+    }
+    if (absTradesFilterActive) {
+        if (absTradesFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.count >= absTradesFrom; });
+        if (absTradesTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.count <= absTradesTo; });
+    }
     // Комбинирование секций — три группы по метке И/ИЛИ/НЕ (absSetSectionLogic),
     // отключённые секции всегда пропускаются, не участвуя ни в одной группе:
     //   • И   — каждая такая секция обязана пройти (как раньше, когда группы
@@ -9010,6 +9070,20 @@ function absSortData(data) {
                 const typeCache = new Map();
                 const typeOf = s => { let t = typeCache.get(s); if (t === undefined) { t = natrGetAssetType(s); typeCache.set(s, t); } return t; };
                 return mult * typeOf(a.symbol).localeCompare(typeOf(b.symbol));
+            }
+            case 'vol24h': {
+                const ta = natrTicker24hMap ? natrTicker24hMap.get(a.symbol) : null;
+                const tb = natrTicker24hMap ? natrTicker24hMap.get(b.symbol) : null;
+                const va = ta && ta.volume != null ? ta.volume : 0;
+                const vb = tb && tb.volume != null ? tb.volume : 0;
+                return mult * (va - vb);
+            }
+            case 'trades': {
+                const ta = natrTicker24hMap ? natrTicker24hMap.get(a.symbol) : null;
+                const tb = natrTicker24hMap ? natrTicker24hMap.get(b.symbol) : null;
+                const va = ta && ta.count != null ? ta.count : 0;
+                const vb = tb && tb.count != null ? tb.count : 0;
+                return mult * (va - vb);
             }
             default: {
                 // Метрики секций: 's1Rvol'…'s7Oi'
@@ -9149,6 +9223,26 @@ function absReRender() {
                 '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
             '</td>' +
             '<td>' + typeCell + '</td>' +
+            '<td class="natr-price-cell mono">' + (function() {
+                const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
+                if (!t || t.volume == null) return '—';
+                let cls = '';
+                if (absVolFrom !== null || absVolTo !== null) {
+                    const inR = (absVolFrom === null || t.volume >= absVolFrom) && (absVolTo === null || t.volume <= absVolTo);
+                    cls = inR ? 'natr-range-hit' : (absVolFrom !== null && t.volume < absVolFrom ? 'natr-below-threshold' : 'natr-above-threshold');
+                }
+                return '<span class="mono ' + cls + '">' + natrFmtVolShort(t.volume) + '</span>';
+            })() + '</td>' +
+            '<td class="natr-price-cell mono">' + (function() {
+                const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
+                if (!t || t.count == null) return '—';
+                let cls = '';
+                if (absTradesFrom !== null || absTradesTo !== null) {
+                    const inR = (absTradesFrom === null || t.count >= absTradesFrom) && (absTradesTo === null || t.count <= absTradesTo);
+                    cls = inR ? 'natr-range-hit' : (absTradesFrom !== null && t.count < absTradesFrom ? 'natr-below-threshold' : 'natr-above-threshold');
+                }
+                return '<span class="mono ' + cls + '">' + t.count.toLocaleString('ru') + '</span>';
+            })() + '</td>' +
             cells +
             '<td style="text-align:center;"><div class="natr-actions-cell">' +
                 '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\'' + jsAttr(item.symbol) + '\')">AI</button>' +
