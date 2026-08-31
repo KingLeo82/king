@@ -104,7 +104,7 @@
         .natr-tiger-settings-panel {
             position: absolute; right: 0; top: calc(100% + 8px); z-index: 50;
             display: none; flex-direction: column;
-            width: 640px; max-width: calc(100vw - 32px);
+            width: 520px; max-width: calc(100vw - 32px);
             /* С добавлением секции Vataga панель стала выше экрана — ограничиваем
                высоту окном просмотра и даём собственную прокрутку. */
             max-height: calc(100vh - 110px); overflow-y: auto;
@@ -138,10 +138,7 @@
         }
         .stg-close:hover { color: var(--fg); background: rgba(255,255,255,0.06); transform: rotate(90deg); }
         .stg-close svg { width: 14px; height: 14px; }
-        /* v34: отступы в панели настроек увеличены — подписи секций
-           прижимались к карточкам (stg-col) и полям Tiger/Vataga */
         .stg-body { display: flex; flex-direction: column; gap: 20px; padding: 16px 18px 18px; }
-        .stg-section { display: flex; flex-direction: column; gap: 12px; }
         .stg-section-title {
             display: flex; align-items: center; gap: 8px;
             font-size: 12px; font-weight: 700; color: var(--fg);
@@ -373,9 +370,9 @@
 
         /* Закреп (pin-to-top) и избранное (favorite) live together in one column, same
            pattern as the CryptoAI/Tiger action buttons: two small controls side by side.
-           Two separate concepts, but both now bypass every other filter when active —
-           pin always keeps a row visible at the top, and "★ Избранное" shows the full
-           favorites list regardless of category/threshold/etc. filters currently set —
+           v37: фильтры действуют на избранные строки как на все остальные; кнопка
+           «★ Избранное» — отдельный ПРОСМОТР всего списка избранного (только цвет
+           звезды и сортировка), закрепы 📌 по-прежнему держат строку наверху —
            each screener keeps its own independent set of both. */
         .natr-pinfav-cell { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .natr-pin-cell, .natr-fav-cell {
@@ -1216,8 +1213,7 @@
         }
         .abs-tf-line .natr-tool-label { min-width: unset; padding-right: 2px; }
         .abs-tf-line .abs-tf-select { width: 58px; min-width: 58px; flex-shrink: 0; }
-        /* v34: 48px было тесно — цифры вместе со спиннером обрезались */
-        .abs-tf-line .abs-count-input { width: 68px; flex-shrink: 0; }
+        .abs-tf-line .abs-count-input { width: 68px; flex-shrink: 0; }   /* v34: 48px было тесно — цифры вместе со спиннером обрезались */
 
         /* Глобальные фильтры — всегда ОТДЕЛЬНОЙ строкой ниже избранного и его
            цвета (flex-basis:100% внутри flex-wrap тулбара .natr-tools) */
@@ -1270,14 +1266,6 @@
     margin-bottom: 2px;
 }
 .abs-link-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-/* v34: одна кнопка-якорь вместо двух («Сейчас» + «Закрытые») — клик
-   переключает режим; при «Закрытые» становится светлее и появляется
-   поле «назад» рядом */
-.abs-link-tab.abs-anchor-toggle { padding: 0 12px; }
-.abs-link-tab.abs-anchor-toggle::after {
-    content: '⇅'; font-size: 10px; font-weight: 700; opacity: 0.55;
-    margin-left: 5px; line-height: 1;
-}
 .abs-link-tab {
     height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
     cursor: pointer; background: transparent; border: 1px solid transparent; color: var(--muted);
@@ -1285,15 +1273,14 @@
 }
 .abs-link-tab:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
 .abs-link-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(240,185,11,0.25); }
-.abs-link-tab.active.lm-closed { background: rgba(255,255,255,0.08); color: var(--fg); border-color: var(--border); }
 .abs-link-tab.active.lm-after  { background: rgba(14,203,129,0.10); color: var(--green); border-color: rgba(14,203,129,0.25); }
 .abs-link-tab.active.lm-inside { background: rgba(156,39,176,0.14); color: #ce93d8; border-color: rgba(156,39,176,0.30); }
 .abs-pct-group {
     border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.015);
-    padding: 8px 8px 6px; margin-bottom: 8px;
+    padding: 8px 10px 10px; margin-bottom: 14px;
 }
-.abs-pct-group .abs-sec-row { margin-bottom: 6px; }
-.abs-refprice-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-left: 4px; }
+.abs-pct-group .abs-sec-row { margin-bottom: 8px; }
+.abs-refprice-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-left: 4px; padding-bottom: 2px; margin-top: 7px; }
 .abs-refprice-row .natr-tool-label { min-width: unset; text-align: left; padding-right: 2px; opacity: 0.85; }
 .abs-refprice-link { color: var(--muted); font-size: 13px; opacity: 0.6; line-height: 1; }
 .abs-refprice-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -1310,7 +1297,18 @@
     font-family: 'JetBrains Mono', monospace; outline: none;
 }
 .abs-ref-select:focus, .abs-offset-input:focus { border-color: var(--accent); }
-.abs-offset-input { width: 64px; }
+.abs-offset-input { width: 64px; flex-shrink: 0; }
+/* v34: «Сдвиг» — поле всегда на месте: в якорных режимах активно, в привязке
+   (До/После/Внутри) приглушено, но ввод числа возвращает секцию к якорю
+   (absChangeShift). Селект секции-ссылки в якоре не прячется, а блокируется —
+   строка привязки не меняет ширину при переключении режимов. */
+.abs-offset-input.abs-shift-active { border-color: rgba(240,185,11,0.40); color: var(--accent); }
+.abs-offset-input.abs-shift-dimmed { opacity: 0.45; border-style: dashed; }
+.abs-ref-select:disabled { opacity: 0.45; cursor: not-allowed; }
+.abs-shift-label { cursor: help; }
+/* Диап. % — знак направления окна, как «Вчера/Сегодня %» в Продолжении */
+.abs-pct-up { color: var(--green); }
+.abs-pct-down { color: var(--red); }
 /* pctkind tabs removed — replaced by abs-pct-toggle */
 .abs-sec-badge.pred { background: rgba(156,39,176,0.14); color: #ce93d8; }
 .abs-sec-badge.lm { font-weight: 700; white-space: nowrap; }
@@ -1589,7 +1587,7 @@
             <button class="natr-tool-btn" id="contDirDownBtn" onclick="contSetDirection('down')">🩸 Падение</button>
         </div>
         <button class="natr-tool-btn" id="contAlertBtn" onclick="contToggleAlerts()" title="Уведомлять (звук + пуш) о новых тикерах, проходящих текущие фильтры">🔔</button>
-        <button class="natr-tool-btn" id="contWatchlistBtn" onclick="contToggleWatchlistOnly()" title="Показывать только избранное (своё для Продолжения тренда)">★ Избранное</button>
+        <button class="natr-tool-btn" id="contWatchlistBtn" onclick="contToggleWatchlistOnly()" title="Показывать только избранное — отдельный просмотр: фильтры на список не действуют, работают только цветовой фильтр избранного и сортировка. В обычном режиме фильтры действуют на избранные строки как на все остальные">★ Избранное</button>
         <div class="natr-tool-group" id="contFavColorFilterGroup" title="Оставить только избранные определённого цвета (можно выбрать несколько). Ничего не выбрано — фильтр по цвету не действует.">
             <label class="natr-tool-label">Цвет:</label>
             <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="gold"   style="background:#f0b90b" title="Золотой" onclick="contToggleFavColorFilter('gold')"></button>
@@ -1651,7 +1649,8 @@
     </div>
     </div>
     <div class="natr-stats" id="contStatsBar" style="display:none;">
-        <div>Найдено: <strong id="contStatFound" class="mono">--</strong></div>
+        <!-- v37: в режиме «★ Избранное» подпись меняется — фильтры на список не действуют -->
+        <div><span id="contStatFoundLabel">Найдено:</span> <strong id="contStatFound" class="mono">--</strong></div>
         <div>Проверено пар: <strong id="contStatTotal" class="mono">--</strong></div>
     </div>
     <div class="natr-table-wrap" id="contTableWrap">
@@ -1907,7 +1906,7 @@
     <div class="natr-tools-card">
     <div class="natr-tools" id="absTools">
         <button type="button" class="natr-tool-btn" id="absAlertBtn" onclick="absToggleAlerts()" title="Уведомления о новых монетах в текущем фильтре">🔔</button>
-        <button type="button" class="natr-tool-btn" id="absWatchlistBtn" onclick="absToggleWatchlistOnly()" title="Показывать только избранные тикеры">★ Избранное</button>
+        <button type="button" class="natr-tool-btn" id="absWatchlistBtn" onclick="absToggleWatchlistOnly()" title="Показывать только избранное — отдельный просмотр: фильтры (категория, глобальные, секции) на список не действуют, работают только цветовой фильтр избранного и сортировка. В обычном режиме фильтры действуют на избранные строки как на все остальные">★ Избранное</button>
         <div class="natr-tool-group" id="absFavColorFilterGroup" title="Оставить только избранные определённого цвета (можно выбрать несколько). Ничего не выбрано — фильтр по цвету не действует.">
             <label class="natr-tool-label">Цвет:</label>
             <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="gold"   style="background:#f0b90b" title="Золотой" onclick="absToggleFavColorFilter('gold')"></button>
@@ -1986,31 +1985,56 @@
 
 <script>
 // ============================================================
-//  v34 — SUPER SCREENER («Отн.» для NATR/R коэфф. + компакт якоря):
-//   • Знаменатель «Отн.» (Средняя/High/Low/Open/Close, мультивыбор)
-//     теперь общий для «Диап. %», «NATR %» и «R коэфф.» — как в
-//     «Диап. %». Раньше NATR всегда делился на close последней
-//     свечи, а тела свечей R коэфф. — на их собственные open
-//   • R коэфф.: тела свечей считаются в одной шкале (% от «Отн.»),
-//     при 1 свече в окне база сравнения — свечи ДО окна (base, те
-//     же ABS_BASELINE свечей, что для RVOL — есть при любой
-//     привязке), запас — окно секции-ссылки. Раньше при 1 свече у
-//     якорей «Сейчас»/«Закрытые» (S.ref = null) R коэфф. всегда
-//     оставался пустым («—»/строки отбрасывались фильтром)
-//   • Кнопки «Сейчас»/«Закрытые» объединены в одну кнопку-якорь:
-//     клик переключает Сейчас ↔ Закрытые, при «Закрытые» появляется
-//     поле «назад». Из линкованных режимов клик возвращает на «Сейчас»
-//   • «Диап. %» стал кнопкой-фильтром с названием (как RVOL/NATR/
-//     R коэфф./OI Δ%): ввод границ подсвечивает значения, кнопка
-//     скрывает строки вне диапазона. Автовключение фильтра вводом
-//     убрано; сохранённые настройки мигрируют как раньше
-//   • Колонки «Оборот 24ч»/«Объём 24ч»/«Сделки» скрываются, когда
-//     в их фильтре нет данных (ни «от», ни «до») — как колонки
-//     метрик секций выше; сортировка по скрытой колонке сбрасывается
-//   • Поле «Свечей» расширено (48→68px) — цифры со спиннером влезают
-//   • Панель «Настройки»: кнопка в навбаре компактнее (уже), отступы
-//     между подписями/карточками/полями Tiger.com Terminal и
-//     Vataga.Terminal увеличены
+//  v37 — SUPER SCREENER (избранное: фильтры действуют, режим «★» —
+//        только цвет и сортировка; RVOL ниже R коэфф.):
+//   • Разъяснено недопонимание v34: в ОБЫЧНОМ режиме фильтры (категория,
+//     глобальные «Оборот/Объём/Сделки», комбинация секций И/ИЛИ/НЕ)
+//     действуют на избранные строки КАК НА ВСЕ ОСТАЛЬНЫЕ — обход
+//     «звёздных» строк (favKept/favBack) убран
+//   • Кнопка «★ Избранное» — отдельный ПРОСМОТР, а не фильтр: показывается
+//     ВЕСЬ состав избранного (строки последнего скана с метриками +
+//     заготовки «—» для не попавших в скан). На список не действуют
+//     никакие фильтры — только цветовой фильтр избранного и сортировка.
+//     То же в «Продолжении тренда». Уведомления 🔔 считаются без режима
+//     просмотра (просмотр — не фильтр)
+//   • Карточка секции: фильтр RVOL перенесён ниже «R коэфф.» — порядок
+//     NATR %, «Диап. %», R коэфф., RVOL, OI Δ%. Колонки таблицы не менялись
+//   • С единственной секцией привязка «До/После/Внутри» (табы + селект
+//     ссылки) по-прежнему скрыта — привязаться не к кому (как в v36)
+// ============================================================
+// ============================================================
+//  v36 — SUPER SCREENER («Сдвиг» перед «До», «Отн.» у метрик,
+//        знаки «Диап. %», избранное вне фильтров; включает v34–v35):
+//   • Кнопки «Сейчас»/«Закрытые» слиты в одно поле (v35), v36 ставит
+//     его с названием «Сдвиг» ПЕРЕД «До»: 0 — якорь «Сейчас» (открытая
+//     свеча), 1 — последние закрытые, 2 и больше — закрытые со сдвигом
+//     назад. В привязке (До/После/Внутри) поле приглушено — ввод числа
+//     возвращает секцию к якорю; селект секции-ссылки в якоре не
+//     прячется, а блокируется (строка привязки не «скачет» при
+//     переключении); с единственной секцией окно привязки (табы +
+//     селект) скрыто целиком
+//   • «Отн.» — СВОЙ набор источников у каждого фильтра (NATR %, «Диап. %»,
+//     R коэфф.): refPricesNatr / refPricesPct / refPricesRcoef, мультивыбор
+//     с усреднением. NATR = ATR ÷ свой «Отн.» (дефолт — refPrice секции,
+//     запас close). R коэфф. — тела свечей в одной шкале «Отн.»: общий
+//     знаменатель сокращается, сравнение РАЗМЕРОВ тел честное (раньше
+//     каждая свеча нормировалась на свой open); при 1 свече — ÷ среднее
+//     тело свечей ДО окна (запас — окно секции-ссылки), работает и у
+//     якорных секций
+//   • «Диап. %» — полноценная кнопка-фильтр (как у остальных метрик):
+//     ввод границ подсвечивает значения, скрывают строки включённой
+//     кнопкой. В таблице — со знаками +/− и расцветкой как «Вчера/
+//     Сегодня %» в Продолжении тренда: знак = направление окна (close
+//     против open), зелёный/красный; фильтр и сортировка — по модулю
+//   • Глобальные колонки «Оборот/Объём/Сделки» видны только при заданной
+//     границе соответствующего фильтра (как колонки метрик секций)
+//   • Избранное (★) больше не выбрасывается фильтрами: глобальные фильтры
+//     и комбинация секций И/ИЛИ/НЕ на звёздные строки не действуют
+//     (категория и цвет избранного — по-прежнему)
+//   • Панель «Настройки» уже (520px, кнопка компактнее, отступы
+//     заголовков/полей Tiger/Vataga увеличены); поле «Свечей» шире
+//     (68px); группы метрик с «Отн.» в карточках получили нормальные
+//     отступы от фильтров ниже (не прижаты)
 // ============================================================
 //  v32 — SUPER SCREENER (% = размах окна + глобальные фильтры):
 //   • % метрика секции ВСЕГДА измеряет окно свечей: «Диап. %» =
@@ -3540,7 +3564,8 @@ async function contToggleAlerts() {
         contAlertsEnabled = true;
         // seed with what's already passing so enabling the bell doesn't immediately spam
         // notifications for pairs that were already past the filters
-        contAlertedSymbols = new Set(contGetFilteredResults().map(r => r.symbol));
+        // (v37: без «★ Избранного» — это просмотр, а не фильтр)
+        contAlertedSymbols = new Set(contFilteredNoWatchlist().map(r => r.symbol));
         btn.classList.add('active');
         // NOTE: auto-refresh was removed — alerts now only fire on manual scan.
         // The bell still works exactly the same way; it just doesn't trigger
@@ -3560,8 +3585,19 @@ function contFireAlert(r) {
     playAlertSound('natr');
     ctNotify('Тренд', base + ' ' + pct);
 }
-function contCheckAlerts(results) {
+// v37: список для уведомлений 🔔 — «только фильтры», без режима «★ Избранное».
+// Избранное теперь — ПРОСМОТР, а не фильтр: в нём список — всё избранное
+// (включая заглушки без данных), уведомления по нему не имеют смысла.
+function contFilteredNoWatchlist() {
+    const saved = contWatchlistOnly;
+    contWatchlistOnly = false;
+    const list = contGetFilteredResults();
+    contWatchlistOnly = saved;
+    return list;
+}
+function contCheckAlerts() {
     if (!contAlertsEnabled) return;
+    const results = contFilteredNoWatchlist();
     const currentSymbols = new Set(results.map(r => r.symbol));
     results.forEach(r => {
         if (!contAlertedSymbols.has(r.symbol)) {
@@ -3755,7 +3791,7 @@ async function contStartScan() {
         contIsScanning = false; contAbortCtrl = null; return;
     }
     contRawResults = raw; // атомарная подмена — фильтры ниже режут это в памяти, без перескана
-    contCheckAlerts(contGetFilteredResults());
+    contCheckAlerts();
     contReFilterAndRender(); // единственный ре-рендер после готовности всех данных
     contSetTableUpdating(false);
     contSetStatus('Готово, отсканировано: '+raw.length, true);
@@ -3784,7 +3820,7 @@ async function contStartBgUpdate() {
     ]);
     if (contAbortCtrl.signal.aborted) { contFinishBgUpdate(false); return; }
     contRawResults = raw;
-    contCheckAlerts(contGetFilteredResults());
+    contCheckAlerts();
     contReFilterAndRender();
     const lu = document.getElementById('contLastUpdate');
     lu.style.display = 'flex';
@@ -3830,13 +3866,33 @@ function contGetFilteredResults() {
     const lbRaw = document.getElementById('contLookbackDays').value.trim();
     const lookbackDays = lbRaw === '' ? 0 : Math.max(0, parseInt(lbRaw) || 0);
 
-    // Favorites-only: combines with every other filter below (категория, RVOL,
-    // ΔOI, вчера/сегодня %, объём, направление) so the user can narrow within
-    // their watchlist, not just see the raw list — same fix already applied to
-    // the Super Screener. Before the first scan there's no data to filter
-    // against yet, so show a plain preview of the watchlist.
-    if (contWatchlistOnly && contRawResults.length === 0) {
-        return contBuildFavoriteStubs();
+    // Режим «★ Избранное» (v37) — отдельный ПРОСМОТР списка, а не фильтр:
+    // показываем весь состав избранного — строки последнего скана с метриками
+    // для тех, кто в него попал, и заготовки «—» для остальных. На этот список
+    // не действуют НИКАКИЕ фильтры (категория, RVOL, ΔOI, вчера/сегодня %,
+    // тело свечи, объём, направление) — только цветовой фильтр избранного
+    // и сортировка (contSortData применяется в contReFilterAndRender).
+    // В обычном режиме фильтры действуют на избранные строки так же,
+    // как на все остальные.
+    if (contWatchlistOnly) {
+        let favRows;
+        if (contRawResults.length === 0) {
+            favRows = contBuildFavoriteStubs();
+        } else {
+            const scanned = contRawResults.filter(r => contFavorites.has(r.symbol));
+            const scannedSet = new Set(scanned.map(r => r.symbol));
+            const missing = [...contFavorites]
+                .filter(sym => !scannedSet.has(sym))
+                .map(sym => ({ symbol: sym, bodyRatio: null, refChange: null, todayChange: null, rvol: null, oiChangePct: null, todayOnly: false }));
+            favRows = scanned.concat(missing);
+        }
+        if (contFavColorFilter.size > 0) {
+            favRows = favRows.filter(r => {
+                const c = contFavColors[r.symbol] || 'gold';
+                return contFavColorFilter.has(c);
+            });
+        }
+        return favRows;
     }
     // Категория применяется к уже отсканированным результатам (та же логика, что и
     // у NATR Scanner): «all» — всё; TF_* — по типу актива (Крипто/Акции/ETF/Товары/
@@ -3874,7 +3930,6 @@ function contGetFilteredResults() {
         if (contVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= contVolFrom; });
         if (contVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume <= contVolTo; });
     }
-    if (contWatchlistOnly) list = list.filter(r => contFavorites.has(r.symbol));
     // Цвет избранного — оставляет только избранные тикеры с одним из выбранных
     // цветов звезды (см. contToggleFavColorFilter). Неизбранные автоматически
     // отсеиваются, как только выбран хоть один цвет.
@@ -3909,6 +3964,10 @@ function contReFilterAndRender() {
     const filtered = contSortData(contGetFilteredResults());
     document.getElementById('contStatFound').textContent = filtered.length;
     document.getElementById('contStatTotal').textContent = contRawResults.length;
+    // v37: в режиме «★ Избранное» итог честно называется «В избранном» —
+    // фильтры на список не действуют
+    const lbl = document.getElementById('contStatFoundLabel');
+    if (lbl) lbl.textContent = contWatchlistOnly ? 'В избранном:' : 'Найдено:';
     document.getElementById('contStatsBar').style.display = 'flex';
     if (contPinned.size === 0) {
         contRenderTable(filtered, 0);
@@ -3953,9 +4012,11 @@ function contRenderTable(data, pinnedCount) {
         body.innerHTML = '';
         let msg;
         if (contWatchlistOnly) {
+            // v37: фильтры в этом режиме не действуют — пусто может быть
+            // только от цветового фильтра (либо избранное ещё не набрано)
             msg = contFavorites.size === 0
                 ? 'Список избранного пуст — добавляйте тикеры звёздочкой ★ в любой строке после сканирования'
-                : 'Ни один избраный тикер не прошёл фильтры — попробуйте ослабить пороги или выключить фильтры';
+                : 'Нет избранного выбранного цвета — снимите выделение цветового фильтра';
         } else if (contFavColorFilter.size > 0) {
             msg = 'Нет избранных тикеров выбранного цвета';
         } else {
@@ -6588,10 +6649,11 @@ const ABS_OI_BUFFER = 12;     // запас записей, чтобы смен�
 // === Секции Super Screener (v30: 7 секций + линковка окон) ================
 // Каждая секция — карточка с окном свечей на своём ТФ. Позиция окна задаётся
 // «привязкой» (линком):
-//   • ЯКОРЬ «Сейчас»   — окно прижато к текущему моменту, включая
-//     формирующуюся свечу (так работал триггер в v23–v29);
-//   • ЯКОРЬ «Закрытые» — окно из последних закрытых свечей, опционально со
-//     сдвигом «offset» назад («импульс был K свечей назад»);
+//   • ЯКОРЬ (поле «Сдвиг», бывшие кнопки «Сейчас»/«Закрытые» + «назад»):
+//     0 — окно прижато к текущему моменту, включая формирующуюся свечу
+//     («Сейчас», так работал триггер в v23–v29); 1 — окно из последней
+//     закрытой свечи; 2 и больше — закрытые со сдвигом на K−1 свечей назад
+//     («импульс был K−1 свечей назад»);
 //   • «До»     — окно из N свечей, полностью закрытых ДО начала окна
 //     секции-ссылки (так работали контекст и предтренд);
 //   • «После»  — окно из N свечей, начинающихся ПОСЛЕ конца окна
@@ -6604,9 +6666,14 @@ const ABS_OI_BUFFER = 12;     // запас записей, чтобы смен�
 // сравнивает значение ПО МОДУЛЮ (знак не важен). Плюс по пять метрик
 // {rvol|natr|pct|rcoef|oi} от/до и флаги «Фильтр» — КАК В NATR SCANNER:
 // ввод границ подсвечивает значения сразу, а скрывают строки только
-// включённые кнопки «Фильтр» (у % кнопки нет — ввод сам включает фильтр).
+// включённые кнопки «Фильтр» (у «Диап. %» кнопка появилась в v34 —
+// раньше ввод включал фильтр сам).
 const ABS_METRIC_KINDS = ['rvol', 'natr', 'pct', 'rcoef', 'oi'];
-// Знаменатель («Отн.») для % метрики: относительно какой цены считать размах окна.
+// Знаменатель («Отн.») для метрик — относительно какой цены считать.
+// v35: СВОЙ набор источников у каждого фильтра (NATR %, «Диап. %», R коэфф.)
+// на секцию — ключи refPricesNatr / refPricesPct / refPricesRcoef;
+// несколько выбранных источников усредняются (absRefPriceValue).
+// Дефолты наследуют прежний refPrice секции (см. absNewSection).
 const ABS_REF_PRICE_OPTS = ['avg', 'high', 'low', 'open', 'close'];
 const ABS_REF_PRICE_LABEL = { avg: 'Средняя', high: 'High', low: 'Low', open: 'Open', close: 'Close' };
 const ABS_SEC_IDS = ['s1','s2','s3','s4','s5','s6','s7'];
@@ -6616,11 +6683,11 @@ const ABS_SEC_DEF = {
     s2: { name:'Контекст',   badge:'проторговка',      tf:'15m', count:12, linkMode:'before', ref:'s3', refPrice:'avg', on:true,
           note:'Окно — свечи, полностью закрытые до начала окна Триггера. «Диапазон %» — чем меньше, тем плотнее проторговка. «OI Δ%» считается, когда задан диапазон OI.' },
     s3: { name:'Триггер',    badge:'импульс',          tf:'5m',  count:5,  linkMode:'now',    ref:null, refPrice:'open', on:true,
-          note:'Окно — последние свечи, включая текущую (формирующуюся). «Диап. %» — размах окна (high−low) в % относительно «Отн.» цены. «OI Δ%» считается, когда задан диапазон OI.' },
+          note:'Окно — последние свечи, включая текущую (формирующуюся) — «Сдвиг» 0. «Диап. %» — размах окна (high−low) в % относительно «Отн.» цены. «OI Δ%» считается, когда задан диапазон OI.' },
     s4: { name:'Ядро',       badge:'внутри импульса',  tf:'5m',  count:2,  linkMode:'inside', ref:'s3', refPrice:'open', on:true,
           note:'Окно — последние N свечей внутри окна Триггера: «ядро» импульса на его завершении.' },
     s5: { name:'После',      badge:'пост-импульс',     tf:'5m',  count:3,  linkMode:'after',  ref:'s3', refPrice:'open', on:true,
-          note:'Окно — свечи после конца окна Триггера. Пока Триггер стоит «Сейчас» (с формирующейся свечой), после него данных нет — «—»; переведите Триггер в «Закрытые» и задайте «назад», чтобы ловить пост-импульсную реакцию.' },
+          note:'Окно — свечи после конца окна Триггера. Пока у Триггера «Сдвиг» 0 (якорь «Сейчас», с формирующейся свечой), после него данных нет — «—»; поставьте Триггеру «Сдвиг» 1 и больше (окно из закрытых свечей), чтобы ловить пост-импульсную реакцию.' },
     s6: { name:'Глубина',    badge:'далёкий фон',      tf:'15m', count:20, linkMode:'before', ref:'s1', refPrice:'open', on:false,
           note:'Окно — свечи до начала окна Предтренда: самый дальний фон цепочки. По умолчанию ВЫКЛ: глубокая цепочка удлиняет выборку килайнов (лишний вес Binance на пару при скане).' },
     s7: { name:'Структура',  badge:'внутри контекста', tf:'15m', count:5,  linkMode:'inside', ref:'s2', refPrice:'avg', on:true,
@@ -6654,13 +6721,20 @@ function absSecNote(id) {
     if (S && S.note) return S.note;
     return (ABS_SEC_DEF[id] && ABS_SEC_DEF[id].note) || 'Пользовательская секция — настройте привязку, таймфрейм и фильтры под свою идею.';
 }
-const ABS_MAX_OFFSET = 99;   // максимум сдвига «Свечей назад» у якоря «Закрытые»
+const ABS_MAX_OFFSET = 99;   // максимум сдвига «свечей назад» у якоря «Закрытые» (внутреннее)
+const ABS_MAX_SHIFT = 100;   // потолок поля «Сдвиг»: 0 = «Сейчас», 1..100 → offset 0..99
 const ABS_KLINE_MAX = 500;   // потолок limit килайнов (вес: ≤100 → 1, ≤500 → 2)
 function absNewSection(id) {
     const d = ABS_SEC_DEF[id];
+    const rp0 = [d ? (d.refPrice || 'avg') : 'avg'];
     const S = d
-        ? { tf: d.tf, count: d.count, refPrices: [d.refPrice || 'avg'], linkMode: d.linkMode, ref: d.ref, offset: 0 }
-        : { tf: '15m', count: 10, refPrices: ['avg'], linkMode: 'now', ref: null, offset: 0 };
+        ? { tf: d.tf, count: d.count, linkMode: d.linkMode, ref: d.ref, offset: 0, uiShift: 0 }
+        : { tf: '15m', count: 10, linkMode: 'now', ref: null, offset: 0, uiShift: 0 };
+    // v35: «Отн.» — СВОЙ набор источников у каждого фильтра (NATR %,
+    // «Диап. %», R коэфф.); раньше был один общий refPrices на секцию
+    S.refPricesNatr = rp0.slice();
+    S.refPricesPct = rp0.slice();
+    S.refPricesRcoef = rp0.slice();
     S.logic = 'and';  // И/ИЛИ/НЕ — как секция комбинируется с другими включёнными секциями
     S.name = null;    // null → берём дефолтное название/бейдж/подсказку из ABS_SEC_DEF (absSecName и т.д.)
     S.badge = null;
@@ -6717,15 +6791,24 @@ const absRestoreSec = (id, saved) => {
     if (typeof saved.ref === 'string' && saved.ref !== id) sec.ref = saved.ref; // существование ref в ABS_SEC_IDS проверяется отдельным проходом ниже
     if (saved.linkMode === 'now' || saved.linkMode === 'closed') sec.ref = null;
     if (Number.isInteger(saved.offset) && saved.offset >= 0 && saved.offset <= ABS_MAX_OFFSET) sec.offset = saved.offset;
-    // refPrices — массив источников для «Отн.» (v33: множественный выбор,
-    // раньше был одиночный select `refPrice`). Валидные значения из старого
-    // сохранения мигрируют в массив из одного элемента.
-    if (Array.isArray(saved.refPrices)) {
-        const valid = Array.from(new Set(saved.refPrices.filter(v => ABS_REF_PRICE_OPTS.includes(v))));
-        if (valid.length) sec.refPrices = valid;
-    } else if (ABS_REF_PRICE_OPTS.includes(saved.refPrice)) {
-        sec.refPrices = [saved.refPrice];
-    }
+    // v35: «Отн.» — свой набор источников у каждого фильтра (NATR %,
+    // «Диап. %», R коэфф.): refPricesNatr / refPricesPct / refPricesRcoef.
+    // Старое общее сохранение (массив refPrices v33–v34 или одиночный
+    // refPrice до v33) мигрирует во все три набора — поведение не меняется,
+    // дальше каждый фильтр настраивается независимо. Плюс память поля
+    // «Сдвиг» для режимов привязки (uiShift).
+    const legacyRP = Array.isArray(saved.refPrices)
+        ? Array.from(new Set(saved.refPrices.filter(v => ABS_REF_PRICE_OPTS.includes(v))))
+        : (ABS_REF_PRICE_OPTS.includes(saved.refPrice) ? [saved.refPrice] : []);
+    ['Natr', 'Pct', 'Rcoef'].forEach(K => {
+        const key = 'refPrices' + K;
+        const own = Array.isArray(saved[key])
+            ? Array.from(new Set(saved[key].filter(v => ABS_REF_PRICE_OPTS.includes(v))))
+            : [];
+        if (own.length) sec[key] = own;
+        else if (legacyRP.length) sec[key] = legacyRP.slice();
+    });
+    if (Number.isInteger(saved.uiShift) && saved.uiShift >= 0 && saved.uiShift <= ABS_MAX_SHIFT) sec.uiShift = saved.uiShift;
     if (['and','or','not'].includes(saved.logic)) sec.logic = saved.logic;
     if (typeof saved.name === 'string' && saved.name.trim()) sec.name = saved.name.trim().slice(0, 40);
     if (typeof saved.badge === 'string' && saved.badge.trim()) sec.badge = saved.badge.trim().slice(0, 30);
@@ -6780,13 +6863,14 @@ try {
         }
     }
     // Валидация ссылок: ref должен существовать среди текущих ABS_SEC_IDS и не
-    // создавать цикл — иначе безопасный сброс на якорь «Сейчас» (могло остаться
-    // от секции, удалённой в другой вкладке/сессии, либо от битого сохранения).
+    // создавать цикл — иначе безопасный сброс на якорь («Сдвиг» 0, могло
+    // остаться от секции, удалённой в другой вкладке/сессии, либо от битого
+    // сохранения).
     ABS_SEC_IDS.forEach(id => {
         const S = absSecs[id];
         if (S.linkMode === 'before' || S.linkMode === 'after' || S.linkMode === 'inside') {
             if (!S.ref || !ABS_SEC_IDS.includes(S.ref) || S.ref === id || absWouldCycle(id, S.ref)) {
-                S.linkMode = 'now'; S.ref = null; S.offset = 0;
+                S.linkMode = 'now'; S.ref = null; S.offset = 0; S.uiShift = 0;
             }
         }
     });
@@ -6922,6 +7006,16 @@ function absVisibleMetrics() {
     });
     return vis;
 }
+// Отражение текущей сортировки в заголовках (вынесено из absReRender —
+// вызывается и при смене набора колонок, когда строк ещё нет).
+function absReflectSortHeaders() {
+    document.querySelectorAll('#absTableWrap thead th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc', 'sort-active');
+        if (th.dataset.key === absSortState.key) {
+            th.classList.add(absSortState.dir === 'asc' ? 'sort-asc' : 'sort-desc', 'sort-active');
+        }
+    });
+}
 // v34: карта видимости глобальных колонок «Оборот 24ч»/«Объём 24ч»/«Сделки» —
 // единый источник правды для thead (absUpdateColumns), хвостового colspan и
 // ячеек строк (absReRender). Колонка видна, только когда в её глобальном
@@ -6932,16 +7026,6 @@ function absGlobalColVis() {
         basevol: absBaseVolFrom !== null || absBaseVolTo !== null,
         trades:  absTradesFrom !== null || absTradesTo !== null
     };
-}
-// Отражение текущей сортировки в заголовках (вынесено из absReRender —
-// вызывается и при смене набора колонок, когда строк ещё нет).
-function absReflectSortHeaders() {
-    document.querySelectorAll('#absTableWrap thead th.sortable').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc', 'sort-active');
-        if (th.dataset.key === absSortState.key) {
-            th.classList.add(absSortState.dir === 'asc' ? 'sort-asc' : 'sort-desc', 'sort-active');
-        }
-    });
 }
 // Пересборка видимости th-метрик, colspan и видимости групповых th,
 // адаптивный min-width таблицы, сброс сортировки по ставшей невидимой
@@ -7179,7 +7263,7 @@ function absRemoveSection(id) {
         S.ref = before.slice().reverse().find(o => !absWouldCycle(oid, o))
              || ABS_SEC_IDS.find(o => o !== oid && !absWouldCycle(oid, o))
              || null;
-        if (!S.ref) { S.linkMode = 'now'; S.offset = 0; }
+        if (!S.ref) { S.linkMode = 'now'; S.offset = 0; S.uiShift = 0; }
     });
     absPersistFilters();
     absRebuildSectionsUI(false);
@@ -7213,10 +7297,12 @@ function absSetSectionLogic(id, mode) {
 }
 
 // === Линковка секций («линки») ============================================
-// Привязка окна секции: якорь к текущему моменту («Сейчас» / «Закрытые» со
-// сдвигом «назад») или позиция относительно окна другой секции («До» /
-// «После» / «Внутри»). Ссылаться можно на любую другую секцию; циклы
-// ссылок пресекаются (absWouldCycle).
+// Привязка окна секции: якорь к текущему моменту — поле «Сдвиг» (0 = «Сейчас»,
+// 1+ = «Закрытые» со сдвигом) — или позиция относительно окна другой секции
+// («До» / «После» / «Внутри»). Ссылаться можно на любую другую секцию; циклы
+// ссылок пресекаются (absWouldCycle). v34: селект секции-ссылки в якорных
+// режимах не прячется, а блокируется — строка привязки не меняет ширину;
+// с единственной секцией окно привязки (табы + селект) скрыто целиком.
 function absWouldCycle(id, ref) {
     let cur = ref;
     const seen = new Set();
@@ -7238,12 +7324,30 @@ function absLinkLabel(id) {
     if (S.linkMode === 'after')  return '⟶ после С' + n;
     return '⤵ внутри С' + n;
 }
+// Значение поля «Сдвиг» по состоянию секции: 0 — «Сейчас», 1 — последняя
+// закрытая, 2+ — закрытые со сдвигом; в режимах привязки поле приглушено и
+// показывает последнюю якорную величину (память, хранится в S.uiShift).
+function absShiftOf(S) {
+    if (S.linkMode === 'now') return 0;
+    if (S.linkMode === 'closed') return (S.offset || 0) + 1;
+    return Number.isInteger(S.uiShift) && S.uiShift >= 0 ? S.uiShift : 0;
+}
 function absSetSectionLink(id, lm) {
     if (!['now','closed','before','after','inside'].includes(lm)) return;
     const S = absSecs[id];
     if (S.linkMode === lm) return;
+    // Привязка (До/После/Внутри) требует хотя бы одну другую секцию: с
+    // единственной секцией окно привязки скрыто — кнопки не действуют.
+    if ((lm === 'before' || lm === 'after' || lm === 'inside') && ABS_SEC_IDS.length <= 1) {
+        showToast('Привязка недоступна: нужна хотя бы ещё одна секция');
+        absSyncCard(id);
+        return;
+    }
+    // Уходя в привязку, запоминаем якорный «Сдвиг» — он останется в поле
+    // приглушённым; ввод числа вернёт секцию к якорю (absChangeShift).
+    if (lm === 'before' || lm === 'after' || lm === 'inside') S.uiShift = absShiftOf(S);
     S.linkMode = lm;
-    if (lm === 'now') { S.ref = null; S.offset = 0; }
+    if (lm === 'now') { S.ref = null; S.offset = 0; S.uiShift = 0; }
     else if (lm === 'closed') { S.ref = null; }
     else if (!S.ref || S.ref === id || absWouldCycle(id, S.ref)) {
         // безопасная ссылка по умолчанию: предыдущая секция, иначе первая подходящая
@@ -7251,19 +7355,14 @@ function absSetSectionLink(id, lm) {
         S.ref = before.slice().reverse().find(o => !absWouldCycle(id, o))
              || ABS_SEC_IDS.find(o => o !== id && !absWouldCycle(id, o))
              || null;
+        if (!S.ref) {
+            // На эту секцию ссылаются все остальные (напрямую или по цепочке)
+            // — привязать её не к кому без цикла. Возвращаем на якорь.
+            showToast('«' + absSecName(id) + '»: на неё ссылаются остальные секции — привязать её не к кому');
+            S.linkMode = 'now'; S.offset = 0; S.uiShift = 0;
+        }
     }
     absAfterStructureChange(id);
-}
-// v34: объединённая кнопка-якорь «Сейчас»/«Закрытые»: клик переключает
-// между двумя якорями (Сейчас → Закрытые → Сейчас). Из линкованных
-// режимов («До»/«После»/«Внутри») клик возвращает секцию на «Сейчас».
-// Дальше всё как при выборе прежних двух кнопок — absSetSectionLink
-// следит за ссылками, absSyncCard обновляет текст/подсветку кнопки.
-function absToggleAnchor(id) {
-    const S = absSecs[id];
-    if (!S) return;
-    if (S.linkMode === 'now') absSetSectionLink(id, 'closed');
-    else absSetSectionLink(id, 'now');
 }
 function absSetSectionRef(id, ref) {
     const S = absSecs[id];
@@ -7278,71 +7377,92 @@ function absSetSectionRef(id, ref) {
     S.ref = ref;
     absAfterStructureChange(id);
 }
-// Сдвиг «Свечей назад» у якоря «Закрытые»: окно уезжает в прошлое —
-// например, «импульс был N свечей назад», чтобы искать «после импульса».
-function absChangeOffset(id) {
+// «Сдвиг» — единое поле якоря (бывшие кнопки «Сейчас»/«Закрытые» и поле
+// «назад»): 0 = «Сейчас» (открытая свеча), 1 = последние закрытые, 2+ =
+// закрытые со сдвигом на K−1 свечей назад. В привязке (До/После/Внутри)
+// поле приглушено — ввод числа возвращает секцию к якорю.
+function absChangeShift(id) {
     const S = absSecs[id];
-    const el = document.getElementById('abs' + id.toUpperCase() + 'Offset');
+    const el = document.getElementById('abs' + id.toUpperCase() + 'Shift');
     if (!el) return;
     const raw = el.value.trim();
-    if (raw === '') return;
+    if (raw === '') return;                     // пользователь ещё печатает
     let v = parseInt(raw, 10);
     if (isNaN(v)) return;
-    v = Math.max(0, Math.min(ABS_MAX_OFFSET, v));
-    if (String(v) !== raw) el.value = v;
-    if (v === S.offset) return;
-    S.offset = v;
+    v = Math.max(0, Math.min(ABS_MAX_SHIFT, v));
+    if (String(v) !== raw) el.value = v;        // ограничение 0–100 видно сразу
+    S.uiShift = v;
+    const lm = v === 0 ? 'now' : 'closed';
+    const off = v === 0 ? 0 : v - 1;
+    if (S.linkMode === lm && (lm === 'now' || S.offset === off)) return;
+    S.linkMode = lm;
+    S.ref = null;
+    S.offset = off;
     absAfterStructureChange(id);
 }
-// Знаменатель для % метрики: Средняя / High / Low / Open / Close — теперь
-// множественный выбор (кнопки-переключатели вместо select). Когда выбрано
-// несколько источников, знаменатель — их среднее (см. absRefPriceValue).
-// Хотя бы один источник должен остаться включён — последний снять нельзя.
+// Блюр с пустым полем — вернуть отображение к текущему состоянию секции
+function absBlurShift(id) {
+    const el = document.getElementById('abs' + id.toUpperCase() + 'Shift');
+    if (!el) return;
+    if (el.value.trim() === '') el.value = absShiftOf(absSecs[id]);
+}
+// Знаменатель «Отн.» — СВОИ кнопки-переключатели у каждого фильтра (v35:
+// NATR %, «Диап. %», R коэфф.; раньше один общий набор на секцию).
+// Множественный выбор; несколько источников — знаменатель их среднее.
+// Хотя бы один источник должен остаться включён — последний не снимается.
 // Пересчёт из кэша — килайны те же, только знаменатель меняется.
-function absToggleRefPrice(id, val) {
+function absToggleRefPrice(id, metric, val) {
     if (!ABS_REF_PRICE_OPTS.includes(val)) return;
+    const key = 'refPrices' + metric.charAt(0).toUpperCase() + metric.slice(1);
     const S = absSecs[id];
-    const cur = Array.isArray(S.refPrices) && S.refPrices.length ? S.refPrices : ['avg'];
+    const cur = Array.isArray(S[key]) && S[key].length ? S[key] : ['avg'];
     const has = cur.includes(val);
     if (has && cur.length <= 1) return;   // последний источник — не снимается
-    S.refPrices = has ? cur.filter(v => v !== val) : cur.concat([val]);
+    S[key] = has ? cur.filter(v => v !== val) : cur.concat([val]);
     absSyncRefPriceTabs(id);
     absPersistFilters();
     if (absRawCache.size) absRecomputeDebounced();
     else if (absAllResults.length) absReRenderDebounced();
 }
 function absSyncRefPriceTabs(id) {
-    const wrap = document.getElementById('abs' + id.toUpperCase() + 'RefPriceTabs');
-    if (!wrap) return;
-    const sel = (absSecs[id].refPrices && absSecs[id].refPrices.length) ? absSecs[id].refPrices : ['avg'];
-    wrap.querySelectorAll('.abs-refprice-tab').forEach(t => t.classList.toggle('active', sel.includes(t.dataset.rp)));
+    const cap = id.toUpperCase();
+    ['Natr', 'Pct', 'Rcoef'].forEach(K => {
+        const wrap = document.getElementById('abs' + cap + K + 'RefPriceTabs');
+        if (!wrap) return;
+        let sel = (absSecs[id]['refPrices' + K] || []).filter(v => ABS_REF_PRICE_OPTS.includes(v));
+        if (!sel.length) sel = ['avg'];
+        wrap.querySelectorAll('.abs-refprice-tab').forEach(t => t.classList.toggle('active', sel.includes(t.dataset.rp)));
+    });
 }
 // Значение цены-источника окна по ключу ('avg'|'high'|'low'|'open'|'close').
 function absRefSourceValue(wm, key) {
     return key === 'high' ? wm.hi : key === 'low' ? wm.lo : key === 'open' ? wm.firstOpen : key === 'close' ? wm.lastClose : wm.avgClose;
 }
-// Итоговый знаменатель секции — среднее выбранных источников (1 источник =
-// прежнее поведение select; несколько — их среднее, например High и Low).
-function absRefPriceValue(wm, S) {
-    const rps = (S.refPrices && S.refPrices.length) ? S.refPrices : ['avg'];
+// Итоговый знаменатель фильтра — среднее выбранных источников этого
+// фильтра (metric: 'natr' | 'pct' | 'rcoef'; 1 источник = как раньше,
+// несколько — их среднее, например High и Low).
+function absRefPriceValue(wm, S, metric) {
+    const key = 'refPrices' + metric.charAt(0).toUpperCase() + metric.slice(1);
+    const rps = (S[key] && S[key].length) ? S[key] : ['avg'];
     let sum = 0, n = 0;
     for (const k of rps) { const v = absRefSourceValue(wm, k); if (v !== null && v !== undefined && !isNaN(v)) { sum += v; n++; } }
     return n ? sum / n : null;
 }
 // Предупреждение о заведомо пустой связке: окно «После» ищет свечи,
-// открывшиеся ПОСЛЕ конца окна секции-ссылки. Если ссылка стоит на якоре
-// «Сейчас» (включает ещё формирующуюся свечу), конец её окна — это будущее
-// относительно текущего момента: свечей позже него не существует и не
-// появится, пока сама секция не будет пересобрана на «Закрытые». Такая
-// пара «После» → «Сейчас» всегда даёт пустое окно («—»), и активный
-// фильтр (например R коэфф.) отбрасывает ВСЕ строки — результат «0».
+// открывшиеся ПОСЛЕ конца окна секции-ссылки. Если у ссылки «Сдвиг» 0
+// (якорь «Сейчас», включает ещё формирующуюся свечу), конец её окна —
+// это будущее относительно текущего момента: свечей позже него не
+// существует и не появится, пока ссылке не зададут «Сдвиг» 1 и больше
+// (окно из закрытых свечей). Такая пара «После» → «Сейчас» всегда даёт
+// пустое окно («—»), и активный фильтр (например R коэфф.) отбрасывает
+// ВСЕ строки — результат «0».
 function absLinkDeadEnd(id) {
     const S = absSecs[id];
     if (!S || S.linkMode !== 'after') return null;
     if (!S.ref || !absSecs[S.ref]) return null;
     const R = absSecs[S.ref];
     if (R.linkMode === 'now') {
-        return '⚠ Ссылка «' + absSecName(S.ref) + '» стоит на якоре «Сейчас» — включает формирующуюся свечу, свечей ПОСЛЕ нее ещё нет. Окно этой секции всегда будет пустым («—»), фильтры всегда отбросят все строки. Переведите «' + absSecName(S.ref) + '» на якорь «Закрытые».';
+        return '⚠ У ссылки «' + absSecName(S.ref) + '» «Сдвиг» 0 (якорь «Сейчас») — включает формирующуюся свечу, свечей ПОСЛЕ нее ещё нет. Окно этой секции всегда будет пустым («—»), фильтры всегда отбросят все строки. Поставьте «' + absSecName(S.ref) + '» «Сдвиг» 1 и больше — якорь на закрытых свечах.';
     }
     return null;
 }
@@ -7366,7 +7486,7 @@ function absAfterStructureChange(id) {
     absPersistFilters();
     absSyncCard(id);
     // Секции, ссылающиеся на эту (S.ref === id), могли получить/потерять
-    // предупреждение «После» → «Сейчас» из-за смены её якоря/связи —
+    // предупреждение «После» → «Сдвиг 0» из-за смены её якоря/связи —
     // обновляем их сноски тоже.
     ABS_SEC_IDS.forEach(oid => { if (oid !== id && absSecs[oid] && absSecs[oid].ref === id) absSyncSecNote(oid); });
     absUpdateGroupHeaders();
@@ -7387,7 +7507,6 @@ function absChangeGlobalVol() {
     absVolTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
     ctSafeSetItem('abs_vol_from', absVolFrom !== null ? String(absVolFrom) : '');
     ctSafeSetItem('abs_vol_to', absVolTo !== null ? String(absVolTo) : '');
-    absUpdateColumns();   // v34: колонка «Оборот 24ч» появляется/скрывается сразу
     if (absAllResults.length) absReRenderDebounced();
 }
 // Объём 24ч в монетах (base volume) — v32: новый глобальный фильтр,
@@ -7399,7 +7518,6 @@ function absChangeGlobalBaseVol() {
     absBaseVolTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
     ctSafeSetItem('abs_basevol_from', absBaseVolFrom !== null ? String(absBaseVolFrom) : '');
     ctSafeSetItem('abs_basevol_to', absBaseVolTo !== null ? String(absBaseVolTo) : '');
-    absUpdateColumns();   // v34: колонка «Объём 24ч» появляется/скрывается сразу
     if (absAllResults.length) absReRenderDebounced();
 }
 function absChangeGlobalTrades() {
@@ -7409,7 +7527,6 @@ function absChangeGlobalTrades() {
     absTradesTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
     ctSafeSetItem('abs_trades_from', absTradesFrom !== null ? String(absTradesFrom) : '');
     ctSafeSetItem('abs_trades_to', absTradesTo !== null ? String(absTradesTo) : '');
-    absUpdateColumns();   // v34: колонка «Сделки» появляется/скрывается сразу
     if (absAllResults.length) absReRenderDebounced();
 }
 function absToggleGlobalVolFilter() {
@@ -7472,6 +7589,20 @@ function absBuildCards() {
             '</div>';
         };
         const oiTitle = 'Изменение открытого интереса за окно: (OI в конце окна − OI в начале) ÷ OI начала × 100. Может быть отрицательным (закрытие позиций). Данные OI Binance: история 30 дней, минимальный период 5м';
+        // «↳ Отн.» (v35) — СВОЙ набор кнопок-знаменателей у каждого фильтра
+        // (NATR %, «Диап. %», R коэфф.): мультивыбор, несколько источников —
+        // их среднее. Группа с рамкой разводит фильтры по вертикали —
+        // «Отн.» больше не прижаты к фильтрам ниже (v34).
+        const refPriceRow = (k, labelTitle, tabsTitle) => {
+            const K = k.charAt(0).toUpperCase() + k.slice(1);
+            return '<div class="abs-refprice-row">' +
+                '<span class="abs-refprice-link" aria-hidden="true">↳</span>' +
+                '<label class="natr-tool-label" title="' + labelTitle + '">Отн.</label>' +
+                '<div class="abs-refprice-tabs" id="abs' + cap + K + 'RefPriceTabs" title="' + tabsTitle + '">' +
+                    ABS_REF_PRICE_OPTS.map(function(rp) { return '<button type="button" class="abs-refprice-tab" data-rp="' + rp + '" onclick="absToggleRefPrice(\'' + id + '\',\'' + k + '\',\'' + rp + '\')">' + ABS_REF_PRICE_LABEL[rp] + '</button>'; }).join('') +
+                '</div>' +
+            '</div>';
+        };
         return '' +
         '<div class="abs-sec-card" id="abs' + cap + 'Card">' +
             '<div class="abs-sec-head">' +
@@ -7486,17 +7617,16 @@ function absBuildCards() {
                     '<button type="button" class="abs-logic-tab" data-lg="not" onclick="absSetSectionLogic(\'' + id + '\',\'not\')">НЕ</button>' +
                 '</div>' +
                 '<div class="abs-link-line">' +
+                    // v34: «Сдвиг» с названием стоит перед «До»; кнопки
+                    // «Сейчас»/«Закрытые» слиты в это поле (0 / 1 / 2+)
+                    '<label class="natr-tool-label abs-shift-label" for="abs' + cap + 'Shift" title="Сдвиг окна относительно текущего момента: 0 — «Сейчас» (открытая свеча), 1 — последние закрытые, 2+ — закрытые со сдвигом">Сдвиг</label>' +
+                    '<input type="number" class="abs-offset-input" id="abs' + cap + 'Shift" min="0" max="' + ABS_MAX_SHIFT + '" step="1" value="0" title="0 — якорь «Сейчас»: последние N свечей, включая формирующуюся. 1 — якорь «Закрытые»: последняя закрытая свеча. 2 и больше — закрытые со сдвигом на K−1 свечей назад («импульс был K−1 свечей назад»). В привязке (До/После/Внутри) поле приглушено — ввод числа вернёт секцию к якорю" oninput="absChangeShift(\'' + id + '\')" onblur="absBlurShift(\'' + id + '\')">' +
                     '<div class="abs-link-tabs" id="abs' + cap + 'LinkTabs">' +
-                        // v34: «Сейчас» и «Закрытые» объединены в одну кнопку-якорь:
-                        // клик переключает Сейчас ↔ Закрытые; из линкованных режимов
-                        // («До»/«После»/«Внутри») клик возвращает на «Сейчас».
-                        '<button type="button" class="abs-link-tab abs-anchor-toggle lm-now" id="abs' + cap + 'AnchorBtn" data-lm="now" onclick="absToggleAnchor(\'' + id + '\')" title="Якорь «Сейчас»: последние N свечей от текущего момента, включая формирующуюся (сдвига «назад» нет). Клик — переключить на «Закрытые»: последние N ЗАКРЫТЫХ свечей, без формирующейся, со сдвигом «назад»">Сейчас</button>' +
                         '<button type="button" class="abs-link-tab lm-before" data-lm="before" onclick="absSetSectionLink(\'' + id + '\',\'before\')" title="Окно закрытых ДО начала окна секции-ссылки">До</button>' +
                         '<button type="button" class="abs-link-tab lm-after" data-lm="after" onclick="absSetSectionLink(\'' + id + '\',\'after\')" title="Окно ПОСЛЕ конца окна секции-ссылки">После</button>' +
                         '<button type="button" class="abs-link-tab lm-inside" data-lm="inside" onclick="absSetSectionLink(\'' + id + '\',\'inside\')" title="N свечей ВНУТРИ окна секции-ссылки">Внутри</button>' +
                     '</div>' +
-                    '<select class="abs-ref-select" id="abs' + cap + 'Ref" onchange="absSetSectionRef(\'' + id + '\', this.value)" title="Секция-ссылка"></select>' +
-                    '<input type="number" class="abs-offset-input" id="abs' + cap + 'Offset" min="0" max="' + ABS_MAX_OFFSET + '" step="1" value="0" title="Сдвиг окна назад на K свечей" oninput="absChangeOffset(\'' + id + '\')">' +
+                    '<select class="abs-ref-select" id="abs' + cap + 'Ref" onchange="absSetSectionRef(\'' + id + '\', this.value)" title="Секция-ссылка для привязки (До/После/Внутри). В якорных режимах поле заблокировано"></select>' +
                 '</div>' +
                 '<div class="abs-link-line abs-tf-line">' +
                     '<label class="natr-tool-label" title="Таймфрейм">ТФ</label>' +
@@ -7505,24 +7635,28 @@ function absBuildCards() {
                     '<input type="number" class="abs-count-input" id="abs' + cap + 'Count" min="1" max="' + ABS_MAX_WINDOW + '" step="1" oninput="absChangeCount(\'' + id + '\')">' +
                 '</div>' +
             '</div>' +
-            metricRow('rvol', 'RVOL', 'Средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна', '0.1') +
-            metricRow('natr', 'NATR %', 'ATR (до 14 периодов) по окну ÷ «Отн.» цена × 100 — знаменатель тот же, что у «Диап. %» (кнопки «Отн.» ниже)', '0.05') +
-            '<div class="abs-pct-group" title="«Отн.» — знаменатель для «Диап. %», NATR % и R коэфф. На RVOL и OI Δ% не влияет">' +
-                '<div class="abs-sec-row">' +
-                    '<button type="button" class="abs-metric-toggle" id="abs' + cap + 'PctBtn" onclick="absToggleMetric(\'' + id + '\',\'pct\')" title="Размах окна свечей в %: (high − low) ÷ «Отн.» цена × 100. Ввод границ подсвечивает значения в таблице (фильтр сравнивает по модулю — знак не важен), кнопка скрывает строки вне диапазона">Диап. %</button>' +
-                    '<input type="number" class="natr-range-input" id="abs' + cap + 'PctFrom" placeholder="от" step="0.05" oninput="absChangeMetric(\'' + id + '\',\'pct\' )">' +
-                    '<span class="natr-range-sep">—</span>' +
-                    '<input type="number" class="natr-range-input" id="abs' + cap + 'PctTo" placeholder="до" step="0.05" oninput="absChangeMetric(\'' + id + '\',\'pct\' )">' +
-                '</div>' +
-                '<div class="abs-refprice-row">' +
-                    '<span class="abs-refprice-link" aria-hidden="true">↳</span>' +
-                    '<label class="natr-tool-label" title="Знаменатель «Отн.» для «Диап. %», NATR % и R коэфф.">Отн.</label>' +
-                    '<div class="abs-refprice-tabs" id="abs' + cap + 'RefPriceTabs" title="Источники знаменателя «Отн.»: относительно чего считать (high − low) окна, ATR и тела свечей. Можно выбрать несколько — тогда знаменатель это их среднее">' +
-                        ABS_REF_PRICE_OPTS.map(function(rp) { return '<button type="button" class="abs-refprice-tab" data-rp="' + rp + '" onclick="absToggleRefPrice(\'' + id + '\',\'' + rp + '\')">' + ABS_REF_PRICE_LABEL[rp] + '</button>'; }).join('') +
-                    '</div>' +
-                '</div>' +
+            // v37: порядок фильтров карточки — NATR %, «Диап. %», R коэфф.,
+            // RVOL, OI Δ% (RVOL перенесён ниже «R коэфф.» по запросу).
+            // Порядок КОЛОНОК таблицы не меняется — там RVOL остаётся первым
+            '<div class="abs-pct-group" title="«Отн.» — знаменатель «NATR %»: относительно какой цены считать ATR окна. Несколько источников — их среднее">' +
+                metricRow('natr', 'NATR %', 'ATR (до 14 периодов) по окну ÷ «Отн.» цена × 100 — знаменатель задаётся СВОИМИ кнопками «Отн.» ниже (у «Диап. %» и R коэфф. — свои, отдельно)', '0.05') +
+                refPriceRow('natr',
+                    'Знаменатель «Отн.» — только для NATR % (у каждого фильтра свой)',
+                    'Источники знаменателя «Отн.» для NATR %: относительно чего считать ATR окна. Можно выбрать несколько — тогда знаменатель это их среднее') +
             '</div>' +
-            metricRow('rcoef', 'R коэфф.', 'Тело последней свечи окна ÷ среднее тело предыдущих свечей окна (тела — в % от «Отн.», знаменатель общий, как у «Диап. %»). При 1 свече в окне — ÷ среднее тело свечей ДО окна. >1 = свеча крупнее обычного', '0.1') +
+            '<div class="abs-pct-group" title="«Отн.» — знаменатель «Диап. %»: относительно чего считать размах (high − low) окна. Несколько источников — их среднее">' +
+                metricRow('pct', 'Диап. %', 'Размах окна свечей в %: (high − low) ÷ «Отн.» цена × 100 — знаменатель задаётся СВОИМИ кнопками «Отн.» ниже. Ввод границ подсвечивает значения в таблице (фильтр сравнивает по модулю — знак не важен), кнопка скрывает строки вне диапазона. Знак в таблице — направление окна (close против open)', '0.05') +
+                refPriceRow('pct',
+                    'Знаменатель «Отн.» — только для «Диап. %» (у каждого фильтра свой)',
+                    'Источники знаменателя «Отн.» для «Диап. %»: относительно чего считать размах (high − low) окна. Можно выбрать несколько — тогда знаменатель это их среднее') +
+            '</div>' +
+            '<div class="abs-pct-group" title="«Отн.» — шкала R коэфф.: тела свечей окна измеряются в одной шкале">' +
+                metricRow('rcoef', 'R коэфф.', 'Тело последней свечи ÷ среднее тело предыдущих свечей окна. При 1 свече в окне — ÷ среднее тело свечей ДО окна. >1 = свеча крупнее обычного', '0.1') +
+                refPriceRow('rcoef',
+                    'Шкала «Отн.» — только для R коэфф. (у каждого фильтра свой)',
+                    'Шкала «Отн.» для R коэфф.: тела всех свечей окна измеряются в % от неё. Числитель и знаменатель делятся на одну и ту же цену, поэтому на значение коэффициента выбор не влияет — шкала для единообразия с NATR % и «Диап. %»') +
+            '</div>' +
+            metricRow('rvol', 'RVOL', 'Средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна', '0.1') +
             metricRow('oi', 'OI Δ%', oiTitle, '0.1') +
             '<div class="abs-sec-note" id="abs' + cap + 'Note">' + escapeHtml(absSecNote(id)) + '</div>' +
         '</div>';
@@ -7552,8 +7686,8 @@ function absBuildThead() {
         mRow +=
             '<th class="sortable" data-tbl="abs" data-key="' + id + 'Rvol" id="absTh' + cap + 'Rvol" style="width:84px;text-align:right;" title="RVOL ' + low + ': средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна">RVOL</th>' +
             '<th class="sortable" data-tbl="abs" data-key="' + id + 'Natr" id="absTh' + cap + 'Natr" style="width:84px;text-align:right;" title="NATR ' + low + ': ATR (до 14 периодов) по окну ÷ «Отн.» цена × 100 (знаменатель — кнопки «Отн.» на карточке секции)">NATR %</th>' +
-            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Pct" id="absTh' + cap + 'Pct" style="width:86px;text-align:right;" title="Размах окна ' + low + ' в %: (high − low) ÷ «Отн.» цена × 100; фильтр сравнивает по модулю">%</th>' +
-            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Rcoef" id="absTh' + cap + 'Rcoef" style="width:84px;text-align:right;" title="R коэфф. ' + low + ': тело последней свечи окна ÷ среднее тело предыдущих свечей окна (тела — в % от «Отн.»; при 1 свече — ÷ среднее тело свечей ДО окна)">R коэфф.</th>' +
+            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Pct" id="absTh' + cap + 'Pct" style="width:86px;text-align:right;" title="Размах окна ' + low + ' в %: (high − low) ÷ «Отн.» цена × 100. Знак — направление окна (close против open): «+» рост, «−» падение; фильтр и сортировка — по модулю">%</th>' +
+            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Rcoef" id="absTh' + cap + 'Rcoef" style="width:84px;text-align:right;" title="R коэфф. ' + low + ': тело последней свечи ÷ среднее тело предыдущих свечей окна (тела — в % от «Отн.», знаменатель общий; при 1 свече — ÷ среднее тело свечей ДО окна)">R коэфф.</th>' +
             '<th class="sortable" data-tbl="abs" data-key="' + id + 'Oi" id="absTh' + cap + 'Oi" style="width:84px;text-align:right;" title="Δ открытого интереса окна ' + low + ': (OI в конце − OI в начале) ÷ OI начала × 100. История OI Binance — 30 дней, минимальный период 5м">OI Δ%</th>';
     });
     mRow += '<th class="sortable" data-tbl="abs" data-key="vol24h" id="absThVol24h" style="width:100px;text-align:right;" title="Оборот 24ч — объём в USDT (quote volume). Колонка видна, только когда в фильтре «Оборот 24ч» задана граница (как у метрик секций)">Оборот 24ч</th>' +
@@ -7565,7 +7699,9 @@ function absBuildThead() {
 
 // === Синхронизация карточки с состоянием ==================================
 // Прогоняется после init/restore и после каждой смены привязки/ТФ/секции:
-// табы, значения, видимость ref-селекта и поля «назад», бейдж линка.
+// табы, значения, блокировка ref-селекта и поле «Сдвиг». v34: ничего не
+// прячется/не появляется при переключении режимов — только меняются
+// состояния (заблокировано/приглушено/активно), строка не «скачет».
 function absSyncCard(id) {
     const cap = id.toUpperCase();
     const S = absSecs[id];
@@ -7575,35 +7711,31 @@ function absSyncCard(id) {
         const K = k.charAt(0).toUpperCase() + k.slice(1);
         num(K + 'From', S[k + 'From']);
         num(K + 'To', S[k + 'To']);
-        // v34: у «Диап. %» теперь тоже есть кнопка-фильтр — отдельного
-        // пропуска для pct больше не нужно
+        // v34: у «Диап. %» своя кнопка-фильтр — синхронизируется как остальные
         const b = document.getElementById('abs' + cap + K + 'Btn');
         if (b) b.classList.toggle('active', !!S[k + 'Active']);
     });
     num('Count', S.count);
     const tfSel = document.getElementById('abs' + cap + 'TfSelect');
     if (tfSel) tfSel.value = S.tf;
-    absSyncRefPriceTabs(id);
+    absSyncRefPriceTabs(id);   // v35: «Отн.» у NATR %, «Диап. %» и R коэфф.
+    // Якорь ли секция (поле «Сдвиг» активно) и единственная ли секция
+    const anchor = S.linkMode === 'now' || S.linkMode === 'closed';
+    const single = ABS_SEC_IDS.length <= 1;
+    // Привязка: табы До/После/Внутри. С единственной секцией привязаться
+    // не к кому — окно привязки (табы + селект) скрыто целиком.
     const lt = document.getElementById('abs' + cap + 'LinkTabs');
-    if (lt) lt.querySelectorAll('.abs-link-tab:not(.abs-anchor-toggle)').forEach(t => t.classList.toggle('active', t.dataset.lm === S.linkMode));
-    // v34: единая кнопка-якорь «Сейчас»/«Закрытые» — текст и подсветка
-    // отражают текущий якорь; в линкованных режимах кнопка неактивна и
-    // показывает «Сейчас» (клик вернёт к якорю).
-    const anchorBtn = document.getElementById('abs' + cap + 'AnchorBtn');
-    if (anchorBtn) {
-        const anchorLm = (S.linkMode === 'now' || S.linkMode === 'closed') ? S.linkMode : 'now';
-        anchorBtn.textContent = anchorLm === 'closed' ? 'Закрытые' : 'Сейчас';
-        anchorBtn.dataset.lm = anchorLm;
-        anchorBtn.classList.toggle('active', anchorLm === S.linkMode);
-        anchorBtn.classList.toggle('lm-closed', anchorLm === 'closed');
-        anchorBtn.title = anchorLm === 'closed'
-            ? 'Якорь «Закрытые»: последние N ЗАКРЫТЫХ свечей, без формирующейся. Поле «назад» рядом сдвигает окно на K свечей в прошлое — нужно, если на эту секцию будет ссылаться «После». Клик — вернуть «Сейчас»'
-            : 'Якорь «Сейчас»: последние N свечей от текущего момента, включая формирующуюся (сдвига «назад» нет). Клик — переключить на «Закрытые»: без формирующейся, со сдвигом «назад»';
+    if (lt) {
+        lt.style.display = single ? 'none' : '';
+        lt.querySelectorAll('.abs-link-tab').forEach(t => t.classList.toggle('active', t.dataset.lm === S.linkMode));
     }
-    // Ссылка: видима только у линкованных секций; варианты — все остальные
+    // Ссылка: в якорных режимах не пропадает, а блокируется (v34) —
+    // переключение привязки больше не прыгает по ширине строки.
+    // С единственной секцией селект скрыт: список вариантов пуст.
     const ref = document.getElementById('abs' + cap + 'Ref');
     if (ref) {
-        ref.style.display = (S.linkMode === 'now' || S.linkMode === 'closed') ? 'none' : '';
+        ref.style.display = single ? 'none' : '';
+        ref.disabled = anchor || single;
         // Пересобирается каждый раз (секций обычно немного) — иначе после
         // добавления/удаления/переименования секции список отставал бы от
         // фактического состава ABS_SEC_IDS.
@@ -7612,16 +7744,22 @@ function absSyncCard(id) {
         if (S.ref && ABS_SEC_IDS.includes(S.ref) && S.ref !== id) ref.value = S.ref;
         else if (ref.selectedIndex === -1) ref.selectedIndex = 0;
     }
-    // «Свечей назад» — только у якоря «Закрытые» (в «Сейчас» смещения нет —
-    // окно всегда прижато к текущему моменту, поле игнорировалось бы)
-    const off = document.getElementById('abs' + cap + 'Offset');
-    if (off) { off.style.display = (S.linkMode === 'closed') ? '' : 'none'; off.value = S.offset; }
+    // «Сдвиг»: 0 — «Сейчас», 1 — последняя закрытая, 2+ — со сдвигом. Стоит
+    // перед «До» всегда; в привязке приглушён, ввод числа возвращает к якорю
+    // (absChangeShift); в якорных режимах uiShift синхронизируется с offset.
+    const sh = document.getElementById('abs' + cap + 'Shift');
+    if (sh) {
+        if (anchor) S.uiShift = absShiftOf(S);
+        sh.value = absShiftOf(S);
+        sh.classList.toggle('abs-shift-dimmed', !anchor);
+        sh.classList.toggle('abs-shift-active', anchor);
+    }
     // И/ИЛИ/НЕ — комбинирование фильтра секции с остальными
     const lgt = document.getElementById('abs' + cap + 'LogicTabs');
     if (lgt) lgt.querySelectorAll('.abs-logic-tab').forEach(t => t.classList.toggle('active', t.dataset.lg === (S.logic || 'and')));
     // Удаление секции — недоступно, когда она последняя
     const delBtn = document.getElementById('abs' + cap + 'Del');
-    if (delBtn) delBtn.disabled = ABS_SEC_IDS.length <= 1;
+    if (delBtn) delBtn.disabled = single;
     // ВКЛ/ВЫКЛ
     const card = document.getElementById('abs' + cap + 'Card');
     if (card) card.classList.toggle('disabled', !absSecEnabled[id]);
@@ -7768,13 +7906,14 @@ function absToggleAlerts() {
 // ============================================================
 //  РАСЧЁТ МЕТРИК ОКОН (обе секции)
 // ============================================================
-// Метрики окна (массив килайнов Binance): средний объём, NATR (ATR до 14
-// периодов внутри окна ÷ цена), Диапазон % ((high − low) ÷ «Отн.» цена —
-// она же % метрика секции), Δ % ((закрытие − открытие) ÷ «Отн.» цена,
-// вспомогательная, в интерфейсе не показывается) и R коэфф. (тело последней
-// свечи ÷ среднее тело предыдущих). RVOL считает вызывающий код — ему
-// нужна база (baseline) свечей ДО окна, у каждой секции своя.
-function absWindowMetrics(window, base, S) {
+// Метрики окна (массив килайнов Binance): средний объём, ATR (до 14
+// периодов внутри окна — сырой, знаменатель «Отн.» применяет вызывающий
+// код), Диапазон % ((high − low) ÷ «Отн.» цена — она же % метрика секции),
+// Δ % ((закрытие − открытие) ÷ «Отн.» цена, вспомогательная — задаёт знак
+// «Диап. %» в таблице) и R коэфф. (тело последней свечи ÷ среднее тело
+// предыдущих — в одной шкале). RVOL и «Отн.»-знаменатели применяет
+// вызывающий код — у каждой секции свои (v35).
+function absWindowMetrics(window, base) {
     if (!window || window.length === 0) return null;
     let volSum = 0, hi = -Infinity, lo = Infinity, closeSum = 0;
     for (const c of window) {
@@ -7787,13 +7926,6 @@ function absWindowMetrics(window, base, S) {
     const avgClose = closeSum / window.length;
     const lastClose = +window[window.length - 1][4];
     const firstOpen = +window[0][1];
-    // v34: знаменатель «Отн.» — среднее выбранных источников секции
-    // (кнопки «Отн.»: Средняя/High/Low/Open/Close, можно несколько).
-    // Теперь он общий для «Диап. %», NATR % и R коэфф. — как в «Диап. %»;
-    // раньше NATR всегда делился на close последней свечи окна.
-    // Если «Отн.» не посчитался (не должно случаться) — запас close.
-    const ref0 = S ? absRefPriceValue({ hi: hi, lo: lo, firstOpen: firstOpen, avgClose: avgClose, lastClose: lastClose }, S) : null;
-    const denom = (ref0 !== null && ref0 !== undefined && !isNaN(ref0) && ref0 > 0) ? ref0 : (lastClose > 0 ? lastClose : null);
     // FIX: ATR считался ТОЛЬКО по свечам самого окна — natrCalcATR нужна
     // предыдущая свеча для TR, поэтому окно из 1 свечи давало period=0 и
     // atr=null (NATR «—»), а окно из 2-3 свечей — период ATR всего 1-2,
@@ -7803,8 +7935,8 @@ function absWindowMetrics(window, base, S) {
     const atrSeries = (base && base.length) ? base.concat(window) : window;
     const period = Math.min(14, atrSeries.length - 1);
     const atr = period >= 1 ? natrCalcATR(atrSeries, period) : null;
-    // R коэфф. (v34): тело последней свечи ÷ среднее тело предыдущих свечей
-    // окна. Тела измеряются в ОДНОЙ шкале — в % от общего знаменателя
+    // R коэфф. (v34/v35): тело последней свечи ÷ среднее тело предыдущих
+    // свечей окна. Тела измеряются в ОДНОЙ шкале — в % от общего знаменателя
     // «Отн.» (как «Диап. %»): при общем знаменателе он сокращается, так
     // что это честное сравнение РАЗМЕРОВ тел; раньше каждая свеча
     // нормировалась на собственный open. При 1 свече — null, дочисляется
@@ -7825,7 +7957,7 @@ function absWindowMetrics(window, base, S) {
     }
     return {
         avgVol: volSum / window.length,
-        natr: (atr && denom) ? (atr / denom) * 100 : null,
+        atr: atr,
         hi: hi, lo: lo, firstOpen: firstOpen, avgClose: avgClose, lastClose: lastClose,
         rcoef: rcoef,
         close: lastClose,
@@ -8072,15 +8204,19 @@ function absAnalyzeRaw(symbol, raw) {
         const R = reso[id];
         const m = { rvol: null, natr: null, pct: null, rcoef: null, changePct: null, rangePct: null, oi: null, tStart: null, tEnd: null };
         if (R) {
-            const wm = absWindowMetrics(R.win, R.base, S);
+            const wm = absWindowMetrics(R.win, R.base);
             const baseVol = (R.base && R.base.length >= ABS_MIN_BASELINE) ? absAvgVolume(R.base) : null;
             if (wm) {
                 m.rvol = baseVol ? wm.avgVol / baseVol : null;
-                m.natr = wm.natr;
-                // % метрика: знаменатель — среднее выбранных источников секции
-                // («Отн.» теперь мультивыбор: один источник = как раньше,
-                // несколько — их среднее, например High и Low вместе)
-                const ref = absRefPriceValue(wm, S);
+                // NATR (v35): ATR ÷ «Отн.» цена — СВОИ кнопки «Отн.» у NATR %
+                // (дефолт — refPrice секции; если «Отн.» не посчитался — close)
+                const natrRef = absRefPriceValue(wm, S, 'natr');
+                const natrDenom = (natrRef !== null && natrRef !== undefined && !isNaN(natrRef) && natrRef > 0) ? natrRef : (wm.lastClose > 0 ? wm.lastClose : null);
+                m.natr = (wm.atr !== null && wm.atr !== undefined && natrDenom) ? (wm.atr / natrDenom) * 100 : null;
+                // % метрика: знаменатель — СВОИ кнопки «Отн.» под «Диап. %»
+                // (v35: у каждого фильтра свой набор; один источник = как
+                // раньше, несколько — их среднее, например High и Low вместе)
+                const ref = absRefPriceValue(wm, S, 'pct');
                 m.rangePct = (ref > 0 && wm.hi !== null && wm.lo !== null) ? ((wm.hi - wm.lo) / ref) * 100 : null;
                 m.changePct = (ref > 0 && wm.firstOpen != null) ? ((wm.lastClose - wm.firstOpen) / ref) * 100 : null;
                 m.pct = m.rangePct;   // v32: % — всегда размах окна (high−low)
@@ -8363,7 +8499,14 @@ function absCheckAlerts() {
     if (!absAlertsEnabled) return;
     // Уведомляем только о тикерах, которые проходят ТЕКУЩИЕ фильтры (философия
     // как у NATR/Cont) — иначе выключенный фильтр не остановил бы спам из фона.
+    // v37: «★ Избранное» — ПРОСМОТР, а не фильтр: список для уведомлений
+    // считается без него (в нём — всё избранное, включая заглушки «—»,
+    // уведомления по заглушкам не имеют смысла и снесли бы память
+    // absAlertedSymbols — при возврате в обычный режим всё переуведомило бы).
+    const savedView = absWatchlistOnly;
+    absWatchlistOnly = false;
     const filtered = absGetFilteredResults();
+    absWatchlistOnly = savedView;
     const current = new Set(filtered.map(r => r.symbol));
     filtered.forEach(r => {
         if (absAlertedSymbols.has(r.symbol)) return;
@@ -8454,16 +8597,29 @@ function absHasActiveFilters(S) {
 // Каждый ввод фильтра живой: пересекаивает уже загруженные данные без скана.
 function absGetFilteredResults() {
     let list = absAllResults.slice();
-    // Только избранное: до первого скана показываем заготовки — чтобы список
-    // было видно сразу; цветовой фильтр действует и на заготовки (как в NATR).
+    // Режим «★ Избранное» (v37) — отдельный ПРОСМОТР списка, а не фильтр:
+    // показываем весь состав избранного — строки последнего скана с метриками
+    // для тех, кто в него попал, и заготовки «—» для остальных. На этот список
+    // не действуют НИКАКИЕ фильтры (категория, глобальные «Оборот/Объём/
+    // Сделки», комбинация секций И/ИЛИ/НЕ) — только цветовой фильтр избранного
+    // и сортировка (absSortData применяется в absReRender). В обычном режиме
+    // (кнопка не активна) фильтры действуют на избранные строки так же,
+    // как на все остальные.
     if (absWatchlistOnly) {
+        let favRows;
         if (absAllResults.length === 0) {
-            let stubs = [...absFavorites].map(sym => absStubRow(sym));
-            if (absFavColorFilter.size > 0)
-                stubs = stubs.filter(r => absFavColorFilter.has(absFavColors[r.symbol] || 'gold'));
-            return stubs;
+            favRows = [...absFavorites].map(sym => absStubRow(sym));
+        } else {
+            const scanned = absAllResults.filter(r => absFavorites.has(r.symbol));
+            const scannedSet = new Set(scanned.map(r => r.symbol));
+            const missing = [...absFavorites]
+                .filter(sym => !scannedSet.has(sym))
+                .map(sym => absStubRow(sym));
+            favRows = scanned.concat(missing);
         }
-        list = list.filter(r => absFavorites.has(r.symbol));
+        if (absFavColorFilter.size > 0)
+            favRows = favRows.filter(r => absFavColorFilter.has(absFavColors[r.symbol] || 'gold'));
+        return favRows;
     }
     // Категория — та же логика, что у NATR/Cont: вкладки TF_* (Крипто/Акции/
     // ETF/Товары/Индексы/Другие) матчатся по типу актива, остальное — по
@@ -8487,6 +8643,9 @@ function absGetFilteredResults() {
             return absFavColorFilter.has(c);
         });
     }
+    // v37: в ОБЫЧНОМ режиме фильтры действуют на избранные строки так же,
+    // как на все остальные — обход «звёздных» строк из v34 убран. Посмотреть
+    // избранное целиком, не трогая фильтры, — кнопка «★ Избранное» выше.
     // Глобальные фильтры: оборот 24ч (USDT), объём 24ч (в монетах) и сделки
     if (absVolFilterActive) {
         if (absVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= absVolFrom; });
@@ -8623,7 +8782,9 @@ function absReRender() {
             sh += '<div>' + absSecName(id) + ' ✓: <strong class="mono" style="color:' + absSecColor(id) + '">' +
                 absAllResults.filter(r => absSectionPasses(r[id], absSecs[id])).length + '</strong></div>';
         });
-        sh += '<div>В фильтре: <strong class="mono">' + shown.length + '</strong></div>';
+        // v37: в режиме «★ Избранное» итог честно называется «В избранном» —
+        // фильтры на список не действуют
+        sh += '<div>' + (absWatchlistOnly ? 'В избранном' : 'В фильтре') + ': <strong class="mono">' + shown.length + '</strong></div>';
         stats.innerHTML = sh;
         stats.style.display = 'flex';
     }
@@ -8633,9 +8794,11 @@ function absReRender() {
         const p = empty.querySelector('p');
         if (p) {
             if (absWatchlistOnly) {
+                // v37: фильтры в этом режиме не действуют — пусто может быть
+                // только от цветового фильтра (либо избранное ещё не набрано)
                 p.textContent = absFavorites.size === 0
                     ? 'Список избранного пуст — добавляйте тикеры звёздочкой ★'
-                    : 'Ни один избранный тикер не прошёл фильтры';
+                    : 'Нет избранного выбранного цвета — снимите выделение цветового фильтра';
             } else if (absFavColorFilter.size > 0) {
                 p.textContent = 'Нет избранных тикеров выбранного цвета';
             } else {
@@ -8658,9 +8821,9 @@ function absReRender() {
     ABS_SEC_IDS.forEach(id => {
         flt[id] = { rvol: MF(absSecs[id], 'rvol'), natr: MF(absSecs[id], 'natr'), pct: MF(absSecs[id], 'pct'), rcoef: MF(absSecs[id], 'rcoef'), oi: MF(absSecs[id], 'oi') };
     });
-    // Видимость колонок метрик — та же карта, что у thead (absUpdateColumns)
+    // Видимость колонок метрик — та же карта, что у thead (absUpdateColumns);
+    // глобальные колонки «Оборот/Объём/Сделки» — та же карта, что у thead (v34)
     const vis = absVisibleMetrics();
-    // v34: глобальные колонки «Оборот/Объём/Сделки» — та же карта, что у thead
     const gVis = absGlobalColVis();
     const rvolHot = v => v >= 2 ? 'abs-rvol-hot' : v >= 1.5 ? 'abs-rvol-warm' : '';
     const fmtWin = ts => new Date(ts).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -8694,6 +8857,28 @@ function absReRender() {
             return '<td class="natr-price-cell mono" title="' + (title || '') + '"><span class="mono ' + cls + '">' + fmt(v) + '</span></td>';
         };
 
+        // Диап. % (v34) — со знаками и расцветкой как «Вчера/Сегодня %» в
+        // Продолжении тренда: знак = направление окна (close против open —
+        // m.changePct), «+» зелёный / «−» красный. Заданный диапазон
+        // подсвечивает ПОВЕРХ направления (в диапазоне — золотой, ниже
+        // «от» — красный, выше «до» — зелёный); фильтр и сортировка — по
+        // модулю: знак на отбор не влияет.
+        const pctCell = (m, fl, title) => {
+            if (isStub || m.pct === null || m.pct === undefined)
+                return '<td class="natr-price-cell mono" title="' + (title || '') + '">—</td>';
+            const up = (m.changePct === null || m.changePct === undefined) ? true : m.changePct >= 0;
+            let cls = '';
+            if (fl.from !== null || fl.to !== null) {
+                const inR = (fl.from === null || m.pct >= fl.from) && (fl.to === null || m.pct <= fl.to);
+                cls = inR ? 'natr-range-hit'
+                    : (fl.from !== null && m.pct < fl.from) ? 'natr-below-threshold'
+                    : 'natr-above-threshold';
+            } else {
+                cls = up ? 'abs-pct-up' : 'abs-pct-down';
+            }
+            return '<td class="natr-price-cell mono" title="' + (title || '') + '"><span class="mono ' + cls + '">' + (up ? '+' : '−') + m.pct.toFixed(2) + '%</span></td>';
+        };
+
         // Ячейки метрик всех секций — в порядке карточек
         let cells = '';
         ABS_SEC_IDS.forEach(id => {
@@ -8703,7 +8888,7 @@ function absReRender() {
             cells +=
                 (vis[id + 'Rvol'] ? numCell(m.rvol, flt[id].rvol, fRvol, rvolHot, 'RVOL ' + low + ': средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна. ' + winTip(id)) : '') +
                 (vis[id + 'Natr'] ? numCell(m.natr, flt[id].natr, fPct, null, 'NATR ' + low + ': ATR (до 14 периодов) по окну ÷ «Отн.» цена × 100 — знаменатель тот же, что у «Диап. %» (кнопки «Отн.» на карточке секции). ' + winTip(id)) : '') +
-                (vis[id + 'Pct']  ? numCell(m.pct, flt[id].pct, fPct, null, 'Размах окна: (high − low) ÷ «Отн.» цена × 100 — измеряет всё окно свечей в %; фильтр сравнивает по модулю. ' + winTip(id)) : '') +
+                (vis[id + 'Pct']  ? pctCell(m, flt[id].pct, 'Размах окна: (high − low) ÷ «Отн.» цена × 100 — измеряет всё окно свечей в %. Знак — направление окна (close против open): «+» рост, «−» падение; фильтр и сортировка — по модулю. ' + winTip(id)) : '') +
                 (vis[id + 'Rcoef'] ? numCell(m.rcoef, flt[id].rcoef, v => v.toFixed(2) + 'x', null, 'R коэфф. ' + low + ': тело последней свечи ÷ среднее тело предыдущих свечей окна (тела — в % от «Отн.», знаменатель общий; при 1 свече — ÷ среднее тело свечей ДО окна). >1 = свеча крупнее обычного. ' + winTip(id)) : '') +
                 (vis[id + 'Oi']   ? numCell(m.oi, flt[id].oi, fPctS, null, 'Δ открытого интереса окна: (OI в конце − OI в начале) ÷ OI начала × 100. Данные OI подгружаются при заданном диапазоне OI. ' + winTip(id)) : '');
         });
