@@ -85,13 +85,14 @@
             .natr-tiger-settings-wrap .natr-tool-btn { padding: 0 14px; font-size: 12px; min-height: 40px; }
         }
 
-        /* Settings trigger reuses .natr-tool-btn's coloring (muted/hover/active) but
-           is sized to match .nav-tab exactly, since it sits right in the same row as
-           the nav tabs and should read as part of that row, not a smaller control. */
+        /* Settings trigger reuses .natr-tool-btn's coloring (muted/hover/active).
+           v34: компактнее по ширине — padding и кегль меньше (было 0 16px / 13px),
+           в ряду с нав-табами по-прежнему читается «настоящей» кнопкой. */
         .natr-tiger-settings-wrap .natr-tool-btn {
-            height: 36px; padding: 0 16px; border-radius: 10px;
-            font-size: 13px; font-weight: 600;
+            height: 34px; padding: 0 10px; border-radius: 10px;
+            font-size: 12px; font-weight: 600; letter-spacing: -0.01em;
         }
+        .natr-tiger-settings-wrap .natr-tool-btn svg { width: 13px; height: 13px; }
 
         /* ======================================================
            ПАНЕЛЬ «НАСТРОЙКИ» — в дизайн-языке приложения
@@ -137,7 +138,10 @@
         }
         .stg-close:hover { color: var(--fg); background: rgba(255,255,255,0.06); transform: rotate(90deg); }
         .stg-close svg { width: 14px; height: 14px; }
-        .stg-body { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+        /* v34: отступы в панели настроек увеличены — подписи секций
+           прижимались к карточкам (stg-col) и полям Tiger/Vataga */
+        .stg-body { display: flex; flex-direction: column; gap: 20px; padding: 16px 18px 18px; }
+        .stg-section { display: flex; flex-direction: column; gap: 12px; }
         .stg-section-title {
             display: flex; align-items: center; gap: 8px;
             font-size: 12px; font-weight: 700; color: var(--fg);
@@ -145,8 +149,8 @@
         }
         .stg-section-title svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
         .stg-desc { font-size: 11px; color: var(--muted); line-height: 1.5; margin: 6px 0 10px; }
-        .stg-field { display: flex; flex-direction: column; gap: 6px; }
-        .stg-field > label { font-size: 11px; font-weight: 600; color: var(--muted); }
+        .stg-field { display: flex; flex-direction: column; gap: 8px; }
+        .stg-field > label { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 1px; }
         .stg-field .sec-select { width: 100%; }
         /* Поле ввода в панели настроек — тот же язык дизайна, что у .sec-select
            (та же обводка/скругление/hover), но для текстового ввода (partner_ID и т.п.) */
@@ -158,7 +162,7 @@
         }
         .stg-input:hover, .stg-input:focus { border-color: rgba(240,185,11,0.4); box-shadow: 0 4px 16px rgba(240,185,11,0.15); }
         .stg-input::placeholder { color: var(--muted); opacity: 0.6; }
-        .stg-hint { font-size: 10.5px; color: var(--muted); opacity: 0.8; line-height: 1.4; }
+        .stg-hint { font-size: 10.5px; color: var(--muted); opacity: 0.8; line-height: 1.4; margin-top: 2px; }
         /* Компактные варианты — поле «Часовой пояс» и поле ID не обязаны
            растягиваться на всю ширину панели настроек (640px). */
         .stg-select-sm { width: auto; min-width: 210px; max-width: 230px; }
@@ -168,11 +172,11 @@
             .stg-select-sm, .stg-input-sm { max-width: none; width: 100%; }
         }
         .stg-divider { height: 1px; background: var(--border); }
-        .natr-tiger-settings-cols { display: flex; gap: 12px; }
+        .natr-tiger-settings-cols { display: flex; gap: 14px; }
         .natr-tiger-settings-cols .stg-col {
             flex: 1; min-width: 0;
-            display: flex; flex-direction: column; gap: 10px;
-            padding: 12px;
+            display: flex; flex-direction: column; gap: 12px;
+            padding: 14px;
             background: rgba(255,255,255,0.02);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -364,16 +368,8 @@
         .natr-range-input:focus { border-color: var(--accent); }
         .natr-range-input::placeholder { color: var(--muted); opacity: 0.6; font-size: 11px; }
         .natr-range-sep { color: var(--muted); font-size: 12px; }
-        /* Порог ликвидности Super Screener (тулбар «Оборот 24ч») — стиль как у
-           остальных контролов тулбара, но с нативным выпадающим списком */
-        .abs-liq-select {
-            padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
-            background: var(--bg); border: 1px solid var(--border); color: var(--fg);
-            font-family: 'Space Grotesk', sans-serif; outline: none; cursor: pointer;
-        }
-        .abs-liq-select:hover { border-color: rgba(240,185,11,0.35); }
-        .abs-liq-select:focus { border-color: var(--accent); }
-        .abs-liq-select option { background: var(--bg); color: var(--fg); }
+        /* v34: «Диап. %» — полноценная кнопка-фильтр (как RVOL/NATR/R коэфф./OI),
+           статичная подпись .abs-metric-label упразднена */
 
         /* Закреп (pin-to-top) и избранное (favorite) live together in one column, same
            pattern as the CryptoAI/Tiger action buttons: two small controls side by side.
@@ -1215,12 +1211,17 @@
         .abs-sec-badge.trig { background: rgba(14,203,129,0.10); color: var(--green); }
         .abs-sec-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         .abs-sec-row .natr-tool-label { min-width: 88px; }
-        .abs-tf-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; margin-bottom: 10px; }
-        .abs-tf-row .natr-tool-label { min-width: unset; width: auto; min-width: 42px; text-align: right; padding-right: 4px; }
-        .abs-tf-row .abs-tf-select { width: 64px; min-width: 64px; flex-shrink: 0; }
-        .abs-tf-row .abs-count-input { width: 64px; flex-shrink: 0; }
+        .abs-tf-line {
+            padding-top: 6px; margin-top: 2px; border-top: 1px dashed var(--border);
+        }
+        .abs-tf-line .natr-tool-label { min-width: unset; padding-right: 2px; }
+        .abs-tf-line .abs-tf-select { width: 58px; min-width: 58px; flex-shrink: 0; }
+        /* v34: 48px было тесно — цифры вместе со спиннером обрезались */
+        .abs-tf-line .abs-count-input { width: 68px; flex-shrink: 0; }
 
-        .abs-global-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        /* Глобальные фильтры — всегда ОТДЕЛЬНОЙ строкой ниже избранного и его
+           цвета (flex-basis:100% внутри flex-wrap тулбара .natr-tools) */
+        .abs-global-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-basis: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
         .abs-global-filters .natr-tool-label { min-width: unset; }
         .abs-tf-select {
             height: 36px; padding: 0 22px 0 8px; border-radius: 8px; font-size: 12px; font-weight: 600;
@@ -1248,6 +1249,7 @@
         }
         .abs-count-input:focus { border-color: var(--accent); }
         .abs-sec-note { font-size: 11px; color: var(--muted); opacity: 0.75; line-height: 1.45; margin: 2px 0 8px; }
+.abs-sec-note.abs-sec-note-warn { color: var(--red); opacity: 1; font-weight: 600; }
         .abs-group-th {
             text-align: center; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
             text-transform: uppercase; color: var(--accent); padding: 7px 8px 5px;
@@ -1268,6 +1270,14 @@
     margin-bottom: 2px;
 }
 .abs-link-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+/* v34: одна кнопка-якорь вместо двух («Сейчас» + «Закрытые») — клик
+   переключает режим; при «Закрытые» становится светлее и появляется
+   поле «назад» рядом */
+.abs-link-tab.abs-anchor-toggle { padding: 0 12px; }
+.abs-link-tab.abs-anchor-toggle::after {
+    content: '⇅'; font-size: 10px; font-weight: 700; opacity: 0.55;
+    margin-left: 5px; line-height: 1;
+}
 .abs-link-tab {
     height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
     cursor: pointer; background: transparent; border: 1px solid transparent; color: var(--muted);
@@ -1275,8 +1285,25 @@
 }
 .abs-link-tab:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
 .abs-link-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(240,185,11,0.25); }
+.abs-link-tab.active.lm-closed { background: rgba(255,255,255,0.08); color: var(--fg); border-color: var(--border); }
 .abs-link-tab.active.lm-after  { background: rgba(14,203,129,0.10); color: var(--green); border-color: rgba(14,203,129,0.25); }
 .abs-link-tab.active.lm-inside { background: rgba(156,39,176,0.14); color: #ce93d8; border-color: rgba(156,39,176,0.30); }
+.abs-pct-group {
+    border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.015);
+    padding: 8px 8px 6px; margin-bottom: 8px;
+}
+.abs-pct-group .abs-sec-row { margin-bottom: 6px; }
+.abs-refprice-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-left: 4px; }
+.abs-refprice-row .natr-tool-label { min-width: unset; text-align: left; padding-right: 2px; opacity: 0.85; }
+.abs-refprice-link { color: var(--muted); font-size: 13px; opacity: 0.6; line-height: 1; }
+.abs-refprice-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.abs-refprice-tab {
+    height: 26px; padding: 0 9px; border-radius: 6px; font-size: 10.5px; font-weight: 600;
+    cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--muted);
+    transition: all 0.15s; font-family: 'Space Grotesk', sans-serif; white-space: nowrap;
+}
+.abs-refprice-tab:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
+.abs-refprice-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(240,185,11,0.3); }
 .abs-ref-select, .abs-offset-input {
     height: 36px; padding: 8px 10px; border-radius: 8px; font-size: 12px;
     background: var(--bg); border: 1px solid var(--border); color: var(--fg);
@@ -1632,6 +1659,10 @@
         <table>
             <thead><tr>
                 <th class="sortable" data-tbl="cont" data-key="favorite" style="width:78px;text-align:center;" title="Закреп и избранное — клик сортирует по цвету звезды (gold→green→red→blue→purple)">📌 ★</th>
+                <!-- FIX(comb): th «Тикер» отсутствовал — строка рендерит 10 ячеек
+                     против 9 заголовков, и вся таблица была сдвинута влево на одну
+                     колонку (тип под «R коэфф.», значения под чужими названиями). -->
+                <th class="sortable" data-tbl="cont" data-key="symbol">Тикер</th>
                 <th class="sortable" data-tbl="cont" data-key="type" style="width:78px;">Тип</th>
                 <th class="sortable" data-tbl="cont" data-key="bodyRatio" style="width:100px;" title="Тело вчерашней свечи (|закрытие-открытие|) ÷ среднее тело свечи за N предыдущих дней">R коэфф.</th>
                 <th class="sortable" data-tbl="cont" data-key="refChange" style="width:100px;">Вчера %</th>
@@ -1885,25 +1916,19 @@
             <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="blue"   style="background:#2196f3" title="Синий" onclick="absToggleFavColorFilter('blue')"></button>
             <button type="button" class="cont-fav-color abs-color-filter-dot" data-color="purple" style="background:#9c27b0" title="Фиолетовый" onclick="absToggleFavColorFilter('purple')"></button>
         </div>
-        <div class="abs-global-filters">
-            <button type="button" class="abs-metric-toggle" id="absVolFilterBtn" onclick="absToggleGlobalVolFilter()" title="Включить фильтр по объёму (иначе значения в диапазоне просто подсвечиваются)">Объём 24ч</button>
+        <div class="abs-global-filters" title="Глобальные фильтры — действуют на все секции, вне зависимости от их комбинации: «Оборот 24ч» — объём в USDT (quote volume), «Объём 24ч» — объём в монетах (base volume), «Сделки» — число сделок за сутки. Ввод границ сразу подсвечивает значения в таблице и включает колонку (без данных колонка скрыта, как у метрик секций); кнопка включает скрытие строк вне диапазона">
+            <button type="button" class="abs-metric-toggle" id="absVolFilterBtn" onclick="absToggleGlobalVolFilter()" title="Оборот 24ч — объём в USDT (quote volume). Включить фильтр по обороту (иначе значения в диапазоне просто подсвечиваются)">Оборот 24ч</button>
             <input type="number" class="natr-range-input" id="absVolFrom" placeholder="от" min="0" step="100000" oninput="absChangeGlobalVol()">
             <span class="natr-range-sep">—</span>
             <input type="number" class="natr-range-input" id="absVolTo" placeholder="до" min="0" step="100000" oninput="absChangeGlobalVol()">
+            <button type="button" class="abs-metric-toggle" id="absBaseVolFilterBtn" onclick="absToggleGlobalBaseVolFilter()" title="Объём 24ч — объём в монетах (base volume). Включить фильтр по объёму (иначе значения в диапазоне просто подсвечиваются)">Объём 24ч</button>
+            <input type="number" class="natr-range-input" id="absBaseVolFrom" placeholder="от" min="0" step="100000" oninput="absChangeGlobalBaseVol()">
+            <span class="natr-range-sep">—</span>
+            <input type="number" class="natr-range-input" id="absBaseVolTo" placeholder="до" min="0" step="100000" oninput="absChangeGlobalBaseVol()">
             <button type="button" class="abs-metric-toggle" id="absTradesFilterBtn" onclick="absToggleGlobalTradesFilter()" title="Включить фильтр по сделкам (иначе значения в диапазоне просто подсвечиваются)">Сделки</button>
             <input type="number" class="natr-range-input" id="absTradesFrom" placeholder="от" min="0" step="1000" oninput="absChangeGlobalTrades()">
             <span class="natr-range-sep">—</span>
             <input type="number" class="natr-range-input" id="absTradesTo" placeholder="до" min="0" step="1000" oninput="absChangeGlobalTrades()">
-        </div>
-        <div class="natr-tool-group" title="Какие фьючерсы сканировать: пары с оборотом 24ч ниже порога пропускаются. По умолчанию сканируются ВСЕ пары; порог можно поднять, чтобы ускорить скан и разгрузить лимиты Binance (сейчас торгуется 700+ перпетуалов)">
-            <label class="natr-tool-label" for="absLiqSelect">Оборот 24ч:</label>
-            <select class="abs-liq-select" id="absLiqSelect" onchange="absChangeLiq(this.value)">
-                <option value="0" selected>Все пары</option>
-                <option value="1000000">&gt; $1M</option>
-                <option value="2000000">&gt; $2M</option>
-                <option value="5000000">&gt; $5M</option>
-                <option value="10000000">&gt; $10M</option>
-            </select>
         </div>
     </div>
     </div>
@@ -1959,20 +1984,51 @@
     <button type="button" class="cont-fav-remove" id="absFavRemove" onclick="absRemoveFavorite()">Убрать из избранного</button>
 </div>
 
-<!-- NATR Scanner favorite color picker (hidden, anchored near the clicked star) -->
-<div class="cont-fav-picker" id="natrFavPicker" style="display:none;">
-    <div class="cont-fav-picker-title">Цвет избранного</div>
-    <div class="cont-fav-picker-colors">
-        <button type="button" class="cont-fav-color" data-color="gold"   style="background:#f0b90b" title="Золотой (по умолчанию)" onclick="natrSetFavoriteColor('gold')"></button>
-        <button type="button" class="cont-fav-color" data-color="green"  style="background:#4caf50" title="Зелёный (бычий)" onclick="natrSetFavoriteColor('green')"></button>
-        <button type="button" class="cont-fav-color" data-color="red"    style="background:#f44336" title="Красный (медвежий)" onclick="natrSetFavoriteColor('red')"></button>
-        <button type="button" class="cont-fav-color" data-color="blue"   style="background:#2196f3" title="Синий" onclick="natrSetFavoriteColor('blue')"></button>
-        <button type="button" class="cont-fav-color" data-color="purple" style="background:#9c27b0" title="Фиолетовый" onclick="natrSetFavoriteColor('purple')"></button>
-    </div>
-    <button type="button" class="cont-fav-remove" id="natrFavRemove" onclick="natrRemoveFavorite()">Убрать из избранного</button>
-</div>
-
 <script>
+// ============================================================
+//  v34 — SUPER SCREENER («Отн.» для NATR/R коэфф. + компакт якоря):
+//   • Знаменатель «Отн.» (Средняя/High/Low/Open/Close, мультивыбор)
+//     теперь общий для «Диап. %», «NATR %» и «R коэфф.» — как в
+//     «Диап. %». Раньше NATR всегда делился на close последней
+//     свечи, а тела свечей R коэфф. — на их собственные open
+//   • R коэфф.: тела свечей считаются в одной шкале (% от «Отн.»),
+//     при 1 свече в окне база сравнения — свечи ДО окна (base, те
+//     же ABS_BASELINE свечей, что для RVOL — есть при любой
+//     привязке), запас — окно секции-ссылки. Раньше при 1 свече у
+//     якорей «Сейчас»/«Закрытые» (S.ref = null) R коэфф. всегда
+//     оставался пустым («—»/строки отбрасывались фильтром)
+//   • Кнопки «Сейчас»/«Закрытые» объединены в одну кнопку-якорь:
+//     клик переключает Сейчас ↔ Закрытые, при «Закрытые» появляется
+//     поле «назад». Из линкованных режимов клик возвращает на «Сейчас»
+//   • «Диап. %» стал кнопкой-фильтром с названием (как RVOL/NATR/
+//     R коэфф./OI Δ%): ввод границ подсвечивает значения, кнопка
+//     скрывает строки вне диапазона. Автовключение фильтра вводом
+//     убрано; сохранённые настройки мигрируют как раньше
+//   • Колонки «Оборот 24ч»/«Объём 24ч»/«Сделки» скрываются, когда
+//     в их фильтре нет данных (ни «от», ни «до») — как колонки
+//     метрик секций выше; сортировка по скрытой колонке сбрасывается
+//   • Поле «Свечей» расширено (48→68px) — цифры со спиннером влезают
+//   • Панель «Настройки»: кнопка в навбаре компактнее (уже), отступы
+//     между подписями/карточками/полями Tiger.com Terminal и
+//     Vataga.Terminal увеличены
+// ============================================================
+//  v32 — SUPER SCREENER (% = размах окна + глобальные фильтры):
+//   • % метрика секции ВСЕГДА измеряет окно свечей: «Диап. %» =
+//     (high − low) окна ÷ «Отн.» цена × 100. Кнопка H,L/O,C и режим
+//     Δ (закрытие−открытие) убраны — ряд-знаменатель выбирается
+//     селектом «Отн.», кнопка-переключатель не нужна. Фильтр %
+//     сравнивает значение ПО МОДУЛЮ: знак перед введённой границей
+//     не важен («−2» = 2), перепутанные «от/до» нормализуются.
+//     Сохранённые pctKind и Δ-границы мигрируют (по модулю)
+//   • Глобальные фильтры тулбара — теперь ТРИ, отдельной строкой
+//     ниже избранного, у каждого кнопка + диапазон «от—до»:
+//     «Оборот 24ч» (объём в USDT, quote volume; прежде ошибочно
+//     назывался «Объём 24ч»), «Объём 24ч» (новый: объём в монетах,
+//     base volume) и «Сделки». В таблице — колонки «Оборот 24ч»
+//     ($) и «Объём 24ч» (в монетах), обе сортируемые
+//   • Селект «Оборот 24ч» (порог скана) и пре-фильтр ликвидности
+//     убраны: скан всегда охватывает весь рынок (~706 пар); отбор
+//     по обороту делает глобальный фильтр — без потери пар при скане
 // ============================================================
 //  v31 — SUPER SCREENER (произвольное число секций + логика И/ИЛИ/НЕ):
 //   • Секций больше не ровно 7: кнопка «+ Добавить секцию» создаёт новую
@@ -2241,7 +2297,6 @@ function switchSection(name) {
 // ============================================================
 //  COLUMN SORTING (shared for NATR, Продолжение & Super Screener)
 // ============================================================
-const natrSortState = { key: 'natr', dir: 'desc' };
 const contSortState = { key: 'bodyRatio', dir: 'desc' };
 const absSortState  = { key: 's3Rvol', dir: 'desc' };
 
@@ -2250,7 +2305,7 @@ document.addEventListener('click', function(e) {
     if (!th) return;
     const tbl = th.dataset.tbl;
     const key = th.dataset.key;
-    const state = tbl === 'natr' ? natrSortState : tbl === 'cont' ? contSortState : absSortState;
+    const state = tbl === 'abs' ? absSortState : contSortState;
     if (state.key === key) {
         state.dir = state.dir === 'desc' ? 'asc' : 'desc';
     } else {
@@ -2264,43 +2319,10 @@ document.addEventListener('click', function(e) {
     });
     th.classList.add(state.dir === 'asc' ? 'sort-asc' : 'sort-desc', 'sort-active');
     // Re-render
-    if (tbl === 'natr') { if (natrAllResults.length) natrReFilterAndRender(); }
-    else if (tbl === 'abs') { if (absAllResults.length) absReRender(); }
+    if (tbl === 'abs') { if (absAllResults.length) absReRender(); }
     else { if (contRawResults.length) contReFilterAndRender(); }
 });
 
-function natrSortData(data) {
-    const { key, dir } = natrSortState;
-    const mult = dir === 'asc' ? 1 : -1;
-    return data.slice().sort((a, b) => {
-        let va, vb;
-        switch (key) {
-            case 'symbol': return mult * a.symbol.localeCompare(b.symbol);
-            case 'favorite': {
-                const COLOR_RANK = { gold: 1, green: 2, red: 3, blue: 4, purple: 5 };
-                const ra = natrFavorites.has(a.symbol) ? (COLOR_RANK[natrFavColors[a.symbol] || 'gold'] || 1) : 0;
-                const rb = natrFavorites.has(b.symbol) ? (COLOR_RANK[natrFavColors[b.symbol] || 'gold'] || 1) : 0;
-                if (ra !== rb) return mult * (ra - rb);
-                return a.symbol.localeCompare(b.symbol);
-            }
-            case 'type': {
-                // natrGetAssetType does a split(',') per call — memoize per sort
-                // so a 500-row sort doesn't run it ~9000 times.
-                const typeCache = new Map();
-                const typeOf = s => { let t = typeCache.get(s); if (t === undefined) { t = natrGetAssetType(s); typeCache.set(s, t); } return t; };
-                return mult * typeOf(a.symbol).localeCompare(typeOf(b.symbol));
-            }
-            case 'price': case 'volume': case 'count': {
-                const ta = natrTicker24hMap.get(a.symbol);
-                const tb = natrTicker24hMap.get(b.symbol);
-                va = ta ? (ta[key] || 0) : -Infinity;
-                vb = tb ? (tb[key] || 0) : -Infinity;
-                return mult * (va - vb);
-            }
-            default: return mult * ((a[key] || 0) - (b[key] || 0));
-        }
-    });
-}
 
 function contSortData(data) {
     const { key, dir } = contSortState;
@@ -2565,9 +2587,7 @@ function natrRegisterBan(resp) {
     natrBannedUntil = Date.now() + cooldownSec * 1000;
     ctSafeSetItem('natr_banned_until', String(natrBannedUntil));
     ctSafeSetItem('natr_ban_streak', String(natrBanStreak));
-    if (natrAbortCtrl) natrAbortCtrl.abort();
-    if (contAbortCtrl) contAbortCtrl.abort();
-    const until = new Date(natrBannedUntil).toLocaleTimeString('ru-RU');
+    if (contAbortCtrl) contAbortCtrl.abort();    if (absAbortCtrl) absAbortCtrl.abort();    const until = new Date(natrBannedUntil).toLocaleTimeString('ru-RU');
     ctNotify('Binance', 'пауза до ' + until);
 }
 // Called after any successful (non-banning) response, to notice the streak has ended.
@@ -2590,27 +2610,12 @@ async function natrApiFetch(url, opts) {
     natrClearBanStreak();
     return resp;
 }
-// Every selectable timeframe lives here — interval is the Binance kline interval,
-// period is how many candles the ATR/NATR average is taken over.
-const NATR_MODES = {
-    '1m_30':  { interval: '1m',  period: 30, label: '1м×30' },
-    '5m_14':  { interval: '5m',  period: 14, label: '5м×14' },
-    '15m_14': { interval: '15m', period: 14, label: '15м×14' },
-    '1h_14':  { interval: '1h',  period: 14, label: '1ч×14' },
-    '4h_14':  { interval: '4h',  period: 14, label: '4ч×14' },
-    '1d_14':  { interval: '1d',  period: 14, label: '1д×14' },
-};
-let natrMode = '5m_14';
-let natrAllResults = [];
-let natrIsScanning = false;
-let natrIsBgUpdating = false;
 // batchSize/batchDelay were far too aggressive (60 concurrent requests, 150ms between
 // batches) — enough to trip Binance's IP-level rate limiter (HTTP 418/429), which is
 // exactly what "перестаёт сканировать на 5-10 минут" is: a temporary IP ban. Lowered
 // concurrency substantially and slowed the pacing down; see natrApiFetch below for the
 // actual ban-detection/backoff logic that stops hammering Binance once limited.
 const NATR_SCAN_CFG = { batchSize: 12, maxRetries: 1, retryDelay: 300, batchDelay: 400, cacheResults: true, abortOnNewScan: true, timeout: 5000 };
-let natrAbortCtrl = null;
 const natrResultsCache = new Map();
 const NATR_CACHE_TTL = 58000;
 const natrPendingRequests = new Map();
@@ -2624,33 +2629,10 @@ function natrPruneResultsCache() {
     }
 }
 const NATR_REFRESH_INTERVAL = 60;
-let natrRefreshCountdown = NATR_REFRESH_INTERVAL;
-let natrRefreshTimerId = null;
-let natrSelectedCategory = 'all';
 let natrCategoryMap = null; // will be set to NATR_EMBEDDED_CATEGORIES on init
 
-// --- Top-N / pin / favorites / liquidity filter / alerts state ---
-// Закреп (pin) and избранное (favorite) are separate concepts, each with its own
-// set for THIS screener only (Продолжение тренда keeps its own contPinned/contFavorites).
-let natrTopN = 10;
-let natrPinned = new Set();
-let natrFavorites = new Set();
-let natrWatchlistOnly = false; // "show favorites only" toggle
-let natrFavColors = {}; // symbol -> color name ('gold'|'green'|'red'|'blue'|'purple')
-let natrFavColorFilter = new Set(); // непустой набор = показывать только избранные этих цветов
-let natrFavPickerSymbol = null;
 const NATR_FAV_COLOR_HEX = { gold:'#f0b90b', green:'#4caf50', red:'#f44336', blue:'#2196f3', purple:'#9c27b0' };
-let natrVolFrom = null;
-let natrVolTo = null;
-let natrVolFilterActive = false;
-let natrTradesFrom = null;
-let natrTradesTo = null;
-let natrTradesFilterActive = false;
-let natrCompareOp = 'gte';
-let natrCompareValue = null;
 let natrTicker24hMap = new Map(); // symbol -> {price, volume, count}
-let natrAlertsEnabled = false;
-let natrAlertedSymbols = new Set(); // tracks who we've already notified about, so re-entering the filter re-alerts
 // Shared thumbtack icon markup for the "закреп" (pin) column, used by both screener tables.
 const NATR_PIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
 // Tiger.com Terminal's own logo, embedded as the asset the user supplied — used here as a
@@ -2681,89 +2663,17 @@ function natrPinFavCellHtml(symbol, isPinned, isFav, pinFn, favFn, favColorHex) 
         'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + favFn + '(\'' + sym + '\', event);}">' + (isFav ? '★' : '☆') + '</span>' +
         '</div></td>';
 }
+// После удаления NATR Scanner здесь остаётся только наследие: старый общий список
+// "natr_watchlist" мигрируем в ключи живого скринера «Продолжение тренда»
+// (cont_pinned/cont_favorites), но только если те ещё никогда не записывались.
 try {
-    natrTopN = parseInt(localStorage.getItem('natr_topn'), 10) || 10;
-    const rVolFrom = parseFloat(localStorage.getItem('natr_vol_from'));
-    if (!isNaN(rVolFrom)) natrVolFrom = rVolFrom;
-    const rVolTo = parseFloat(localStorage.getItem('natr_vol_to'));
-    if (!isNaN(rVolTo)) natrVolTo = rVolTo;
-    natrVolFilterActive = localStorage.getItem('natr_vol_filter_active') === '1';
-    const rTrFrom = parseFloat(localStorage.getItem('natr_trades_from'));
-    if (!isNaN(rTrFrom)) natrTradesFrom = rTrFrom;
-    const rTrTo = parseFloat(localStorage.getItem('natr_trades_to'));
-    if (!isNaN(rTrTo)) natrTradesTo = rTrTo;
-    natrTradesFilterActive = localStorage.getItem('natr_trades_filter_active') === '1';
-    const savedOp = localStorage.getItem('natr_compare_op');
-    if (savedOp === 'gte' || savedOp === 'lte') natrCompareOp = savedOp;
-    const savedCmpVal = parseFloat(localStorage.getItem('natr_compare_value'));
-    if (!isNaN(savedCmpVal) && savedCmpVal >= 0) natrCompareValue = savedCmpVal;
-    // Migrate the old shared "natr_watchlist" (used as both pin AND favorite, shared
-    // between both screeners) into the new separate, per-screener keys — but only if
-    // those new keys have never been written before, so we don't clobber real data.
     const legacyWatchlist = localStorage.getItem('natr_watchlist');
-    if (legacyWatchlist !== null && localStorage.getItem('natr_pinned') === null && localStorage.getItem('natr_favorites') === null) {
-        ctSafeSetItem('natr_pinned', legacyWatchlist);
-        ctSafeSetItem('natr_favorites', legacyWatchlist);
+    if (legacyWatchlist !== null) {
         if (localStorage.getItem('cont_pinned') === null) ctSafeSetItem('cont_pinned', legacyWatchlist);
         if (localStorage.getItem('cont_favorites') === null) ctSafeSetItem('cont_favorites', legacyWatchlist);
     }
-    natrPinned = new Set(ctSafeGetJSON('natr_pinned', []));
-    natrFavorites = new Set(ctSafeGetJSON('natr_favorites', []));
-    natrFavColors = ctSafeGetJSON('natr_fav_colors', {}) || {};
-    natrWatchlistOnly = localStorage.getItem('natr_watchlist_only') === '1';
-    try {
-        const savedNatrColors = ctSafeGetJSON('natr_fav_color_filter', []);
-        if (Array.isArray(savedNatrColors)) natrFavColorFilter = new Set(savedNatrColors);
-    } catch(e) { /* defaults are fine */ }
-    const savedMode = localStorage.getItem('natr_mode');
-    if (NATR_MODES[savedMode]) natrMode = savedMode;
-    const savedCat = localStorage.getItem('natr_category');
-    if (savedCat) natrSelectedCategory = savedCat;
-    natrAlertsEnabled = localStorage.getItem('natr_alerts_enabled') === '1';
-    if (natrCompareValue === null) natrAlertsEnabled = false; // enabled flag with no valid NATR filter shouldn't stick
 } catch(e) { /* storage unavailable — defaults are fine */ }
 
-// Syncs toolbar controls (select values, active tab classes, watchlist button)
-// with whatever was restored from localStorage above — runs once on DOMContentLoaded.
-function natrApplyRestoredUI() {
-    const validTopN = [10, 20, 50, 99999];
-    if (!validTopN.includes(natrTopN)) natrTopN = 10;
-    const topSel = document.getElementById('natrTopNSelect');
-    if (topSel) topSel.value = String(natrTopN);
-    const volFromEl = document.getElementById('natrVolFrom');
-    if (volFromEl && natrVolFrom !== null) volFromEl.value = natrVolFrom;
-    const volToEl = document.getElementById('natrVolTo');
-    if (volToEl && natrVolTo !== null) volToEl.value = natrVolTo;
-    const volBtn = document.getElementById('natrVolFilterBtn');
-    if (volBtn) volBtn.classList.toggle('active', natrVolFilterActive);
-    const trFromEl = document.getElementById('natrTradesFrom');
-    if (trFromEl && natrTradesFrom !== null) trFromEl.value = natrTradesFrom;
-    const trToEl = document.getElementById('natrTradesTo');
-    if (trToEl && natrTradesTo !== null) trToEl.value = natrTradesTo;
-    const trBtn = document.getElementById('natrTradesFilterBtn');
-    if (trBtn) trBtn.classList.toggle('active', natrTradesFilterActive);
-    const cmpOpSel = document.getElementById('natrCompareOp');
-    if (cmpOpSel) cmpOpSel.value = natrCompareOp;
-    const cmpValInput = document.getElementById('natrCompareValue');
-    if (cmpValInput && natrCompareValue !== null) cmpValInput.value = natrCompareValue;
-    document.querySelectorAll('#natrCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === natrSelectedCategory));
-    document.querySelectorAll('#section-natr .natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === natrMode));
-    const wlBtn = document.getElementById('natrWatchlistBtn');
-    if (wlBtn) wlBtn.classList.toggle('active', natrWatchlistOnly);
-    const alertBtn = document.getElementById('natrAlertBtn');
-    if (alertBtn && natrAlertsEnabled && natrCompareValue !== null) {
-        alertBtn.classList.add('active');
-    }
-    if (natrFavColorFilter.size > 0) {
-        document.querySelectorAll('#natrFavColorFilterGroup .abs-color-filter-dot').forEach(btn => {
-            btn.classList.toggle('active', natrFavColorFilter.has(btn.dataset.color));
-        });
-    }
-    const tigerExchSel = document.getElementById('natrTigerExchangeSelect');
-    if (tigerExchSel) tigerExchSel.value = natrTigerExchange;
-    const tigerGroupSel = document.getElementById('natrTigerLinkGroupSelect');
-    if (tigerGroupSel) tigerGroupSel.value = natrTigerLinkGroup;
-}
 
 // Embedded category map — avoids CORS, works offline
 const NATR_EMBEDDED_CATEGORIES={"BTCUSDT":"PoW","ETHUSDT":"Layer-1","BCHUSDT":"Payment","XRPUSDT":"Payment","EOSUSDT":"NONE","LTCUSDT":"Payment","TRXUSDT":"Layer-1","ETCUSDT":"PoW","LINKUSDT":"Infrastructure","XLMUSDT":"Layer-2","ADAUSDT":"Layer-1","XMRUSDT":"PoW","DASHUSDT":"PoW","ZECUSDT":"PoW","XTZUSDT":"Layer-1","BNBUSDT":"Layer-1","ATOMUSDT":"Layer-1","ONTUSDT":"PoW","IOTAUSDT":"PoW","BATUSDT":"Infrastructure","VETUSDT":"Layer-1","NEOUSDT":"Layer-1","QTUMUSDT":"Layer-1","IOSTUSDT":"Layer-1","THETAUSDT":"AI","ALGOUSDT":"Layer-1","ZILUSDT":"PoW","KNCUSDT":"DeFi","ZRXUSDT":"DeFi","COMPUSDT":"DeFi","OMGUSDT":"Layer-2","DOGEUSDT":"Meme","KAVAUSDT":"DeFi","BANDUSDT":"DeFi","RLCUSDT":"AI","WAVESUSDT":"Layer-1","MKRUSDT":"DeFi","SNXUSDT":"DeFi","DOTUSDT":"Layer-1","DEFIUSDT":"Index","YFIUSDT":"DeFi","BALUSDT":"DEX","CRVUSDT":"DeFi","TRBUSDT":"Infrastructure","RUNEUSDT":"DeFi","SUSHIUSDT":"DeFi","EGLDUSDT":"Layer-1","SOLUSDT":"Layer-1","ICXUSDT":"Layer-1","STORJUSDT":"Storage","BLZUSDT":"Storage","UNIUSDT":"DeFi","AVAXUSDT":"Layer-1","FTMUSDT":"Layer-1","ENJUSDT":"Gaming","FLMUSDT":"DeFi","KSMUSDT":"Layer-1","NEARUSDT":"Layer-1","AAVEUSDT":"DeFi","FILUSDT":"Storage","RSRUSDT":"DeFi","LRCUSDT":"DeFi","OCEANUSDT":"AI","BELUSDT":"DeFi","AXSUSDT":"Metaverse","ALPHAUSDT":"DeFi","ZENUSDT":"PoW","SKLUSDT":"Layer-2","GRTUSDT":"AI","1INCHUSDT":"DeFi","CHZUSDT":"NFT","SANDUSDT":"Metaverse","ANKRUSDT":"DeFi","HOTUSDT":"Storage","DENTUSDT":"Infrastructure","CELRUSDT":"Layer-2","MTLUSDT":"Infrastructure","OGNUSDT":"DeFi","NKNUSDT":"PoW","SCUSDT":"Storage","DGBUSDT":"Payment","1000SHIBUSDT":"Meme","BAKEUSDT":"DeFi","BTCDOMUSDT":"Index","IOTXUSDT":"Infrastructure","RAYUSDT":"DEX","C98USDT":"DeFi","MASKUSDT":"Infrastructure","ATAUSDT":"Infrastructure","DYDXUSDT":"DeFi","1000XECUSDT":"Payment","GALAUSDT":"Gaming","CELOUSDT":"Layer-1","ARUSDT":"Storage","KLAYUSDT":"Layer-1","ARPAUSDT":"Infrastructure","CTSIUSDT":"Layer-2","LPTUSDT":"AI","ENSUSDT":"Infrastructure","PEOPLEUSDT":"Meme","ROSEUSDT":"Layer-1","DUSKUSDT":"Layer-1","FLOWUSDT":"Layer-1","IMXUSDT":"NFT","API3USDT":"Infrastructure","GMTUSDT":"NFT","APEUSDT":"NFT","WOOUSDT":"DeFi","JASMYUSDT":"Infrastructure","DARUSDT":"NFT","OPUSDT":"Layer-2","INJUSDT":"DeFi","STGUSDT":"DeFi","SPELLUSDT":"DeFi","1000LUNCUSDT":"DeFi","LUNA2USDT":"Layer-1","LDOUSDT":"DeFi","ICPUSDT":"Layer-1","APTUSDT":"Layer-1","QNTUSDT":"Infrastructure","FETUSDT":"AI","FXSUSDT":"DeFi","HOOKUSDT":"Infrastructure","MAGICUSDT":"Metaverse","TUSDT":"Infrastructure","RNDRUSDT":"NONE","HIGHUSDT":"Metaverse","MINAUSDT":"Layer-1","ASTRUSDT":"Layer-1","AGIXUSDT":"AI","PHBUSDT":"AI","GMXUSDT":"DeFi","CFXUSDT":"PoW","STXUSDT":"Infrastructure","CKBUSDT":"PoW","PERPUSDT":"DeFi","TRUUSDT":"DeFi","LQTYUSDT":"DeFi","IDUSDT":"Infrastructure","ARBUSDT":"Layer-2","JOEUSDT":"DeFi","TLMUSDT":"Metaverse","AMBUSDT":"Layer-1","LEVERUSDT":"DeFi","RDNTUSDT":"DeFi","HFTUSDT":"DeFi","XVSUSDT":"DeFi","BLURUSDT":"NFT","EDUUSDT":"Metaverse","IDEXUSDT":"DeFi","SUIUSDT":"Layer-1","1000PEPEUSDT":"Meme","1000FLOKIUSDT":"Meme","UMAUSDT":"DeFi","RADUSDT":"DeFi","KEYUSDT":"Infrastructure","COMBOUSDT":"Metaverse","NMRUSDT":"AI","MAVUSDT":"Infrastructure","MDTUSDT":"Infrastructure","XVGUSDT":"PoW","WLDUSDT":"AI","PENDLEUSDT":"DeFi","ARKMUSDT":"Infrastructure","AGLDUSDT":"Gaming","YGGUSDT":"Gaming","DODOXUSDT":"DeFi","BNTUSDT":"DeFi","OXTUSDT":"Infrastructure","SEIUSDT":"Layer-1","CYBERUSDT":"Infrastructure","HIFIUSDT":"DeFi","ARKUSDT":"Layer-1","GLMRUSDT":"Layer-2","BICOUSDT":"Infrastructure","STRAXUSDT":"Layer-2","LOOMUSDT":"Infrastructure","BIGTIMEUSDT":"Gaming","BONDUSDT":"DeFi","ORBSUSDT":"Infrastructure","STPTUSDT":"DeFi","WAXPUSDT":"Gaming","BSVUSDT":"PoW","RIFUSDT":"Storage","POLYXUSDT":"Infrastructure","GASUSDT":"Infrastructure","POWRUSDT":"Layer-2","TIAUSDT":"Infrastructure","SNTUSDT":"DeFi","CAKEUSDT":"DeFi","MEMEUSDT":"Meme","TWTUSDT":"Infrastructure","TOKENUSDT":"DeFi","ORDIUSDT":"Meme","STEEMUSDT":"DeFi","BADGERUSDT":"Bitcoin Eco","ILVUSDT":"Metaverse","NTRNUSDT":"Layer-1","KASUSDT":"Layer-1","BEAMXUSDT":"Gaming","1000BONKUSDT":"Meme","PYTHUSDT":"Infrastructure","SUPERUSDT":"Gaming","ONGUSDT":"Layer-1","ETHWUSDT":"PoW","JTOUSDT":"DeFi","1000SATSUSDT":"Meme","AUCTIONUSDT":"DeFi","1000RATSUSDT":"Meme","ACEUSDT":"Gaming","MOVRUSDT":"Layer-1","NFPUSDT":"AI","AIUSDT":"AI","XAIUSDT":"Gaming","WIFUSDT":"Meme","MANTAUSDT":"Layer-2","ONDOUSDT":"DeFi","LSKUSDT":"Layer-2","ALTUSDT":"Infrastructure","JUPUSDT":"DeFi","ZETAUSDT":"Layer-1","RONINUSDT":"Gaming","DYMUSDT":"Infrastructure","OMUSDT":"DeFi","PIXELUSDT":"Gaming","STRKUSDT":"Layer-1","GLMUSDT":"Infrastructure","PORTALUSDT":"Gaming","TONUSDT":"Layer-1","AXLUSDT":"Infrastructure","METISUSDT":"Layer-2","AEVOUSDT":"DeFi","VANRYUSDT":"Metaverse","BOMEUSDT":"Meme","ETHFIUSDT":"DeFi","ENAUSDT":"DeFi","WUSDT":"Infrastructure","TNSRUSDT":"NFT","SAGAUSDT":"Layer-1","TAOUSDT":"AI","OMNIUSDT":"Layer-1","REZUSDT":"DeFi","BBUSDT":"Layer-1","NOTUSDT":"Gaming","TURBOUSDT":"AI","IOUSDT":"AI","ZKUSDT":"Layer-2","MEWUSDT":"Meme","LISTAUSDT":"DeFi","ZROUSDT":"Infrastructure","RENDERUSDT":"Infrastructure","BANANAUSDT":"DeFi","RAREUSDT":"NFT","GUSDT":"Infrastructure","SYNUSDT":"DeFi","SYSUSDT":"PoW","VOXELUSDT":"Gaming","BRETTUSDT":"Meme","ALPACAUSDT":"DeFi","POPCATUSDT":"Meme","SUNUSDT":"DeFi","VIDTUSDT":"AI","NULSUSDT":"Infrastructure","DOGSUSDT":"Meme","MBOXUSDT":"Metaverse","CHESSUSDT":"DeFi","FLUXUSDT":"AI","BSWUSDT":"DeFi","QUICKUSDT":"DeFi","NEIROETHUSDT":"Meme","RPLUSDT":"DeFi","POLUSDT":"Layer-2","UXLINKUSDT":"Infrastructure","1MBABYDOGEUSDT":"Meme","NEIROUSDT":"Meme","KDAUSDT":"PoW","FIDAUSDT":"Infrastructure","FIOUSDT":"NFT","CATIUSDT":"Gaming","GHSTUSDT":"Metaverse","LOKAUSDT":"Gaming","HMSTRUSDT":"Gaming","REIUSDT":"Layer-1","EIGENUSDT":"Infrastructure","DIAUSDT":"Infrastructure","1000CATUSDT":"Meme","SCRUSDT":"Layer-1","GOATUSDT":"AI","MOODENGUSDT":"Meme","SAFEUSDT":"Infrastructure","PONKEUSDT":"Meme","COWUSDT":"DeFi","CETUSUSDT":"DeFi","1000000MOGUSDT":"Meme","GRASSUSDT":"AI","DRIFTUSDT":"DeFi","SWELLUSDT":"DeFi","ACTUSDT":"AI","PNUTUSDT":"Meme","HIPPOUSDT":"Meme","1000XUSDT":"AI","DEGENUSDT":"Meme","BANUSDT":"Meme","AKTUSDT":"AI","SLERFUSDT":"Meme","SCRTUSDT":"Layer-1","1000CHEEMSUSDT":"Meme","1000WHYUSDT":"Meme","THEUSDT":"DeFi","MORPHOUSDT":"DeFi","CHILLGUYUSDT":"Meme","KAIAUSDT":"DeFi","AEROUSDT":"DeFi","ACXUSDT":"DeFi","ORCAUSDT":"DeFi","MOVEUSDT":"Layer-1","VIRTUALUSDT":"AI","SPXUSDT":"Meme","MEUSDT":"NFT","AVAUSDT":"NONE","DEGOUSDT":"NFT","VELODROMEUSDT":"DeFi","MOCAUSDT":"Metaverse","VANAUSDT":"AI","PENGUUSDT":"Meme","LUMIAUSDT":"DeFi","USUALUSDT":"DeFi","AIXBTUSDT":"AI","FARTCOINUSDT":"Meme","KMNOUSDT":"DeFi","CGPTUSDT":"AI","HIVEUSDT":"Layer-1","DEXEUSDT":"DeFi","PHAUSDT":"AI","DFUSDT":"DeFi","GRIFFAINUSDT":"AI","AI16ZUSDT":"AI","ZEREBROUSDT":"AI","COOKIEUSDT":"AI","ALCHUSDT":"AI","SWARMSUSDT":"AI","SONICUSDT":"Gaming","DUSDT":"Metaverse","PROMUSDT":"NFT","SUSDT":"Layer-1","SOLVUSDT":"DeFi","ARCUSDT":"AI","AVAAIUSDT":"AI","TRUMPUSDT":"Meme","MELANIAUSDT":"Meme","VTHOUSDT":"Layer-1","ANIMEUSDT":"NFT","VINEUSDT":"Meme","PIPPINUSDT":"Meme","VVVUSDT":"AI","BERAUSDT":"Layer-1","TSTUSDT":"Meme","LAYERUSDT":"Infrastructure","HEIUSDT":"Infrastructure","B3USDT":"Alpha","IPUSDT":"AI","GPSUSDT":"Infrastructure","SHELLUSDT":"AI","KAITOUSDT":"Infrastructure","REDUSDT":"Infrastructure","VICUSDT":"Layer-1","EPICUSDT":"NFT","BMTUSDT":"Infrastructure","MUBARAKUSDT":"Meme","FORMUSDT":"Gaming","BIDUSDT":"AI","TUTUSDT":"Meme","BROCCOLI714USDT":"Meme","BROCCOLIF3BUSDT":"Meme","SIRENUSDT":"Alpha","BANANAS31USDT":"Meme","BRUSDT":"DeFi","PLUMEUSDT":"Layer-1","NILUSDT":"AI","PARTIUSDT":"Layer-1","JELLYJELLYUSDT":"Alpha","MAVIAUSDT":"Gaming","PAXGUSDT":"RWA","WALUSDT":"Storage","FUNUSDT":"DeFi","MLNUSDT":"DeFi","GUNUSDT":"Gaming","ATHUSDT":"AI","BABYUSDT":"DeFi","FORTHUSDT":"DeFi","PROMPTUSDT":"AI","XCNUSDT":"PoW","STOUSDT":"DeFi","FHEUSDT":"AI","KERNELUSDT":"DeFi","WCTUSDT":"Infrastructure","INITUSDT":"Layer-1","BANKUSDT":"Meme","EPTUSDT":"AI","DEEPUSDT":"DeFi","HYPERUSDT":"DeFi","MEMEFIUSDT":"Gaming","FISUSDT":"DeFi","JSTUSDT":"DeFi","SIGNUSDT":"Infrastructure","PUNDIXUSDT":"DeFi","CTKUSDT":"Infrastructure","AIOTUSDT":"AI","DOLOUSDT":"DeFi","HAEDALUSDT":"DeFi","SXTUSDT":"AI","B2USDT":"DeFi","MILKUSDT":"DeFi","SYRUPUSDT":"DeFi","OBOLUSDT":"DeFi","DOODUSDT":"Alpha","OGUSDT":"NONE","ZKJUSDT":"Layer-2","SKYAIUSDT":"AI","NXPCUSDT":"Gaming","CVCUSDT":"Infrastructure","AGTUSDT":"AI","AWEUSDT":"AI","BUSDT":"Meme","SOONUSDT":"Infrastructure","HUMAUSDT":"Payment","AUSDT":"Layer-2","SOPHUSDT":"Layer-2","MERLUSDT":"Layer-2","HYPEUSDT":"DeFi","PUFFERUSDT":"Layer-2","PORT3USDT":"AI","1000000BOBUSDT":"Meme","LAUSDT":"AI","SKATEUSDT":"Layer-1","HOMEUSDT":"DeFi","RESOLVUSDT":"DeFi","TAIKOUSDT":"Layer-2","SQDUSDT":"DeFi","PUMPBTCUSDT":"DeFi","SPKUSDT":"DeFi","MYXUSDT":"DeFi","FUSDT":"DeFi","NEWTUSDT":"Meme","DMCUSDT":"Gaming","HUSDT":"Infrastructure","OLUSDT":"Gaming","SAHARAUSDT":"AI","BULLAUSDT":"Alpha","IDOLUSDT":"AI","MUSDT":"Meme","TANSSIUSDT":"Infrastructure","PUMPUSDT":"Meme","CROSSUSDT":"Gaming","AINUSDT":"AI","CUSDT":"AI","VELVETUSDT":"DeFi","TACUSDT":"Gaming","ERAUSDT":"DeFi","TAUSDT":"AI","CVXUSDT":"DeFi","SLPUSDT":"Gaming","ZORAUSDT":"Layer-2","TAGUSDT":"AI","ZRCUSDT":"DeFi","ESPORTSUSDT":"Gaming","TREEUSDT":"DeFi","A2ZUSDT":"Gaming","PLAYUSDT":"Gaming","NAORISUSDT":"Infrastructure","PROVEUSDT":"Infrastructure","ALLUSDT":"Index","INUSDT":"Alpha","YALAUSDT":"DeFi","CARVUSDT":"Alpha","AIOUSDT":"Alpha","XNYUSDT":"Alpha","USELESSUSDT":"Meme","DAMUSDT":"DeFi","CUDISUSDT":"Alpha","SAPIENUSDT":"Alpha","XPLUSDT":"Layer-1","WLFIUSDT":"DeFi","SOMIUSDT":"DeFi","BASUSDT":"Alpha","BTRUSDT":"Layer-2","MITOUSDT":"DeFi","HEMIUSDT":"DeFi","LINEAUSDT":"Layer-2","QUSDT":"Alpha","ARIAUSDT":"Alpha","TAKEUSDT":"Gaming","PTBUSDT":"Alpha","OPENUSDT":"AI","FLOCKUSDT":"AI","SKYUSDT":"DeFi","AVNTUSDT":"DeFi","HOLOUSDT":"AI","XPINUSDT":"Alpha","UBUSDT":"Alpha","TOSHIUSDT":"Meme","STBLUSDT":"DeFi","0GUSDT":"Layer-1","BARDUSDT":"DeFi","ASTERUSDT":"DeFi","TRADOORUSDT":"Alpha","BLESSUSDT":"Alpha","FLUIDUSDT":"DeFi","COAIUSDT":"Alpha","HANAUSDT":"Alpha","MIRAUSDT":"AI","AKEUSDT":"Alpha","ORDERUSDT":"DeFi","LIGHTUSDT":"Infrastructure","XANUSDT":"DeFi","EDENUSDT":"DeFi","NOMUSDT":"DeFi","TRUTHUSDT":"Alpha","2ZUSDT":"Infrastructure","EVAAUSDT":"DeFi","LYNUSDT":"Alpha","KGENUSDT":"Alpha","4USDT":"Alpha","GIGGLEUSDT":"Meme","MONUSDT":"DeFi","YBUSDT":"DeFi","METUSDT":"DeFi","LITUSDT":"DeFi","BREVUSDT":"Infrastructure","COLLECTUSDT":"Alpha","MAGMAUSDT":"Alpha","XAUUSDT":"TradFi","USUSDT":"Alpha","CYSUSDT":"Alpha","RAVEUSDT":"Alpha","ZKPUSDT":"Alpha","GUAUSDT":"Alpha","IRUSDT":"Alpha","RECALLUSDT":"AI","ZBTUSDT":"DeFi","LABUSDT":"Alpha","RIVERUSDT":"Alpha","RVVUSDT":"Alpha","BLUAIUSDT":"Alpha","TURTLEUSDT":"DeFi","APRUSDT":"Alpha","ONUSDT":"Alpha","42USDT":"Alpha","COMMONUSDT":"Alpha","KITEUSDT":"AI","ATUSDT":"Alpha","CCUSDT":"Layer-1","MMTUSDT":"DeFi","TRUSTUSDT":"AI","UAIUSDT":"Alpha","FOLKSUSDT":"Alpha","STABLEUSDT":"Alpha","JCTUSDT":"Alpha","ALLOUSDT":"AI","CLANKERUSDT":"Alpha","BEATUSDT":"Alpha","PIEVERSEUSDT":"Alpha","SENTUSDT":"AI","BOBUSDT":"Alpha","IRYSUSDT":"Alpha","RLSUSDT":"Alpha","POWERUSDT":"Alpha","WETUSDT":"Alpha","NIGHTUSDT":"Alpha","XAGUSDT":"TradFi","ZAMAUSDT":"Infrastructure","FOGOUSDT":"Infrastructure","FRAXUSDT":"DeFi","AIAUSDT":"Alpha","ACUUSDT":"Alpha","ELSAUSDT":"Alpha","SKRUSDT":"Alpha","SPACEUSDT":"Alpha","FIGHTUSDT":"Alpha","TSLAUSDT":"TradFi","BIRBUSDT":"Alpha","GWEIUSDT":"Alpha","XPTUSDT":"TradFi","XPDUSDT":"TradFi","MEGAUSDT":"DeFi","INXUSDT":"Alpha","INTCUSDT":"TradFi","HOODUSDT":"TradFi","TRIAUSDT":"Alpha","MSTRUSDT":"TradFi","AMZNUSDT":"TradFi","CRCLUSDT":"TradFi","COINUSDT":"TradFi","PLTRUSDT":"TradFi","AZTECUSDT":"Layer-2","OPNUSDT":"DeFi","ROBOUSDT":"Alpha","KATUSDT":"Infrastructure","MANTRAUSDT":"RWA","COPPERUSDT":"TradFi","EWYUSDT":"TradFi","CFGUSDT":"RWA","EWJUSDT":"TradFi","EDGEUSDT":"DeFi","PAYPUSDT":"TradFi","METAUSDT":"TradFi","NVDAUSDT":"TradFi","GOOGLUSDT":"TradFi","XAUTUSDT":"RWA","CLUSDT":"TradFi","BZUSDT":"TradFi","NATGASUSDT":"TradFi","PRLUSDT":"Alpha","QQQUSDT":"TradFi","SPYUSDT":"TradFi","AAPLUSDT":"TradFi","TSMUSDT":"TradFi","MUUSDT":"TradFi","SNDKUSDT":"TradFi","MSFTUSDT":"TradFi","AVGOUSDT":"TradFi","BABAUSDT":"TradFi","AMDUSDT":"TradFi","QCOMUSDT":"TradFi","USARUSDT":"TradFi","LITEUSDT":"TradFi","ORCLUSDT":"TradFi","DISUSDT":"TradFi","UBERUSDT":"TradFi","CSCOUSDT":"TradFi","HDUSDT":"TradFi","SOXLUSDT":"TradFi","MRVLUSDT":"TradFi","CRWVUSDT":"TradFi","WMTUSDT":"TradFi","JPMUSDT":"TradFi","BRKBUSDT":"TradFi","FLNCUSDT":"TradFi","DRAMUSDT":"TradFi","RKLBUSDT":"TradFi","CBRSUSDT":"TradFi","SPCXUSDT":"TradFi","OPENAIUSDT":"TradFi","NBISUSDT":"TradFi","WDCUSDT":"TradFi","ARMUSDT":"TradFi","BEUSDT":"TradFi","COHRUSDT":"TradFi","QNTXUSDT":"TradFi","LLYUSDT":"TradFi","NVOUSDT":"TradFi","BBXUSDT":"TradFi","NOKUSDT":"TradFi","EWTUSDT":"TradFi","ASTSUSDT":"TradFi","DELLUSDT":"TradFi","IBMUSDT":"TradFi","NOWUSDT":"TradFi","CRMUSDT":"TradFi","IRENUSDT":"TradFi","ONDSUSDT":"TradFi","BXUSDT":"TradFi","HPEUSDT":"TradFi","AMATUSDT":"TradFi","CRWDUSDT":"TradFi","CRDOUSDT":"TradFi","AAOIUSDT":"TradFi","IWMUSDT":"TradFi","AXTIUSDT":"TradFi","NFLXUSDT":"TradFi","COSTUSDT":"TradFi","URNMUSDT":"TradFi","HIMSUSDT":"TradFi","EBAYUSDT":"TradFi","ZMUSDT":"TradFi","DKNGUSDT":"TradFi","RIVNUSDT":"TradFi","GMEUSDT":"TradFi","XLEUSDT":"TradFi","EWZUSDT":"TradFi","BMNRUSDT":"TradFi","UVXYUSDT":"TradFi","ADBEUSDT":"TradFi","GLWUSDT":"TradFi","STXXUSDT":"TradFi","ASMLUSDT":"TradFi","REUSDT":"Alpha","LRCXUSDT":"TradFi","KLACUSDT":"TradFi","ALABUSDT":"TradFi","SMCIUSDT":"TradFi","CIENUSDT":"TradFi","KORUUSDT":"TradFi","SONYUSDT":"TradFi","MVLLUSDT":"TradFi","TQQQUSDT":"TradFi","SQQQUSDT":"TradFi","STRCUSDT":"TradFi","CATUSDT":"TradFi","TXNUSDT":"TradFi","FLEXUSDT":"TradFi","TERUSDT":"TradFi","TTWOUSDT":"TradFi","KSTRUSDT":"TradFi","BSPUSDT":"TradFi","BOTUSDT":"TradFi","WENUSDT":"TradFi","INTWUSDT":"TradFi","SNXXUSDT":"TradFi","XBIUSDT":"TradFi","BNCUSDT":"TradFi","FWDIUSDT":"TradFi","GEVUSDT":"TradFi","VRTUSDT":"TradFi","SNOWUSDT":"TradFi","APPUSDT":"TradFi","MUUUSDT":"TradFi","SOXSUSDT":"TradFi","TZAUSDT":"TradFi","MINIMAXUSDT":"TradFi","ZHIPUUSDT":"TradFi","HK0700USDT":"TradFi","HK1810USDT":"TradFi","TENCENTUSDT":"TradFi","SHAZUSDT":"TradFi","SOFIUSDT":"TradFi","PANWUSDT":"TradFi","PENGUSDT":"TradFi","POPMARTUSDT":"TradFi","ANTHROPICUSDT":"TradFi","HYUNDAIUSDT":"TradFi","SAMSUNGUSDT":"TradFi","SKHYNIXUSDT":"TradFi","SKHYUSDT":"TradFi","SPCXUSD1":"TradFi"};
@@ -2799,62 +2709,8 @@ function natrAssetTypeBadge(symbol) {
     return '<span class="atype-badge '+meta.cls+'">'+meta.label+'</span>';
 }
 
-function natrSetStatus(text, active, updating) {
-    const b = document.getElementById('natrStatusBadge');
-    document.getElementById('natrStatusText').textContent = text;
-    b.classList.toggle('active', !!active);
-    b.classList.toggle('updating', !!updating);
-}
-function natrSetTableUpdating(u) {
-    document.getElementById('natrTableWrap').classList.toggle('updating', u);
-    document.getElementById('natrAutoRefresh').classList.toggle('updating', u);
-    document.getElementById('natrLastUpdate').classList.toggle('updating', u);
-}
-function natrUpdateLastTime() {
-    const now = new Date();
-    document.getElementById('natrUpdateTime').textContent = 'Обновлено: ' + now.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    document.getElementById('natrLastUpdate').style.display = 'flex';
-}
-function natrShowSkeleton(count) {
-    const el = document.getElementById('natrSkeleton');
-    el.style.display = 'block';
-    el.innerHTML = Array(count||10).fill(0).map(() =>
-        '<div class="skel-row"><div class="skel" style="width:32px;height:32px;border-radius:8px;"></div><div class="skel" style="width:100px;height:18px;"></div><div class="skel" style="width:80px;height:28px;margin-left:auto;"></div></div>'
-    ).join('');
-    document.getElementById('natrTableBody').innerHTML = '';
-    document.getElementById('natrEmptyState').style.display = 'none';
-}
-function natrHideSkeleton() { document.getElementById('natrSkeleton').style.display = 'none'; }
-function natrUpdateTimerDisplay() {
-    const el = document.getElementById('natrRefreshTimer');
-    if (!el) return;
-    if (!natrRefreshTimerId) { el.textContent = '--'; el.style.color = ''; return; }
-    el.textContent = natrRefreshCountdown;
-    el.style.color = natrRefreshCountdown <= 5 ? 'var(--red)' : natrRefreshCountdown <= 15 ? 'var(--accent)' : '';
-}
-function natrStartAutoRefresh() {
-    natrRefreshCountdown = NATR_REFRESH_INTERVAL;
-    if (natrRefreshTimerId) clearInterval(natrRefreshTimerId);
-    natrRefreshTimerId = setInterval(() => {
-        natrRefreshCountdown--;
-            if (natrRefreshCountdown <= 0) {
-            if (!natrIsScanning && natrAllResults.length > 0) natrStartBgUpdate();
-            natrRefreshCountdown = NATR_REFRESH_INTERVAL;
-        }
-    }, 1000);
-    document.getElementById('natrAutoRefresh').classList.add('active');
-}
-function natrStopAutoRefresh() {
-    if (natrRefreshTimerId) { clearInterval(natrRefreshTimerId); natrRefreshTimerId = null; }
-    natrRefreshCountdown = NATR_REFRESH_INTERVAL;
-    const ar = document.getElementById('natrAutoRefresh');
-    if (ar) ar.classList.remove('active', 'updating');
-    // Остановить фоновое обновление, если оно идёт
-    if (natrIsBgUpdating && natrAbortCtrl) { natrAbortCtrl.abort(); natrIsBgUpdating = false; natrSetTableUpdating(false); }
-}
 function natrInitCategories() {
     natrCategoryMap = Object.assign({}, NATR_EMBEDDED_CATEGORIES);
-    natrUpdateCatTabCounts();
     contUpdateCatTabCounts();
     absUpdateCatTabCounts(); // Super Screener использует тот же natrCategoryMap
     // No background API refresh here on purpose: Binance's www.binance.com/bapi/... web
@@ -2897,116 +2753,8 @@ function updateCatTabCounts(containerSelector) {
         }
     });
 }
-function natrUpdateCatTabCounts() { updateCatTabCounts('#natrCatTabs'); }
 function contUpdateCatTabCounts() { updateCatTabCounts('#contCatTabs'); }
-function natrSwitchCategory(cat) {
-    natrSelectedCategory = cat;
-    document.querySelectorAll('#natrCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
-    ctSafeSetItem('natr_category', cat);
-    // If we have results, re-filter and re-render
-    if (natrAllResults.length > 0) {
-        natrReFilterAndRender();
-    }
-}
 const NATR_TF_TAB_TO_ASSET_TYPE = { TF_CRYPTO: 'crypto', TF_STOCK: 'stock', TF_ETF: 'etf', TF_COMMODITY: 'commodity', TF_INDEX: 'index', TF_OTHER: 'rwa' };
-// Single source of truth for "what does the current filter set select" — used both
-// for rendering the table AND for deciding what the alert system watches, so alerts
-// never fire for rows the filters are currently hiding.
-function natrGetFilteredResults() {
-    // Favorites-only bypasses every other filter (category tab, объём/сделки, NATR-порог)
-    // — same "show me exactly this list, full stop" semantics pinned rows already have.
-    // Previously favorites were filtered from whatever the category/volume/etc. filters
-    // already narrowed down to, so a favorited symbol could silently disappear just because
-    // it didn't match the currently selected category or NATR threshold.
-    if (natrWatchlistOnly) {
-        // No scan yet — synthesize "stub" rows from natrFavorites so the user can still
-        // see what's in their list before hitting Сканировать. All numeric cells render
-        // as "—" via the null-checks in natrRenderTable.
-        if (natrAllResults.length === 0) {
-            let stubs = natrBuildFavoriteStubs();
-            if (natrFavColorFilter.size > 0) {
-                stubs = stubs.filter(r => natrFavColorFilter.has(natrFavColors[r.symbol] || 'gold'));
-            }
-            return stubs;
-        }
-        let favs = natrAllResults.filter(r => natrFavorites.has(r.symbol));
-        if (natrFavColorFilter.size > 0) {
-            favs = favs.filter(r => natrFavColorFilter.has(natrFavColors[r.symbol] || 'gold'));
-        }
-        return favs;
-    }
-    let list;
-    if (natrSelectedCategory === 'all') {
-        list = [...natrAllResults];
-    } else if (NATR_TF_TAB_TO_ASSET_TYPE[natrSelectedCategory]) {
-        const wantType = NATR_TF_TAB_TO_ASSET_TYPE[natrSelectedCategory];
-        list = natrAllResults.filter(r => natrGetAssetType(r.symbol) === wantType);
-    } else {
-        list = natrAllResults.filter(r => {
-            const cat = (natrCategoryMap[r.symbol] || 'NONE').split(',')[0];
-            return cat === natrSelectedCategory;
-        });
-    }
-    if (natrVolFilterActive) {
-        if (natrVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= natrVolFrom; });
-        if (natrVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume <= natrVolTo; });
-    }
-    if (natrTradesFilterActive) {
-        if (natrTradesFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.count >= natrTradesFrom; });
-        if (natrTradesTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.count <= natrTradesTo; });
-    }
-    if (natrCompareValue !== null && !isNaN(natrCompareValue)) {
-        list = list.filter(r => natrCompareOp === 'lte' ? r.natr <= natrCompareValue : r.natr >= natrCompareValue);
-    }
-    // Цвет фильтр избранного — показать только избранные выбранных цветов.
-    if (natrFavColorFilter.size > 0) {
-        list = list.filter(r => {
-            if (!natrFavorites.has(r.symbol)) return false;
-            const c = natrFavColors[r.symbol] || 'gold';
-            return natrFavColorFilter.has(c);
-        });
-    }
-    return list;
-}
-// Stub rows for the "★ Избранное без сканирования" case (NATR Scanner): every favorited
-// symbol shows up with "—" in every numeric cell (Цена/Объём/Сделки/NATR), but Тикер
-// and Тип (Крипто/Акция/ETF/...) render normally — enough to recall what was added,
-// then hit Сканировать whenever you actually want fresh data.
-function natrBuildFavoriteStubs() {
-    return [...natrFavorites].map(sym => ({
-        symbol: sym,
-        natr: null
-    }));
-}
-// Pinned (📌 закреп) rows always stay visible at the top of the table, unaffected by
-// category/объём/сделки/NATR filters or Top N — only their values refresh. Separate from
-// избранное (favorite): favorites only control the "★ Избранное" show-only-favorites filter.
-function natrReFilterAndRender(animate) {
-    const filtered = natrSortData(natrGetFilteredResults());
-    if (natrPinned.size === 0) {
-        natrRenderTable(filtered, !!animate, 0);
-        return;
-    }
-    let pinnedRows;
-    if (natrAllResults.length === 0) {
-        // No scan yet — pinned symbols still need to show at the top, so build stubs
-        // from natrPinned the same way natrBuildFavoriteStubs does for favorites.
-        pinnedRows = [...natrPinned].map(sym => ({ symbol: sym, natr: null }));
-    } else {
-        pinnedRows = natrSortData(natrAllResults.filter(r => natrPinned.has(r.symbol)));
-    }
-    const pinnedSet = new Set(pinnedRows.map(r => r.symbol));
-    const rest = filtered.filter(r => !pinnedSet.has(r.symbol));
-    natrRenderTable(pinnedRows.concat(rest), !!animate, pinnedRows.length);
-}
-// Debounced entry point for free-text/number filter inputs (объём, сделки, NATR-порог):
-// avoids re-filtering + re-rendering the whole table on every single keystroke.
-const natrReFilterAndRenderDebounced = debounce(natrReFilterAndRender, 180);
-function natrChangeTopN(v) {
-    natrTopN = parseInt(v, 10) || 10;
-    ctSafeSetItem('natr_topn', String(natrTopN));
-    if (natrAllResults.length) natrReFilterAndRender();
-}
 // Accepts plain numbers and shorthand like "10к"/"10k" (thousands) or "1м"/"1m" (millions),
 // matching how people actually type volume/trade-count bounds. Returns null if empty/invalid.
 function natrParseShorthand(str) {
@@ -3022,223 +2770,6 @@ function natrParseShorthand(str) {
     else if (suffix === 'м' || suffix === 'm' || suffix === 'млн') val *= 1000000;
     return val;
 }
-function natrChangeVolRange() {
-    natrVolFrom = natrParseShorthand(document.getElementById('natrVolFrom').value);
-    natrVolTo = natrParseShorthand(document.getElementById('natrVolTo').value);
-    ctSafeSetItem('natr_vol_from', natrVolFrom === null ? '' : String(natrVolFrom));
-    ctSafeSetItem('natr_vol_to', natrVolTo === null ? '' : String(natrVolTo));
-    // typing alone only re-colors matching values (see natrInRange in natrRenderTable) —
-    // it does not hide rows unless the Фильтр button is toggled on
-    if (natrAllResults.length) natrReFilterAndRenderDebounced();
-}
-function natrToggleVolFilter() {
-    natrVolFilterActive = !natrVolFilterActive;
-    const btn = document.getElementById('natrVolFilterBtn');
-    if (btn) btn.classList.toggle('active', natrVolFilterActive);
-    ctSafeSetItem('natr_vol_filter_active', natrVolFilterActive ? '1' : '0');
-    if (natrAllResults.length) natrReFilterAndRender();
-}
-function natrChangeTradesRange() {
-    natrTradesFrom = natrParseShorthand(document.getElementById('natrTradesFrom').value);
-    natrTradesTo = natrParseShorthand(document.getElementById('natrTradesTo').value);
-    ctSafeSetItem('natr_trades_from', natrTradesFrom === null ? '' : String(natrTradesFrom));
-    ctSafeSetItem('natr_trades_to', natrTradesTo === null ? '' : String(natrTradesTo));
-    if (natrAllResults.length) natrReFilterAndRenderDebounced();
-}
-function natrToggleTradesFilter() {
-    natrTradesFilterActive = !natrTradesFilterActive;
-    const btn = document.getElementById('natrTradesFilterBtn');
-    if (btn) btn.classList.toggle('active', natrTradesFilterActive);
-    ctSafeSetItem('natr_trades_filter_active', natrTradesFilterActive ? '1' : '0');
-    if (natrAllResults.length) natrReFilterAndRender();
-}
-// Shared "is this value within the typed from/to bounds" check — used to color matching
-// cells even when the filter button hasn't been turned on yet (preview mode).
-function natrInRange(value, from, to) {
-    if (from !== null && value < from) return false;
-    if (to !== null && value > to) return false;
-    return true;
-}
-function natrChangeNatrCompare() {
-    const opSel = document.getElementById('natrCompareOp');
-    const valInput = document.getElementById('natrCompareValue');
-    natrCompareOp = opSel.value === 'lte' ? 'lte' : 'gte';
-    const v = parseFloat(valInput.value);
-    natrCompareValue = (!isNaN(v) && v >= 0) ? v : null;
-    if (natrCompareValue === null && natrAlertsEnabled) {
-        // no threshold left to alert on — turn the bell off rather than leave it silently stuck on
-        natrAlertsEnabled = false;
-        const btn = document.getElementById('natrAlertBtn');
-        if (btn) btn.classList.remove('active');
-    }
-    ctSafeSetItem('natr_compare_op', natrCompareOp);
-    ctSafeSetItem('natr_compare_value', natrCompareValue === null ? '' : String(natrCompareValue));
-    ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0');
-    if (natrAllResults.length) natrReFilterAndRenderDebounced();
-}
-function natrSavePinned() {
-    ctSafeSetItem('natr_pinned', JSON.stringify([...natrPinned]));
-}
-function natrSaveFavorites() {
-    ctSafeSetItem('natr_favorites', JSON.stringify([...natrFavorites]));
-}
-function natrSaveFavColors() {
-    ctSafeSetItem('natr_fav_colors', JSON.stringify(natrFavColors));
-}
-function natrTogglePinned(symbol) {
-    if (natrPinned.has(symbol)) natrPinned.delete(symbol); else natrPinned.add(symbol);
-    natrSavePinned();
-    natrReFilterAndRender();
-}
-function natrToggleFavorite(symbol, ev) {
-    if (ev && ev.stopPropagation) ev.stopPropagation();
-    const wasFav = natrFavorites.has(symbol);
-    if (!wasFav) {
-        natrFavorites.add(symbol);
-        if (!natrFavColors[symbol]) natrFavColors[symbol] = 'gold';
-        natrSaveFavorites();
-        natrSaveFavColors();
-        natrReFilterAndRender();
-    }
-    requestAnimationFrame(() => {
-        const cell = Array.from(document.querySelectorAll('#natrTableBody .natr-fav-cell'))
-            .find(el => el.getAttribute('data-symbol') === symbol);
-        natrShowFavPicker(symbol, cell || (ev && ev.currentTarget) || null);
-    });
-}
-function natrShowFavPicker(symbol, anchorEl) {
-    const picker = document.getElementById('natrFavPicker');
-    if (!picker) return;
-    natrFavPickerSymbol = symbol;
-    const pw = picker.offsetWidth  || 180;
-    const ph = picker.offsetHeight || 116;
-    let left, top;
-    if (anchorEl && anchorEl.getBoundingClientRect) {
-        const r = anchorEl.getBoundingClientRect();
-        left = r.left + r.width / 2 - pw / 2;
-        top  = r.bottom + 6;
-        if (top + ph > window.innerHeight - 8) top = r.top - ph - 6;
-    } else {
-        left = window.innerWidth  - pw - 16;
-        top  = 80;
-    }
-    left = Math.max(8, Math.min(left, window.innerWidth  - pw - 8));
-    top  = Math.max(8, Math.min(top,  window.innerHeight - ph - 8));
-    picker.style.left = left + 'px';
-    picker.style.top  = top  + 'px';
-    picker.style.display = 'block';
-    const cur = natrFavColors[symbol] || 'gold';
-    picker.querySelectorAll('.cont-fav-color').forEach(b => {
-        b.classList.toggle('active', b.getAttribute('data-color') === cur);
-    });
-}
-function natrHideFavPicker() {
-    const picker = document.getElementById('natrFavPicker');
-    if (picker) picker.style.display = 'none';
-    natrFavPickerSymbol = null;
-}
-function natrSetFavoriteColor(color) {
-    if (!natrFavPickerSymbol) return;
-    natrFavColors[natrFavPickerSymbol] = color;
-    natrSaveFavColors();
-    natrReFilterAndRender();
-    requestAnimationFrame(() => {
-        const sym = natrFavPickerSymbol;
-        const cell = Array.from(document.querySelectorAll('#natrTableBody .natr-fav-cell'))
-            .find(el => el.getAttribute('data-symbol') === sym);
-        natrShowFavPicker(sym, cell || null);
-    });
-}
-function natrRemoveFavorite() {
-    if (!natrFavPickerSymbol) return;
-    const sym = natrFavPickerSymbol;
-    natrFavorites.delete(sym);
-    delete natrFavColors[sym];
-    natrSaveFavorites();
-    natrSaveFavColors();
-    natrHideFavPicker();
-    natrReFilterAndRender();
-}
-function natrToggleFavColorFilter(color) {
-    if (natrFavColorFilter.has(color)) natrFavColorFilter.delete(color);
-    else natrFavColorFilter.add(color);
-    ctSafeSetJSON('natr_fav_color_filter', Array.from(natrFavColorFilter));
-    const btn = document.querySelector('#natrFavColorFilterGroup .abs-color-filter-dot[data-color="' + color + '"]');
-    if (btn) btn.classList.toggle('active', natrFavColorFilter.has(color));
-    natrReFilterAndRender();
-}
-// Dismissers for natr fav picker
-(function attachNatrFavPickerDismissers() {
-    if (window.__natrFavPickerDismissersAttached) return;
-    window.__natrFavPickerDismissersAttached = true;
-    document.addEventListener('click', (e) => {
-        const picker = document.getElementById('natrFavPicker');
-        if (!picker || picker.style.display === 'none') return;
-        if (picker.contains(e.target)) return;
-        if (e.target && e.target.closest && e.target.closest('#natrTableBody .natr-fav-cell')) return;
-        natrHideFavPicker();
-    }, true);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') natrHideFavPicker();
-    });
-    window.addEventListener('scroll',  () => natrHideFavPicker(), { passive: true });
-    window.addEventListener('resize',  () => natrHideFavPicker());
-})();
-function natrToggleWatchlistOnly() {
-    natrWatchlistOnly = !natrWatchlistOnly;
-    document.getElementById('natrWatchlistBtn').classList.toggle('active', natrWatchlistOnly);
-    ctSafeSetItem('natr_watchlist_only', natrWatchlistOnly ? '1' : '0');
-    // Always re-render — even if no scan has been done yet, the user wants to see
-    // what's in their favorites list right now (stub rows with "—" for unknown data).
-    // When a scan already happened, the existing natrAllResults path takes over.
-    natrReFilterAndRender();
-}
-// The alert bell now shares the same NATR threshold/operator as the display filter above
-// it (no separate "Порог %" field anymore) — turning it on notifies whenever a new ticker
-// starts passing that same condition.
-async function natrToggleAlerts() {
-    const btn = document.getElementById('natrAlertBtn');
-    if (!natrAlertsEnabled) {
-        if (natrCompareValue === null) { ctNotify('NATR', 'задайте порог %'); return; }
-        if ('Notification' in window && Notification.permission === 'default') {
-            try { await Notification.requestPermission(); } catch(e) { /* ignore */ }
-        }
-        natrAlertsEnabled = true;
-        // seed with what's already passing the filter so turning the bell on doesn't
-        // immediately spam notifications for pairs that were already past it
-        natrAlertedSymbols = new Set(natrGetFilteredResults().map(r => r.symbol));
-        btn.classList.add('active');
-    } else {
-        natrAlertsEnabled = false;
-        btn.classList.remove('active');
-    }
-    ctSafeSetItem('natr_alerts_enabled', natrAlertsEnabled ? '1' : '0');
-}
-function natrFireAlert(symbol, natr) {
-    // Компактный формат «NATR - CVC 4.4%»: только скринер, тикер и значение
-    // с одним знаком после запятой — без лишних слов. Push и тост идут через
-    // единую ctNotify с одинаковым форматом.
-    const base = symbol.replace(/USDT$|USD1$/, '');
-    playAlertSound('natr');
-    ctNotify('NATR', base + ' ' + natr.toFixed(1) + '%');
-}
-// results is already the currently-filtered set (natrGetFilteredResults), so when a NATR
-// threshold is active every item here already satisfies it — we just need to spot which
-// ones are NEW since the last check, and forget ones that dropped back out of the filter
-// so they can re-alert if they cross again later.
-function natrCheckAlerts(results) {
-    if (!natrAlertsEnabled || natrCompareValue === null) return;
-    const currentSymbols = new Set(results.map(r => r.symbol));
-    results.forEach(r => {
-        if (!natrAlertedSymbols.has(r.symbol)) {
-            natrAlertedSymbols.add(r.symbol);
-            natrFireAlert(r.symbol, r.natr);
-        }
-    });
-    [...natrAlertedSymbols].forEach(sym => {
-        if (!currentSymbols.has(sym)) natrAlertedSymbols.delete(sym);
-    });
-}
 function natrOpenInCryptoAI(symbol) {
     switchSection('cai');
     const base = symbol.replace(/USDT$|USD1$/, '');
@@ -3253,20 +2784,16 @@ function natrOpenInCryptoAI(symbol) {
 // It provides no market data back — it's purely "push this symbol into my open Tiger window".
 // Docs: https://support.tiger.com/razrabotka-dlya-tiger.trade-windows/tiger-api
 let natrTigerWS = null;
-let natrTigerLinkGroup = 'A';
 // This screener's data is always Binance USDT-M futures, but the person's own Tiger
 // connection can be a completely different exchange (Bybit, OKX, ...) — this is the
 // exchange the button actually opens the symbol on. Tiger's API requires each exchange's
 // OWN native ticker code, so natrConvertSymbolForTiger below maps Binance's "BTCUSDT" to
 // that exchange's format where the convention is known; see NATR_TIGER_EXCHANGES.
-let natrTigerExchange = 'BYBIT';
 let contTigerExchange = 'BYBIT';
 let contTigerLinkGroup = 'B';
 let absTigerExchange = 'Binance-Fut';
 let absTigerLinkGroup = 'B';
 try {
-    const savedGroup = localStorage.getItem('natr_tiger_link_group'); if (savedGroup) natrTigerLinkGroup = savedGroup;
-    const savedExch = localStorage.getItem('natr_tiger_exchange'); if (savedExch) natrTigerExchange = savedExch;
     const savedContExch = localStorage.getItem('cont_tiger_exchange'); if (savedContExch) contTigerExchange = savedContExch;
     const savedContGroup = localStorage.getItem('cont_tiger_link_group'); if (savedContGroup) contTigerLinkGroup = savedContGroup;
     const savedAbsExch = localStorage.getItem('abs_tiger_exchange'); if (savedAbsExch) absTigerExchange = savedAbsExch;
@@ -3279,17 +2806,13 @@ try {
 // product identifier — we default to the app's own name. Data of both screeners
 // is Binance USDT-M futures, so the default instrument type is F (futures).
 let vatagaPartnerId = 'CryptoTerminal';
-let natrVatagaExchange = 'binance';
 let contVatagaExchange = 'binance';
-let natrVatagaType = 'F';
 let contVatagaType = 'F';
 let absVatagaExchange = 'binance';
 let absVatagaType = 'F';
 try {
     const savedPid = localStorage.getItem('vataga_partner_id'); if (savedPid) vatagaPartnerId = savedPid;
-    const savedNVEx = localStorage.getItem('natr_vataga_exchange'); if (savedNVEx) natrVatagaExchange = savedNVEx;
     const savedCVEx = localStorage.getItem('cont_vataga_exchange'); if (savedCVEx) contVatagaExchange = savedCVEx;
-    const savedNVType = localStorage.getItem('natr_vataga_type'); if (savedNVType === 'S' || savedNVType === 'F') natrVatagaType = savedNVType;
     const savedCVType = localStorage.getItem('cont_vataga_type'); if (savedCVType === 'S' || savedCVType === 'F') contVatagaType = savedCVType;
     const savedAVEx = localStorage.getItem('abs_vataga_exchange'); if (savedAVEx) absVatagaExchange = savedAVEx;
     const savedAVType = localStorage.getItem('abs_vataga_type'); if (savedAVType === 'S' || savedAVType === 'F') absVatagaType = savedAVType;
@@ -3389,9 +2912,6 @@ function tigerLinkSymbol(exchange, linkGroup, symbol) {
         ctNotify('Tiger', 'нет связи (порт 7819)', true);
     });
 }
-function natrOpenInTiger(symbol) {
-    tigerLinkSymbol(natrTigerExchange, natrTigerLinkGroup, symbol);
-}
 // Vataga.Terminal local HTTP API (doc v1.2):
 //   POST http://localhost:5005/api/open/{partner_ID}/{exchange}/{type}/{symbol}
 //   200 OK + {"status":"ok","message":"Vataga.terminal triggered successfully."}
@@ -3426,7 +2946,6 @@ async function vatagaLinkSymbol(exchange, type, symbol) {
         }
     }
 }
-function natrOpenInVataga(symbol) { vatagaLinkSymbol(natrVatagaExchange, natrVatagaType, symbol); }
 function contOpenInVataga(symbol) { vatagaLinkSymbol(contVatagaExchange, contVatagaType, symbol); }
 function absOpenInVataga(symbol) { vatagaLinkSymbol(absVatagaExchange, absVatagaType, symbol); }
 function absOpenInTiger(symbol) { tigerLinkSymbol(absTigerExchange, absTigerLinkGroup, symbol); }
@@ -3434,19 +2953,9 @@ function absChangeTigerExchange(v) { absTigerExchange = v; ctSafeSetItem('abs_ti
 function absChangeTigerLinkGroup(v) { absTigerLinkGroup = v; ctSafeSetItem('abs_tiger_link_group', v); }
 function absChangeVatagaExchange(v) { absVatagaExchange = v; ctSafeSetItem('abs_vataga_exchange', v); }
 function absChangeVatagaType(v) { absVatagaType = v === 'S' ? 'S' : 'F'; ctSafeSetItem('abs_vataga_type', absVatagaType); }
-function natrChangeVatagaExchange(v) { natrVatagaExchange = v; ctSafeSetItem('natr_vataga_exchange', v); }
 function contChangeVatagaExchange(v) { contVatagaExchange = v; ctSafeSetItem('cont_vataga_exchange', v); }
-function natrChangeVatagaType(v) { natrVatagaType = v === 'S' ? 'S' : 'F'; ctSafeSetItem('natr_vataga_type', natrVatagaType); }
 function contChangeVatagaType(v) { contVatagaType = v === 'S' ? 'S' : 'F'; ctSafeSetItem('cont_vataga_type', contVatagaType); }
 function vatagaChangePartnerId(v) { vatagaPartnerId = String(v || '').trim().slice(0, 64) || 'CryptoTerminal'; ctSafeSetItem('vataga_partner_id', vatagaPartnerId); }
-function natrChangeTigerExchange(v) {
-    natrTigerExchange = v;
-    ctSafeSetItem('natr_tiger_exchange', v);
-}
-function natrChangeTigerLinkGroup(v) {
-    natrTigerLinkGroup = v;
-    ctSafeSetItem('natr_tiger_link_group', v);
-}
 function contChangeTigerExchange(v) {
     contTigerExchange = v;
     ctSafeSetItem('cont_tiger_exchange', v);
@@ -3467,24 +2976,6 @@ function natrToggleTigerSettings() {
     if (btn) btn.classList.toggle('active', show);
 }
 function natrInitTigerSettingsUI() {
-    // NATR Scanner selects
-    const exchSel = document.getElementById('natrTigerExchangeSelect');
-    if (exchSel && !exchSel.options.length) {
-        NATR_TIGER_EXCHANGES.forEach(x => {
-            const opt = document.createElement('option');
-            opt.value = x.value; opt.textContent = x.label;
-            exchSel.appendChild(opt);
-        });
-    }
-    const groupSel = document.getElementById('natrTigerLinkGroupSelect');
-    if (groupSel && !groupSel.options.length) {
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
-            const opt = document.createElement('option'); opt.value = l; opt.textContent = 'Группа ' + l; groupSel.appendChild(opt);
-        });
-        for (let n = 0; n <= 11; n++) {
-            const opt = document.createElement('option'); opt.value = String(n); opt.textContent = 'Группа ' + n; groupSel.appendChild(opt);
-        }
-    }
     // Продолжение тренда selects (same options, separate elements)
     const cExchSel = document.getElementById('contTigerExchangeSelect');
     if (cExchSel && !cExchSel.options.length) {
@@ -3504,19 +2995,9 @@ function natrInitTigerSettingsUI() {
         }
     }
     // Restore selected values
-    if (exchSel) exchSel.value = natrTigerExchange;
-    if (groupSel) groupSel.value = natrTigerLinkGroup;
     if (cExchSel) cExchSel.value = contTigerExchange;
     if (cGroupSel) cGroupSel.value = contTigerLinkGroup;
     // Vataga.Terminal selects (same pattern, plus the shared partner-ID input)
-    const vExchSel = document.getElementById('natrVatagaExchangeSelect');
-    if (vExchSel && !vExchSel.options.length) {
-        VATAGA_EXCHANGES.forEach(x => {
-            const opt = document.createElement('option');
-            opt.value = x.value; opt.textContent = x.label;
-            vExchSel.appendChild(opt);
-        });
-    }
     const cVExchSel = document.getElementById('contVatagaExchangeSelect');
     if (cVExchSel && !cVExchSel.options.length) {
         VATAGA_EXCHANGES.forEach(x => {
@@ -3527,10 +3008,7 @@ function natrInitTigerSettingsUI() {
     }
     const pidInput = document.getElementById('vatagaPartnerIdInput');
     if (pidInput && !pidInput.value) pidInput.value = vatagaPartnerId;
-    if (vExchSel) vExchSel.value = natrVatagaExchange;
     if (cVExchSel) cVExchSel.value = contVatagaExchange;
-    const vTypeSel = document.getElementById('natrVatagaTypeSelect');
-    if (vTypeSel) vTypeSel.value = natrVatagaType;
     const cVTypeSel = document.getElementById('contVatagaTypeSelect');
     if (cVTypeSel) cVTypeSel.value = contVatagaType;
     // Super Screener Tiger selects
@@ -3655,7 +3133,10 @@ async function natrFetchTicker24h() {
         const d = await r.json();
         if (!Array.isArray(d)) return;
         const map = new Map();
-        d.forEach(t => map.set(t.symbol, { price: +t.lastPrice, volume: +t.quoteVolume, count: +t.count || 0 }));
+        // v32: base — объём в МОНЕТАХ (base volume из поля volume ответа);
+        // volume остаётся оборотом в USDT (quoteVolume) — его показывают колонка
+        // «Оборот 24ч» и глобальный фильтр оборота, base — колонкой «Объём 24ч»
+        d.forEach(t => map.set(t.symbol, { price: +t.lastPrice, volume: +t.quoteVolume, base: +t.volume, count: +t.count || 0 }));
         natrTicker24hMap = map;
     } catch(e) { /* non-fatal — price/volume column just stays blank */ }
 }
@@ -3666,18 +3147,13 @@ function natrFmtVolShort(v) {
     if (v >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
     return '$' + v.toFixed(0);
 }
-function natrFmtPriceShort(p) {
-    if (!p && p !== 0) return '—';
-    if (p >= 1000) return p.toLocaleString('ru-RU', {maximumFractionDigits:1});
-    if (p >= 1) return p.toFixed(2);
-    if (p >= 0.01) return p.toFixed(4);
-    return p.toFixed(8);
-}
-function natrFmtCount(c) {
-    if (!c && c !== 0) return '—';
-    if (c >= 1e6) return (c/1e6).toFixed(2) + 'M';
-    if (c >= 1e3) return (c/1e3).toFixed(1) + 'K';
-    return String(c);
+// Объём в МОНЕТАХ (base volume) — те же сокращения, но без «$»
+function natrFmtBaseVolShort(v) {
+    if (!v && v !== 0) return '—';
+    if (v >= 1e9) return (v/1e9).toFixed(2) + 'B';
+    if (v >= 1e6) return (v/1e6).toFixed(2) + 'M';
+    if (v >= 1e3) return (v/1e3).toFixed(1) + 'K';
+    return v.toFixed(0);
 }
 async function natrGetAllPairs() {
     try {
@@ -3701,22 +3177,15 @@ function natrCalcATR(klines, period) {
     }
     return sum / period;
 }
-function natrCalcNATR(klines, period) {
-    const atr = natrCalcATR(klines, period);
-    if (!atr || !klines.length) return null;
-    const price = +klines[klines.length - 1][4];
-    return price ? (atr / price) * 100 : null;
-}
 async function natrGetKlines(symbol, interval, limit, endTime, signal) {
-    // signal — необязательный 5-й аргумент: сигнал СВОЕГО сканера (Super
-    // Screener передаёт absAbortCtrl.signal). Когда задан, именно он (а не
-    // natrAbortCtrl NATR-сканера) прерывает запрос — раньше отмена NATR-скана
-    // могла молча убить параллельный скан Super Screener.
-    if (signal ? signal.aborted : natrAbortCtrl?.signal.aborted) return null;
+    // signal — необязательный 5-й аргумент: сигнал сканера-вызова (Super
+    // Screener передаёт absAbortCtrl.signal); прерывает запрос при отмене скана.
+    if (signal && signal.aborted) return null;
     // endTime (мс) — необязательный 4-й аргумент: килайны, заканчивающиеся ДО этого
     // времени. Используется Super Screener для окна контекста (свечи
     // строго ДО начала окна триггера). Ключ кэша включает endTime, чтобы
     // «свежие» и «исторические» запросы не путались.
+    natrPruneResultsCache(); // FIX(clean): prune раньше вызывался только из удалённого NATR-сканера
     const ck = symbol + '_' + interval + '_' + limit + (endTime ? '_' + endTime : '');
     if (NATR_SCAN_CFG.cacheResults && natrResultsCache.has(ck)) {
         const c = natrResultsCache.get(ck);
@@ -3728,11 +3197,11 @@ async function natrGetKlines(symbol, interval, limit, endTime, signal) {
     const attempts = 1 + Math.max(0, NATR_SCAN_CFG.maxRetries || 0);
     try {
         for (let attempt = 0; attempt < attempts; attempt++) {
-            if (natrIsBanned() || (signal ? signal.aborted : natrAbortCtrl?.signal.aborted)) break;
+            if (natrIsBanned() || (signal && signal.aborted)) break;
             try {
                 const ctrl = new AbortController();
                 const tid = setTimeout(() => ctrl.abort(), NATR_SCAN_CFG.timeout);
-                const abortSrc = signal || (natrAbortCtrl ? natrAbortCtrl.signal : null);
+                const abortSrc = signal || null;
                 if (abortSrc) abortSrc.addEventListener('abort', () => { clearTimeout(tid); ctrl.abort(); }, {once: true});
                 const resp = await natrApiFetch(NATR_API + '/fapi/v1/klines?symbol=' + symbol + '&interval=' + interval + '&limit=' + limit + (endTime ? '&endTime=' + endTime : ''), {signal:ctrl.signal});
                 clearTimeout(tid);
@@ -3748,241 +3217,6 @@ async function natrGetKlines(symbol, interval, limit, endTime, signal) {
         }
         resolveP(null); return null;
     } finally { setTimeout(() => natrPendingRequests.delete(ck), 100); }
-}
-async function natrProcessMax(pairs, interval, limit, period, onProgress) {
-    const results = []; const total = pairs.length; let processed = 0;
-    for (let i = 0; i < total; i += NATR_SCAN_CFG.batchSize) {
-        if (natrAbortCtrl?.signal.aborted || natrIsBanned()) break;
-        const batch = pairs.slice(i, Math.min(i + NATR_SCAN_CFG.batchSize, total));
-        const batchP = batch.map(async sym => {
-            const klines = await natrGetKlines(sym, interval, limit);
-            if (!klines) return null;
-            const natr = natrCalcNATR(klines, period);
-            return natr != null && natr !== 0 && natr < 1000 ? {symbol: sym, natr} : null;
-        });
-        const br = await Promise.all(batchP);
-        results.push(...br.filter(Boolean));
-        processed += batch.length;
-        if (onProgress) onProgress(processed, total);
-        if (NATR_SCAN_CFG.batchDelay > 0 && i + NATR_SCAN_CFG.batchSize < total)
-            await new Promise(r => setTimeout(r, NATR_SCAN_CFG.batchDelay));
-    }
-    return results;
-}
-function natrGetDisplayedData() {
-    return Array.from(document.querySelectorAll('#natrTableBody tr')).map(row => {
-        const sym = row.querySelector('.ticker-cell')?.getAttribute('data-symbol') || '';
-        const nt = row.querySelector('.natr-val')?.textContent || '0';
-        return {symbol: sym, natr: parseFloat(nt.replace('%','').trim())};
-    }).filter(d => d.symbol);
-}
-// pinnedCount = how many rows at the START of `data` are pinned (★) rows. Those bypass
-// Top N entirely (always shown); Top N only caps the remaining, non-pinned rows.
-function natrRenderTable(data, animate, pinnedCount) {
-    const body = document.getElementById('natrTableBody');
-    pinnedCount = pinnedCount || 0;
-    const pinnedRows = data.slice(0, pinnedCount);
-    const restRows = data.slice(pinnedCount).slice(0, natrTopN);
-    const shown = pinnedRows.concat(restRows);
-    if (!shown.length) {
-        body.innerHTML = '';
-        const emptyEl = document.getElementById('natrEmptyState');
-        const p = emptyEl.querySelector('p');
-        if (p) {
-            if (natrWatchlistOnly) {
-                p.textContent = natrFavorites.size === 0
-                    ? 'Список избранного пуст — добавляйте тикеры звёздочкой ★ в любой строке после сканирования'
-                    : 'Ни один избраный тикер не прошёл фильтры — попробуйте ослабить пороги или выключить фильтры';
-            } else {
-                p.textContent = 'Сканирование...';
-            }
-        }
-        emptyEl.style.display = 'block';
-        return;
-    }
-    document.getElementById('natrEmptyState').style.display = 'none';
-    // Stub rows (no scan yet, but favorites/pinned requested) have natr === null — exclude
-    // them from the max/avg computation so they don't drag stats down to "0.00%".
-    const validNatrs = shown.map(s => s.natr).filter(v => v != null);
-    const maxVal = validNatrs.length ? Math.max(...validNatrs) : 0;
-    const prevData = animate ? natrGetDisplayedData() : null;
-    body.innerHTML = shown.map((item, i) => {
-        const isPinnedRow = i < pinnedCount;
-        const nc = item.natr == null ? 'natr-lo' : (item.natr > maxVal*0.7?'natr-hi':item.natr > maxVal*0.4?'natr-mid':'natr-lo');
-        const bc = i===shown.length-1?'border-after':'';
-        const displaySymbol = escapeHtml(item.symbol.replace(/USDT$|USD1$/, ''));
-        const changed = prevData && prevData[i] && prevData[i].natr !== item.natr;
-        const ra = changed?'row-updated':'';
-        const na = changed?'natr-changed':'';
-        const isPinned = natrPinned.has(item.symbol);
-        const isFav = natrFavorites.has(item.symbol);
-        const t24h = natrTicker24hMap.get(item.symbol);
-        // Volume/trades cell coloring: below the lower threshold -> red, above the upper
-        // threshold -> green, inside the [from, to] range -> the existing gold highlight.
-        let volClass = '';
-        if (t24h && (natrVolFrom !== null || natrVolTo !== null)) {
-            if (natrVolFrom !== null && t24h.volume < natrVolFrom) volClass = ' natr-below-threshold';
-            else if (natrVolTo !== null && t24h.volume > natrVolTo) volClass = ' natr-above-threshold';
-            else if (natrInRange(t24h.volume, natrVolFrom, natrVolTo)) volClass = ' natr-range-hit';
-        }
-        let tradesClass = '';
-        if (t24h && (natrTradesFrom !== null || natrTradesTo !== null)) {
-            if (natrTradesFrom !== null && t24h.count < natrTradesFrom) tradesClass = ' natr-below-threshold';
-            else if (natrTradesTo !== null && t24h.count > natrTradesTo) tradesClass = ' natr-above-threshold';
-            else if (natrInRange(t24h.count, natrTradesFrom, natrTradesTo)) tradesClass = ' natr-range-hit';
-        }
-        const priceCell = t24h ? '$'+natrFmtPriceShort(t24h.price) : '—';
-        const volCell = t24h ? natrFmtVolShort(t24h.volume) : '—';
-        const tradesCell = t24h ? natrFmtCount(t24h.count) : '—';
-        const typeCell = natrAssetTypeBadge(item.symbol);
-        // NATR cell — null-safe (stub rows from "★ Избранное без сканирования")
-        const natrCell = item.natr == null
-            ? '<span class="mono" style="color:var(--muted)">—</span>'
-            : '<span class="natr-val mono '+nc+' '+na+'">'+item.natr.toFixed(2)+'<small style="font-size:0.65em;color:var(--muted)">%</small></span>';
-        const caiLink = '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\''+jsAttr(item.symbol)+'\')">AI</button>';
-        const tigerLink = '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на '+natrTigerExchange+' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); natrOpenInTiger(\''+jsAttr(item.symbol)+'\')">'+NATR_TIGER_SVG+'</button>';
-        const vatagaLink = '<button type="button" class="natr-icon-btn natr-vataga-btn" title="Открыть в Vataga.Terminal на '+natrVatagaExchange+' ('+(natrVatagaType === 'S' ? 'спот' : 'фьючерсы')+', локальный сервер, порт 5005)" onclick="event.stopPropagation(); natrOpenInVataga(\''+jsAttr(item.symbol)+'\')">'+NATR_VATAGA_SVG+'</button>';
-        return '<tr class="'+bc+' '+ra+(isPinnedRow?' natr-pinned-row':'')+(item.symbol===natrSelectedSymbol?' natr-row-selected':'')+'" data-symbol="'+jsAttr(item.symbol)+'">'+
-            natrPinFavCellHtml(item.symbol, isPinned, isFav, 'natrTogglePinned', 'natrToggleFavorite', natrFavColors[item.symbol] ? NATR_FAV_COLOR_HEX[natrFavColors[item.symbol]] : null)+
-            '<td class="ticker-cell" tabindex="0" role="button" aria-label="Скопировать тикер '+displaySymbol+'" data-symbol="'+displaySymbol+'">'+
-            '<div class="ticker-name '+nc+'" title="'+displaySymbol+'">'+natrTruncateTicker(displaySymbol)+'</div>'+
-            '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></td>'+
-            '<td>'+typeCell+'</td>'+
-            '<td style="text-align:right;">'+natrCell+'</td>'+
-            '<td class="natr-price-cell mono'+volClass+'">'+volCell+'</td>'+
-            '<td class="natr-price-cell mono'+tradesClass+'">'+tradesCell+'</td>'+
-            '<td class="natr-price-cell mono">'+priceCell+'</td>'+
-            '<td style="text-align:center;"><div class="natr-actions-cell">'+caiLink+tigerLink+vatagaLink+'</div></td></tr>';
-    }).join('');
-    document.querySelectorAll('#natrTableBody .ticker-cell').forEach(cell => {
-        const activate = function() {
-            copyToClipboard(cell.getAttribute('data-symbol'));
-            cell.classList.add('copied');
-            setTimeout(() => cell.classList.remove('copied'), 800);
-        };
-        cell.addEventListener('click', activate);
-        cell.addEventListener('keydown', function(e) {
-            if ((e.key === 'Enter' || e.key === ' ') && e.target === cell) { e.preventDefault(); activate(); }
-        });
-    });
-    document.getElementById('natrStatsBar').style.display = 'flex';
-    document.getElementById('natrStatTotal').textContent = data.length;
-    document.getElementById('natrStatMax').textContent = (validNatrs.length ? maxVal : 0).toFixed(2) + '%';
-    const avg = validNatrs.length ? validNatrs.reduce((s,v) => s + v, 0) / validNatrs.length : 0;
-    document.getElementById('natrStatAvg').textContent = avg.toFixed(2) + '%';
-    natrUpdateLastTime();
-}
-function natrSwitchMode(m) {
-    natrMode = m;
-    document.querySelectorAll('#section-natr .natr-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
-    ctSafeSetItem('natr_mode', m);
-    if (natrAllResults.length) natrReFilterAndRender();
-}
-async function natrStartBgUpdate() {
-    if (natrIsScanning || natrIsBgUpdating || natrIsBanned()) return;
-    natrIsBgUpdating = true; natrAbortCtrl = new AbortController();
-    natrPruneResultsCache();
-    natrSetTableUpdating(true); natrSetStatus('Фоновое обновление...', true, true);
-    const pairs = await natrGetAllPairs();
-    if (!pairs.length || natrAbortCtrl.signal.aborted) { natrFinishBgUpdate(false); return; }
-    const modeCfg = NATR_MODES[natrMode] || NATR_MODES['5m_14'];
-    const interval = modeCfg.interval;
-    const limit = modeCfg.period + 5;
-    const [results] = await Promise.all([
-        natrProcessMax(pairs, interval, limit, modeCfg.period, (p,t) => {
-            if (!natrAbortCtrl.signal.aborted) natrSetStatus(p+'/'+t, true, true);
-        }),
-        natrFetchTicker24h()
-    ]);
-    if (natrAbortCtrl.signal.aborted) { natrFinishBgUpdate(false); return; }
-    natrAllResults = results.sort((a,b) => b.natr - a.natr);
-    natrCheckAlerts(natrGetFilteredResults());
-    natrReFilterAndRender(true); // animate — flash rows whose NATR changed since the previous render
-    natrFinishBgUpdate(true);
-}
-function natrFinishBgUpdate(ok) {
-    natrIsBgUpdating = false; natrAbortCtrl = null; natrSetTableUpdating(false);
-    natrSetStatus(ok ? 'Готово: '+natrAllResults.length : (natrAllResults.length>0?'Готово: '+natrAllResults.length:'Отменено'), ok);
-}
-async function natrStartScan() {
-    // TOGGLE: если сканирование активно — немедленно остановить
-    if (natrIsScanning) {
-        if (natrAbortCtrl) natrAbortCtrl.abort();
-        natrHideSkeleton();
-        document.getElementById('natrScanBtn').classList.remove('loading');
-        natrSetTableUpdating(false);
-        natrSetStatus('Отменено');
-        natrStopAutoRefresh();
-        return;
-    }
-    // Если авто-обновление активно и сканирование не идёт — выключить его
-    if (natrRefreshTimerId && natrAllResults.length > 0) {
-        natrStopAutoRefresh();
-        natrSetStatus('Авто-обновление выключено');
-        return;
-    }
-    if (natrIsBanned()) {
-        natrSetStatus(natrBanStatusText());
-        ctNotify('Binance', 'ждём ' + natrBanSecondsLeft() + ' с');
-        return;
-    }
-    if (natrIsBgUpdating && natrAbortCtrl) { natrAbortCtrl.abort(); natrIsBgUpdating = false; natrSetTableUpdating(false); }
-    natrIsScanning = true; natrAbortCtrl = new AbortController();
-    natrPruneResultsCache();
-    document.getElementById('natrScanBtn').classList.add('loading');
-    // Пересканирование НЕ убирает старые результаты: таблица остаётся на
-    // экране с полосой «обновление», а когда новые данные готовы — всё
-    // заменяется одним махом (атомарная подмена + один ре-рендер). Скелетон —
-    // только для самого первого скана, когда показывать ещё нечего.
-    const keepOldData = natrAllResults.length > 0;
-    if (keepOldData) {
-        natrSetTableUpdating(true);
-    } else {
-        natrShowSkeleton(); document.getElementById('natrEmptyState').style.display = 'none';
-    }
-    natrSetStatus('Загрузка списка...', true, keepOldData);
-    const pairs = await natrGetAllPairs();
-    if (!pairs.length || natrAbortCtrl.signal.aborted) {
-        if (!natrAbortCtrl.signal.aborted) {
-            natrSetStatus('Ошибка API'); natrHideSkeleton();
-            if (keepOldData) {
-                // Старые результаты остаются на экране — просто снимаем
-                // индикацию обновления и сообщаем, почему данные не обновились.
-                natrSetTableUpdating(false);
-                ctNotify('Binance', 'ошибка API');
-            } else {
-                const p = document.querySelector('#natrEmptyState p');
-                if (p) p.textContent = 'Ошибка API Binance — проверьте соединение и нажмите «Сканировать» ещё раз';
-                document.getElementById('natrEmptyState').style.display = 'block';
-            }
-        } else { natrSetStatus('Отменено'); natrHideSkeleton(); if (keepOldData) natrSetTableUpdating(false); }
-        document.getElementById('natrScanBtn').classList.remove('loading');
-        natrIsScanning = false; natrAbortCtrl = null; return;
-    }
-    natrSetStatus('Сканирование '+pairs.length+'...', true, keepOldData);
-    const modeCfg = NATR_MODES[natrMode] || NATR_MODES['5m_14'];
-    const interval = modeCfg.interval;
-    const limit = modeCfg.period + 5;
-    const [results] = await Promise.all([
-        natrProcessMax(pairs, interval, limit, modeCfg.period, (p,t) => {
-            if (!natrAbortCtrl.signal.aborted) natrSetStatus(p+'/'+t, true);
-        }),
-        natrFetchTicker24h()
-    ]);
-    if (natrAbortCtrl.signal.aborted) {
-        natrHideSkeleton(); document.getElementById('natrScanBtn').classList.remove('loading');
-        if (keepOldData) natrSetTableUpdating(false);
-        natrIsScanning = false; natrAbortCtrl = null; return;
-    }
-    natrAllResults = results.sort((a,b) => b.natr - a.natr); // атомарная подмена — одна операция, никакой частичной замены
-    natrCheckAlerts(natrGetFilteredResults());
-    natrHideSkeleton();
-    natrReFilterAndRender(true); // единственный ре-рендер; animate подсвечивает изменившиеся строки
-    natrSetTableUpdating(false);
-    natrSetStatus('Готово: '+results.length, true);
-    document.getElementById('natrScanBtn').classList.remove('loading');
-    natrIsScanning = false; natrAbortCtrl = null;
-    natrStartAutoRefresh();
 }
 
 // ============================================================
@@ -4003,7 +3237,7 @@ let contWatchlistOnly = false; // "show favorites only" toggle (uses contFavorit
 let contFavColorFilter = new Set(); // непустой набор = показывать только избранные этих цветов
 let contFavColors = {}; // symbol -> color name ('gold'|'green'|'red'|'blue'|'purple') — цвет избранной звезды
 let contFavPickerSymbol = null; // символ, для которого сейчас открыт пикер цвета (или null)
-const CONT_FAV_COLOR_HEX = { gold:'#f0b90b', green:'#4caf50', red:'#f44336', blue:'#2196f3', purple:'#9c27b0' };
+// NATR_FAV_COLOR_HEX reused here (declared in Section 1)
 let contVolFrom = null;
 let contVolTo = null;
 let contVolFilterActive = false;
@@ -4019,7 +3253,7 @@ let contIsBgUpdating = false;
 // header; contStartAutoRefresh() / contUpdateTimerDisplay() / the CONT_REFRESH_INTERVAL
 // constant and contRefreshCountdown / contRefreshTimerId state were removed. The
 // bell 🔔 still works, but it only fires when the user manually presses «Сканировать»
-// — no background polling anymore. contStartBgUpdate() is kept as a utility for
+// — no background polling anymore. contStartBgUpdate() is intentionally UNUSED.
 // any future manual "refresh in background" button, but nothing currently calls it.
 let contIsScanning = false;
 let contAbortCtrl = null;
@@ -4173,8 +3407,7 @@ function contToggleFavorite(symbol, ev) {
         contReFilterAndRender();
     }
     requestAnimationFrame(() => {
-        const cell = Array.from(document.querySelectorAll('#contTableBody .natr-fav-cell'))
-            .find(el => el.getAttribute('data-symbol') === symbol);
+        const cell = document.querySelector('#contTableBody .natr-fav-cell[data-symbol="' + jsAttr(symbol) + '"]');
         contShowFavPicker(symbol, cell || (ev && ev.currentTarget) || null);
     });
 }
@@ -4220,8 +3453,7 @@ function contSetFavoriteColor(color) {
     contReFilterAndRender();
     requestAnimationFrame(() => {
         const sym = contFavPickerSymbol;
-        const cell = Array.from(document.querySelectorAll('#contTableBody .natr-fav-cell'))
-            .find(el => el.getAttribute('data-symbol') === sym);
+        const cell = document.querySelector('#contTableBody .natr-fav-cell[data-symbol="' + jsAttr(sym) + '"]');
         contShowFavPicker(sym, cell || null);
     });
 }
@@ -4472,8 +3704,7 @@ async function contProcessMax(pairs, lookbackDays, onProgress) {
     return results;
 }
 async function contStartScan() {
-    if (contIsScanning) { if (contAbortCtrl) contAbortCtrl.abort(); return; }
-    if (natrIsBanned()) {
+    if (contIsScanning) {        if (contAbortCtrl) contAbortCtrl.abort();        const _cBtn = document.getElementById('contScanBtn');        if (_cBtn) { _cBtn.classList.remove('loading'); _cBtn.disabled = false; }        contSetTableUpdating(false);        contSetStatus('Остановлено');        contIsScanning = false; contAbortCtrl = null;        return;    }    if (natrIsBanned()) {
         contSetStatus(natrBanStatusText());
         ctNotify('Binance', 'ждём ' + natrBanSecondsLeft() + ' с');
         return;
@@ -4775,7 +4006,7 @@ function contRenderTable(data, pinnedCount) {
         }
         const isPinned = contPinned.has(r.symbol);
         const isFav = contFavorites.has(r.symbol);
-        const favColorHex = isFav ? (CONT_FAV_COLOR_HEX[contFavColors[r.symbol]] || CONT_FAV_COLOR_HEX.gold) : null;
+        const favColorHex = isFav ? (NATR_FAV_COLOR_HEX[contFavColors[r.symbol]] || NATR_FAV_COLOR_HEX.gold) : null;
         const bodyRatioCell = r.bodyRatio !== null
             ? '<span class="mono cont-rvol-hot" title="Тело вчерашней свечи ÷ среднее тело за N предыдущих дней">'+r.bodyRatio.toFixed(2)+'x</span>'
             : '<span style="color:var(--muted)">—</span>';
@@ -7230,7 +6461,9 @@ async function caiSelectDisambiguated(coinId) {
 // auto-picked search path and the disambiguation-picked path.
 async function caiLoadCoinDetails(coinId, coinNameHint, historyBase, btn) {
     document.getElementById('caiLoadingText').textContent = coinNameHint ? ('Загрузка '+coinNameHint+'...') : 'Загрузка...';
-    var data = await caiSafeFetch('https://api.coingecko.com/api/v3/coins/'+coinId+'?localization=true&tickers=false&community_data=false&developer_data=false&sparkline=true');
+    // FIX: encodeURIComponent — id монеты приходит из API/ввода и может содержать
+    // символы, ломающие URL (&, /, #, пробелы) → бессмысленные 4xx от CoinGecko.
+    var data = await caiSafeFetch('https://api.coingecko.com/api/v3/coins/'+encodeURIComponent(coinId)+'?localization=true&tickers=false&community_data=false&developer_data=false&sparkline=true');
     if (data.categories && data.categories.some(function(c){return c.toLowerCase().indexOf('stablecoin')!==-1;})) {
         caiShowStablecoin(data.name+' ('+data.symbol.toUpperCase()+')');
         btn.disabled=false; btn.textContent='Анализировать';
@@ -7291,7 +6524,8 @@ async function caiSearch() {
     var btn = document.getElementById('caiBtn');
     btn.disabled = true; btn.textContent = 'Загрузка...';
     try {
-        var d = await caiSafeFetch('https://api.coingecko.com/api/v3/search?query='+ext.base);
+        // FIX: encodeURIComponent — запрос пользователя вставлялся в URL как есть.
+        var d = await caiSafeFetch('https://api.coingecko.com/api/v3/search?query='+encodeURIComponent(ext.base));
         if (!d.coins||!d.coins.length) throw new Error('"'+ext.base+'" — не найдено');
         var exactMatches = d.coins.filter(function(c){ return c.symbol.toUpperCase()===ext.base; });
         if (exactMatches.length > 1) {
@@ -7317,7 +6551,7 @@ async function caiSearch() {
 // Две независимые секции со своими таймфреймами и числом свечей:
 // «Контекст» — окно N свечей, полностью закрытых ДО начала окна триггера
 // (проторговка: узкий диапазон, низкий NATR); «Триггер» — последние M свечей,
-// включая текущую (локальный всплеск: RVOL, NATR, Δ %). Связь И/ИЛИ.
+// включая текущую (локальный всплеск: RVOL, NATR, Δ %, R коэфф.). Связь И/ИЛИ.
 //
 // Reuses natrApiFetch / natrGetAllPairs / natrGetKlines / natrFetchTicker24h
 // for the heavy lifting, ctSafeSetItem/ctSafeGetJSON for persistence, and
@@ -7336,13 +6570,11 @@ const ABS_TF_LABEL = { '1m':'1м','3m':'3м','5m':'5м','15m':'15м','30m':'30м
 const ABS_BASELINE = 50;      // свечей до окна — база для RVOL каждой секции
 const ABS_MAX_WINDOW = 50;    // максимум свечей в окне секции (лимит запроса ≤ 100)
 const ABS_MIN_BASELINE = 10;  // минимум свечей базы, иначе RVOL = null
-// Пре-фильтр ликвидности: пары тише порога не сканируются вовсе. Раньше порог
-// был жёстко $5M — при 706 торгуемых перпетуалах это отсекало ~2/3 рынка
-// («мало фьючерсов»), поэтому порог стал настройкой тулбара. Дефолт v26 —
-// 0 («все пары», полный охват рынка): килайны берутся с limit ≤ 100 (вес 1),
-// полный скан ~706 пар ≈ 1400 веса — укладывается в лимит Binance.
-const ABS_LIQ_OPTIONS = [0, 1e6, 2e6, 5e6, 1e7];   // «Все пары» / >$1M / >$2M / >$5M / >$10M
-let absMinVol24h = 0;
+// (v32: пре-фильтр ликвидности и селект «Оборот 24ч» убраны — скан всегда
+// охватывает весь рынок ~706 перпетуалов: килайны берутся с limit ≤ 100
+// (вес 1), полный скан ≈ 1400 веса — в пределах лимита Binance. Отбор по
+// обороту/объёму/сделкам теперь делают глобальные фильтры тулбара — по
+// результату, без потери пар на этапе скана.)
 
 // === Открытый интерес (OI Δ%) =============================================
 // Binance /futures/data/openInterestHist: периоды 5м…1д, история 30 дней.
@@ -7366,26 +6598,32 @@ const ABS_OI_BUFFER = 12;     // запас записей, чтобы смен�
 //     секции-ссылки (пост-импульсная реакция);
 //   • «Внутри» — окно из N последних свечей ВНУТРИ диапазона окна
 //     секции-ссылки (структура внутри импульса/контекста).
-// pctKind: 'range' = Диапазон % ((high−low)/цена), 'delta' = Δ %
-// ((закрытие−открытие)/открытие). Плюс по четыре метрики {rvol|natr|pct|oi}
-// от/до и флаги «Фильтр» — КАК В NATR SCANNER: ввод границ подсвечивает
-// значения сразу, а скрывают строки только включённые кнопки «Фильтр».
-const ABS_METRIC_KINDS = ['rvol', 'natr', 'pct', 'oi'];
+// v32: % метрика секции ВСЕГДА измеряет окно свечей — размах «Диап. %» =
+// (high − low) окна ÷ «Отн.» цена (ряд-знаменатель выбирается селектом
+// «Отн.» на карточке) × 100. Кнопка H,L/O,C и режим Δ убраны; фильтр %
+// сравнивает значение ПО МОДУЛЮ (знак не важен). Плюс по пять метрик
+// {rvol|natr|pct|rcoef|oi} от/до и флаги «Фильтр» — КАК В NATR SCANNER:
+// ввод границ подсвечивает значения сразу, а скрывают строки только
+// включённые кнопки «Фильтр» (у % кнопки нет — ввод сам включает фильтр).
+const ABS_METRIC_KINDS = ['rvol', 'natr', 'pct', 'rcoef', 'oi'];
+// Знаменатель («Отн.») для % метрики: относительно какой цены считать размах окна.
+const ABS_REF_PRICE_OPTS = ['avg', 'high', 'low', 'open', 'close'];
+const ABS_REF_PRICE_LABEL = { avg: 'Средняя', high: 'High', low: 'Low', open: 'Open', close: 'Close' };
 const ABS_SEC_IDS = ['s1','s2','s3','s4','s5','s6','s7'];
 const ABS_SEC_DEF = {
-    s1: { name:'Предтренд',  badge:'фоновый тренд',   tf:'15m', count:20, linkMode:'before', ref:'s2', pctKind:'delta', on:true,
-          note:'Окно — свечи до начала окна секции-ссылки (по умолчанию — Контекст). Фон: направление «Δ», активность «RVOL», волатильность «NATR».' },
-    s2: { name:'Контекст',   badge:'проторговка',      tf:'15m', count:12, linkMode:'before', ref:'s3', pctKind:'range', on:true,
+    s1: { name:'Предтренд',  badge:'фоновый тренд',   tf:'15m', count:20, linkMode:'before', ref:'s2', refPrice:'open', on:true,
+          note:'Окно — свечи до начала окна секции-ссылки (по умолчанию — Контекст). Фон: активность «RVOL», волатильность «NATR», плотность «Диап. %».' },
+    s2: { name:'Контекст',   badge:'проторговка',      tf:'15m', count:12, linkMode:'before', ref:'s3', refPrice:'avg', on:true,
           note:'Окно — свечи, полностью закрытые до начала окна Триггера. «Диапазон %» — чем меньше, тем плотнее проторговка. «OI Δ%» считается, когда задан диапазон OI.' },
-    s3: { name:'Триггер',    badge:'импульс',          tf:'5m',  count:5,  linkMode:'now',    ref:null, pctKind:'delta', on:true,
-          note:'Окно — последние свечи, включая текущую (формирующуюся). «Δ %» — от открытия первой свечи окна до закрытия последней. «OI Δ%» считается, когда задан диапазон OI.' },
-    s4: { name:'Ядро',       badge:'внутри импульса',  tf:'5m',  count:2,  linkMode:'inside', ref:'s3', pctKind:'delta', on:true,
+    s3: { name:'Триггер',    badge:'импульс',          tf:'5m',  count:5,  linkMode:'now',    ref:null, refPrice:'open', on:true,
+          note:'Окно — последние свечи, включая текущую (формирующуюся). «Диап. %» — размах окна (high−low) в % относительно «Отн.» цены. «OI Δ%» считается, когда задан диапазон OI.' },
+    s4: { name:'Ядро',       badge:'внутри импульса',  tf:'5m',  count:2,  linkMode:'inside', ref:'s3', refPrice:'open', on:true,
           note:'Окно — последние N свечей внутри окна Триггера: «ядро» импульса на его завершении.' },
-    s5: { name:'После',      badge:'пост-импульс',     tf:'5m',  count:3,  linkMode:'after',  ref:'s3', pctKind:'delta', on:true,
+    s5: { name:'После',      badge:'пост-импульс',     tf:'5m',  count:3,  linkMode:'after',  ref:'s3', refPrice:'open', on:true,
           note:'Окно — свечи после конца окна Триггера. Пока Триггер стоит «Сейчас» (с формирующейся свечой), после него данных нет — «—»; переведите Триггер в «Закрытые» и задайте «назад», чтобы ловить пост-импульсную реакцию.' },
-    s6: { name:'Глубина',    badge:'далёкий фон',      tf:'15m', count:20, linkMode:'before', ref:'s1', pctKind:'delta', on:false,
+    s6: { name:'Глубина',    badge:'далёкий фон',      tf:'15m', count:20, linkMode:'before', ref:'s1', refPrice:'open', on:false,
           note:'Окно — свечи до начала окна Предтренда: самый дальний фон цепочки. По умолчанию ВЫКЛ: глубокая цепочка удлиняет выборку килайнов (лишний вес Binance на пару при скане).' },
-    s7: { name:'Структура',  badge:'внутри контекста', tf:'15m', count:5,  linkMode:'inside', ref:'s2', pctKind:'range', on:true,
+    s7: { name:'Структура',  badge:'внутри контекста', tf:'15m', count:5,  linkMode:'inside', ref:'s2', refPrice:'avg', on:true,
           note:'Окно — последние N свечей внутри окна Контекста: структура проторговки.' }
 };
 const ABS_SEC_COLOR = { s1:'#ce93d8', s2:'var(--accent)', s3:'var(--green)', s4:'#ffb74d', s5:'#4dd0e1', s6:'#b0bec5', s7:'#ba68c8' };
@@ -7421,8 +6659,8 @@ const ABS_KLINE_MAX = 500;   // потолок limit килайнов (вес: �
 function absNewSection(id) {
     const d = ABS_SEC_DEF[id];
     const S = d
-        ? { tf: d.tf, count: d.count, pctKind: d.pctKind, linkMode: d.linkMode, ref: d.ref, offset: 0 }
-        : { tf: '15m', count: 10, pctKind: 'delta', linkMode: 'now', ref: null, offset: 0 };
+        ? { tf: d.tf, count: d.count, refPrices: [d.refPrice || 'avg'], linkMode: d.linkMode, ref: d.ref, offset: 0 }
+        : { tf: '15m', count: 10, refPrices: ['avg'], linkMode: 'now', ref: null, offset: 0 };
     S.logic = 'and';  // И/ИЛИ/НЕ — как секция комбинируется с другими включёнными секциями
     S.name = null;    // null → берём дефолтное название/бейдж/подсказку из ABS_SEC_DEF (absSecName и т.д.)
     S.badge = null;
@@ -7441,7 +6679,8 @@ let absAlertsEnabled = false;
 let absWatchlistOnly = false;
 let absFavColorFilter = new Set(); // непустой набор = показывать только избранные этих цветов
 
-let absVolFrom = null, absVolTo = null, absVolFilterActive = false;
+let absVolFrom = null, absVolTo = null, absVolFilterActive = false;             // оборот 24ч (USDT)
+let absBaseVolFrom = null, absBaseVolTo = null, absBaseVolFilterActive = false;  // объём 24ч (в монетах)
 let absTradesFrom = null, absTradesTo = null, absTradesFilterActive = false;
 let absIsScanning = false;
 let absIsBgUpdating = false;
@@ -7478,13 +6717,22 @@ const absRestoreSec = (id, saved) => {
     if (typeof saved.ref === 'string' && saved.ref !== id) sec.ref = saved.ref; // существование ref в ABS_SEC_IDS проверяется отдельным проходом ниже
     if (saved.linkMode === 'now' || saved.linkMode === 'closed') sec.ref = null;
     if (Number.isInteger(saved.offset) && saved.offset >= 0 && saved.offset <= ABS_MAX_OFFSET) sec.offset = saved.offset;
-    if (saved.pctKind === 'range' || saved.pctKind === 'delta') sec.pctKind = saved.pctKind;
+    // refPrices — массив источников для «Отн.» (v33: множественный выбор,
+    // раньше был одиночный select `refPrice`). Валидные значения из старого
+    // сохранения мигрируют в массив из одного элемента.
+    if (Array.isArray(saved.refPrices)) {
+        const valid = Array.from(new Set(saved.refPrices.filter(v => ABS_REF_PRICE_OPTS.includes(v))));
+        if (valid.length) sec.refPrices = valid;
+    } else if (ABS_REF_PRICE_OPTS.includes(saved.refPrice)) {
+        sec.refPrices = [saved.refPrice];
+    }
     if (['and','or','not'].includes(saved.logic)) sec.logic = saved.logic;
     if (typeof saved.name === 'string' && saved.name.trim()) sec.name = saved.name.trim().slice(0, 40);
     if (typeof saved.badge === 'string' && saved.badge.trim()) sec.badge = saved.badge.trim().slice(0, 30);
-    ['rvol','natr','pct','oi'].forEach(k => {
-        if (typeof saved[k + 'From'] === 'number') sec[k + 'From'] = saved[k + 'From'];
-        if (typeof saved[k + 'To']   === 'number') sec[k + 'To']   = saved[k + 'To'];
+    ['rvol','natr','pct','rcoef','oi'].forEach(k => {
+        // v32: % — всегда размах окна (бывшая Δ-метрика ушла), границы по модулю
+        if (typeof saved[k + 'From'] === 'number') sec[k + 'From'] = k === 'pct' ? Math.abs(saved[k + 'From']) : saved[k + 'From'];
+        if (typeof saved[k + 'To']   === 'number') sec[k + 'To']   = k === 'pct' ? Math.abs(saved[k + 'To'])   : saved[k + 'To'];
         // Флаги «Фильтр» (*Active): сохранения v23–v27 несут их явно;
         // в v28 кнопок не было — сохранение БЕЗ флага при заданном
         // диапазоне считаем «фильтр был включён» (v29): строки продолжают
@@ -7492,6 +6740,10 @@ const absRestoreSec = (id, saved) => {
         const hasRange = sec[k + 'From'] !== null || sec[k + 'To'] !== null;
         sec[k + 'Active'] = typeof saved[k + 'Active'] === 'boolean' ? saved[k + 'Active'] : hasRange;
     });
+    // После миграции Δ→Диапазон границы могли остаться в обратном порядке
+    if (sec.pctFrom !== null && sec.pctTo !== null && sec.pctFrom > sec.pctTo) {
+        const tmp = sec.pctFrom; sec.pctFrom = sec.pctTo; sec.pctTo = tmp;
+    }
 };
 try {
     const sf = ctSafeGetJSON('abs_filters', null);
@@ -7555,16 +6807,19 @@ try {
         if (Array.isArray(savedColors)) absFavColorFilter = new Set(savedColors);
     } catch(e) { /* defaults are fine */ }
     absAlertsEnabled = localStorage.getItem('abs_alerts_enabled') === '1';
-    const savedLiq = parseFloat(localStorage.getItem('abs_min_vol24h'));
-    if (!isNaN(savedLiq) && ABS_LIQ_OPTIONS.includes(savedLiq)) absMinVol24h = savedLiq;
     const savedAbsCat = localStorage.getItem('abs_category');
     if (savedAbsCat) absSelectedCategory = savedAbsCat;
-    // Глобальные фильтры: объём 24ч и сделки
+    // Глобальные фильтры: оборот 24ч (USDT), объём 24ч (в монетах), сделки
     const gvf = parseFloat(localStorage.getItem('abs_vol_from'));
     if (!isNaN(gvf) && gvf >= 0) absVolFrom = gvf;
     const gvt = parseFloat(localStorage.getItem('abs_vol_to'));
     if (!isNaN(gvt) && gvt >= 0) absVolTo = gvt;
     if (localStorage.getItem('abs_vol_filter_active') === '1') absVolFilterActive = true;
+    const gbvf = parseFloat(localStorage.getItem('abs_basevol_from'));
+    if (!isNaN(gbvf) && gbvf >= 0) absBaseVolFrom = gbvf;
+    const gbvt = parseFloat(localStorage.getItem('abs_basevol_to'));
+    if (!isNaN(gbvt) && gbvt >= 0) absBaseVolTo = gbvt;
+    if (localStorage.getItem('abs_basevol_filter_active') === '1') absBaseVolFilterActive = true;
     const gtf = parseFloat(localStorage.getItem('abs_trades_from'));
     if (!isNaN(gtf) && gtf >= 0) absTradesFrom = gtf;
     const gttr = parseFloat(localStorage.getItem('abs_trades_to'));
@@ -7587,8 +6842,6 @@ function absInit() {
     ABS_SEC_IDS.forEach(id => absSyncCard(id));
 
     absRestoreGlobalFilters();
-    const liq = document.getElementById('absLiqSelect');
-    if (liq) liq.value = String(absMinVol24h);
     absUpdateGroupHeaders();
     absUpdateColumns();   // thead под восстановленные фильтры (видимые метрики)
     if (absAlertsEnabled) document.getElementById('absAlertBtn').classList.add('active');
@@ -7647,7 +6900,7 @@ function absUpdateGroupHeaders() {
         const S = absSecs[id];
         el.textContent = absSecName(id) + ' · ' + absLinkLabel(id) + ' · ' + ABS_TF_LABEL[S.tf] + ' × ' + S.count;
         const pth = document.getElementById('absTh' + id.toUpperCase() + 'Pct');
-        if (pth) pth.textContent = S.pctKind === 'range' ? 'Диап. %' : 'Δ %';
+        if (pth) pth.textContent = 'Диап. %';
     });
 }
 
@@ -7668,6 +6921,17 @@ function absVisibleMetrics() {
         });
     });
     return vis;
+}
+// v34: карта видимости глобальных колонок «Оборот 24ч»/«Объём 24ч»/«Сделки» —
+// единый источник правды для thead (absUpdateColumns), хвостового colspan и
+// ячеек строк (absReRender). Колонка видна, только когда в её глобальном
+// фильтре задана хотя бы одна граница «от»/«до» (как у метрик секций).
+function absGlobalColVis() {
+    return {
+        vol24h:  absVolFrom !== null || absVolTo !== null,
+        basevol: absBaseVolFrom !== null || absBaseVolTo !== null,
+        trades:  absTradesFrom !== null || absTradesTo !== null
+    };
 }
 // Отражение текущей сортировки в заголовках (вынесено из absReRender —
 // вызывается и при смене набора колонок, когда строк ещё нет).
@@ -7703,17 +6967,37 @@ function absUpdateColumns() {
         if (g) { g.style.display = counts[id] ? '' : 'none'; g.setAttribute('colspan', String(Math.max(1, counts[id]))); }
         nTotal += counts[id];
     });
-    // Адаптивная ширина: 4 служебные колонки (78+110+78+128) + метрики ×~90px.
-    // Инлайн-стиль перекрывает статический min-width из CSS (он остаётся
-    // fallback'ом до первого вызова).
+    // v34: глобальные колонки «Оборот 24ч»/«Объём 24ч»/«Сделки» — как колонки
+    // метрик секций: видны только когда в их фильтре есть данные (задана
+    // хотя бы одна граница «от»/«до»). По умолчанию (фильтры пустые) колонок
+    // нет — таблица компактнее. Хвостовой th группы подстраивает colspan.
+    const gVis = absGlobalColVis();
+    [['vol24h', 'absThVol24h'], ['basevol', 'absThBasevol'], ['trades', 'absThTrades']].forEach(pair => {
+        const th = document.getElementById(pair[1]);
+        if (th) th.style.display = gVis[pair[0]] ? '' : 'none';
+    });
+    const tail = document.getElementById('absTailGroupTh');
+    if (tail) {
+        const gCount = (gVis.vol24h ? 1 : 0) + (gVis.basevol ? 1 : 0) + (gVis.trades ? 1 : 0);
+        tail.setAttribute('colspan', String(gCount + 1));   // + «Действия»
+    }
+    // Адаптивная ширина: служебные колонки (📌★ 78 + тикер 110 + тип 78 +
+    // действия 128 ≈ 394) + видимые глобальные (оборот 100 / объём 96 /
+    // сделки 84) + метрики ×~90px. Инлайн-стиль перекрывает статический
+    // min-width из CSS (он остаётся fallback'ом до первого вызова).
+    const gW = (gVis.vol24h ? 100 : 0) + (gVis.basevol ? 96 : 0) + (gVis.trades ? 84 : 0);
     const table = document.querySelector('#absTableWrap table');
-    if (table) table.style.minWidth = (604 + nTotal * 90) + 'px';
+    if (table) table.style.minWidth = (420 + gW + nTotal * 90) + 'px';
     // Сортировка по скрытой колонке сбрасывается на дефолт (RVOL триггера →
     // RVOL контекста → RVOL предтренда → тикер), иначе порядок строк
-    // управлялся бы невидимым столбцом.
+    // управлялся бы невидимым столбцом. v34: то же — для глобальных колонок.
     const isMetricKey = Object.prototype.hasOwnProperty.call(vis, absSortState.key);
     if (isMetricKey && !vis[absSortState.key]) {
-        absSortState.key = vis.s3Rvol ? 's3Rvol' : (vis.s2Rvol ? 's2Rvol' : (vis.s1Rvol ? 's1Rvol' : 'symbol'));
+        absSortState.key = ABS_SEC_IDS.find(id => vis[id + 'Rvol']) ? ABS_SEC_IDS.find(id => vis[id + 'Rvol']) + 'Rvol' : 'symbol';
+        absSortState.dir = absSortState.key === 'symbol' ? 'asc' : 'desc';
+    }
+    if (Object.prototype.hasOwnProperty.call(gVis, absSortState.key) && !gVis[absSortState.key]) {
+        absSortState.key = ABS_SEC_IDS.find(id => vis[id + 'Rvol']) ? ABS_SEC_IDS.find(id => vis[id + 'Rvol']) + 'Rvol' : 'symbol';
         absSortState.dir = absSortState.key === 'symbol' ? 'asc' : 'desc';
     }
     absReflectSortHeaders();
@@ -7793,15 +7077,22 @@ function absChangeMetric(id, kind) {
     if (!f || !t) return;
     const fv = parseFloat(f.value.trim());
     const tv = parseFloat(t.value.trim());
-    // OI и Δ % могут быть отрицательными; остальные метрики ≥ 0
-    const lo = (kind === 'oi' || (kind === 'pct' && S.pctKind === 'delta')) ? -Infinity : 0;
-    S[kind + 'From'] = (f.value.trim() !== '' && !isNaN(fv)) ? Math.max(lo, fv) : null;
-    S[kind + 'To']   = (t.value.trim() !== '' && !isNaN(tv)) ? Math.max(lo, tv) : null;
-    // pct: кнопка теперь переключает H,L/O,C, а не Active —
-    // авто-активируем фильтр при вводе значений
-    if (kind === 'pct' && !S.pctActive && (S.pctFrom !== null || S.pctTo !== null)) {
-        S.pctActive = true;
+    if (kind === 'pct') {
+        // v32: % = размах окна (high−low)÷«Отн.»×100 — сравнение ПО МОДУЛЮ:
+        // знак перед введённым значением не важен, границы нормализуются
+        S.pctFrom = (f.value.trim() !== '' && !isNaN(fv)) ? Math.abs(fv) : null;
+        S.pctTo   = (t.value.trim() !== '' && !isNaN(tv)) ? Math.abs(tv) : null;
+        if (S.pctFrom !== null && S.pctTo !== null && S.pctFrom > S.pctTo) {
+            const tmp = S.pctFrom; S.pctFrom = S.pctTo; S.pctTo = tmp;   // «от 5 до 2» → [2; 5]
+        }
+    } else {
+        const lo = kind === 'oi' ? -Infinity : 0;   // OI может быть отрицательным; остальные ≥ 0
+        S[kind + 'From'] = (f.value.trim() !== '' && !isNaN(fv)) ? Math.max(lo, fv) : null;
+        S[kind + 'To']   = (t.value.trim() !== '' && !isNaN(tv)) ? Math.max(lo, tv) : null;
     }
+    // v34: у «Диап. %» появилась своя кнопка-фильтр (как у остальных метрик) —
+    // ввод границ больше не включает фильтр автоматически: значения сначала
+    // подсвечиваются, скрывают строки только включённой кнопкой «Диап. %»
     absPersistFilters();
     absUpdateColumns();   // набор данных в фильтрах изменился — колонки тоже
     // Первое появление диапазона OI при кэше без OI — фоновый рескан за данными
@@ -7963,6 +7254,17 @@ function absSetSectionLink(id, lm) {
     }
     absAfterStructureChange(id);
 }
+// v34: объединённая кнопка-якорь «Сейчас»/«Закрытые»: клик переключает
+// между двумя якорями (Сейчас → Закрытые → Сейчас). Из линкованных
+// режимов («До»/«После»/«Внутри») клик возвращает секцию на «Сейчас».
+// Дальше всё как при выборе прежних двух кнопок — absSetSectionLink
+// следит за ссылками, absSyncCard обновляет текст/подсветку кнопки.
+function absToggleAnchor(id) {
+    const S = absSecs[id];
+    if (!S) return;
+    if (S.linkMode === 'now') absSetSectionLink(id, 'closed');
+    else absSetSectionLink(id, 'now');
+}
 function absSetSectionRef(id, ref) {
     const S = absSecs[id];
     if (!ABS_SEC_IDS.includes(ref) || ref === id) { absSyncCard(id); return; }
@@ -7992,34 +7294,81 @@ function absChangeOffset(id) {
     S.offset = v;
     absAfterStructureChange(id);
 }
-// «% метрика» секции: H,L (high−low) или O,C (закрытие−открытие).
-// Переключается одной кнопкой-тогглом.
-function absTogglePctKind(id) {
+// Знаменатель для % метрики: Средняя / High / Low / Open / Close — теперь
+// множественный выбор (кнопки-переключатели вместо select). Когда выбрано
+// несколько источников, знаменатель — их среднее (см. absRefPriceValue).
+// Хотя бы один источник должен остаться включён — последний снять нельзя.
+// Пересчёт из кэша — килайны те же, только знаменатель меняется.
+function absToggleRefPrice(id, val) {
+    if (!ABS_REF_PRICE_OPTS.includes(val)) return;
     const S = absSecs[id];
-    const newPk = S.pctKind === 'range' ? 'delta' : 'range';
-    S.pctKind = newPk;
+    const cur = Array.isArray(S.refPrices) && S.refPrices.length ? S.refPrices : ['avg'];
+    const has = cur.includes(val);
+    if (has && cur.length <= 1) return;   // последний источник — не снимается
+    S.refPrices = has ? cur.filter(v => v !== val) : cur.concat([val]);
+    absSyncRefPriceTabs(id);
     absPersistFilters();
-    absSyncCard(id);
-    absUpdateGroupHeaders();
     if (absRawCache.size) absRecomputeDebounced();
     else if (absAllResults.length) absReRenderDebounced();
 }
-function absSetPctKind(id, pk) {
-    if (pk !== 'range' && pk !== 'delta') return;
+function absSyncRefPriceTabs(id) {
+    const wrap = document.getElementById('abs' + id.toUpperCase() + 'RefPriceTabs');
+    if (!wrap) return;
+    const sel = (absSecs[id].refPrices && absSecs[id].refPrices.length) ? absSecs[id].refPrices : ['avg'];
+    wrap.querySelectorAll('.abs-refprice-tab').forEach(t => t.classList.toggle('active', sel.includes(t.dataset.rp)));
+}
+// Значение цены-источника окна по ключу ('avg'|'high'|'low'|'open'|'close').
+function absRefSourceValue(wm, key) {
+    return key === 'high' ? wm.hi : key === 'low' ? wm.lo : key === 'open' ? wm.firstOpen : key === 'close' ? wm.lastClose : wm.avgClose;
+}
+// Итоговый знаменатель секции — среднее выбранных источников (1 источник =
+// прежнее поведение select; несколько — их среднее, например High и Low).
+function absRefPriceValue(wm, S) {
+    const rps = (S.refPrices && S.refPrices.length) ? S.refPrices : ['avg'];
+    let sum = 0, n = 0;
+    for (const k of rps) { const v = absRefSourceValue(wm, k); if (v !== null && v !== undefined && !isNaN(v)) { sum += v; n++; } }
+    return n ? sum / n : null;
+}
+// Предупреждение о заведомо пустой связке: окно «После» ищет свечи,
+// открывшиеся ПОСЛЕ конца окна секции-ссылки. Если ссылка стоит на якоре
+// «Сейчас» (включает ещё формирующуюся свечу), конец её окна — это будущее
+// относительно текущего момента: свечей позже него не существует и не
+// появится, пока сама секция не будет пересобрана на «Закрытые». Такая
+// пара «После» → «Сейчас» всегда даёт пустое окно («—»), и активный
+// фильтр (например R коэфф.) отбрасывает ВСЕ строки — результат «0».
+function absLinkDeadEnd(id) {
     const S = absSecs[id];
-    if (S.pctKind === pk) return;
-    S.pctKind = pk;
-    absPersistFilters();
-    absSyncCard(id);
-    absUpdateGroupHeaders();
-    if (absRawCache.size) absRecomputeDebounced();
-    else if (absAllResults.length) absReRenderDebounced();
+    if (!S || S.linkMode !== 'after') return null;
+    if (!S.ref || !absSecs[S.ref]) return null;
+    const R = absSecs[S.ref];
+    if (R.linkMode === 'now') {
+        return '⚠ Ссылка «' + absSecName(S.ref) + '» стоит на якоре «Сейчас» — включает формирующуюся свечу, свечей ПОСЛЕ нее ещё нет. Окно этой секции всегда будет пустым («—»), фильтры всегда отбросят все строки. Переведите «' + absSecName(S.ref) + '» на якорь «Закрытые».';
+    }
+    return null;
+}
+// Обновляет текст сноски секции: предупреждение о мёртвой связке (если
+// применимо) вместо обычного описания секции, с подсветкой красным.
+function absSyncSecNote(id) {
+    const el = document.getElementById('abs' + id.toUpperCase() + 'Note');
+    if (!el) return;
+    const warn = absLinkDeadEnd(id);
+    if (warn) {
+        el.textContent = warn;
+        el.classList.add('abs-sec-note-warn');
+    } else {
+        el.textContent = absSecNote(id);
+        el.classList.remove('abs-sec-note-warn');
+    }
 }
 // Смена структуры (привязка/ссылка/сдвиг) — килайны в кэше те же,
 // пересчитываем локально без запросов к Binance.
 function absAfterStructureChange(id) {
     absPersistFilters();
     absSyncCard(id);
+    // Секции, ссылающиеся на эту (S.ref === id), могли получить/потерять
+    // предупреждение «После» → «Сейчас» из-за смены её якоря/связи —
+    // обновляем их сноски тоже.
+    ABS_SEC_IDS.forEach(oid => { if (oid !== id && absSecs[oid] && absSecs[oid].ref === id) absSyncSecNote(oid); });
     absUpdateGroupHeaders();
     absUpdateColumns();
     // Смена привязки/ссылки/сдвига — килайны те же, пересчитываем из кэша
@@ -8038,6 +7387,19 @@ function absChangeGlobalVol() {
     absVolTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
     ctSafeSetItem('abs_vol_from', absVolFrom !== null ? String(absVolFrom) : '');
     ctSafeSetItem('abs_vol_to', absVolTo !== null ? String(absVolTo) : '');
+    absUpdateColumns();   // v34: колонка «Оборот 24ч» появляется/скрывается сразу
+    if (absAllResults.length) absReRenderDebounced();
+}
+// Объём 24ч в монетах (base volume) — v32: новый глобальный фильтр,
+// зеркален обороту (объём в USDT), но в единицах базового актива
+function absChangeGlobalBaseVol() {
+    const f = document.getElementById('absBaseVolFrom');
+    const t = document.getElementById('absBaseVolTo');
+    absBaseVolFrom = (f && f.value.trim() !== '') ? Math.max(0, parseFloat(f.value)) : null;
+    absBaseVolTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
+    ctSafeSetItem('abs_basevol_from', absBaseVolFrom !== null ? String(absBaseVolFrom) : '');
+    ctSafeSetItem('abs_basevol_to', absBaseVolTo !== null ? String(absBaseVolTo) : '');
+    absUpdateColumns();   // v34: колонка «Объём 24ч» появляется/скрывается сразу
     if (absAllResults.length) absReRenderDebounced();
 }
 function absChangeGlobalTrades() {
@@ -8047,6 +7409,7 @@ function absChangeGlobalTrades() {
     absTradesTo = (t && t.value.trim() !== '') ? Math.max(0, parseFloat(t.value)) : null;
     ctSafeSetItem('abs_trades_from', absTradesFrom !== null ? String(absTradesFrom) : '');
     ctSafeSetItem('abs_trades_to', absTradesTo !== null ? String(absTradesTo) : '');
+    absUpdateColumns();   // v34: колонка «Сделки» появляется/скрывается сразу
     if (absAllResults.length) absReRenderDebounced();
 }
 function absToggleGlobalVolFilter() {
@@ -8063,17 +7426,30 @@ function absToggleGlobalTradesFilter() {
     ctSafeSetItem('abs_trades_filter_active', absTradesFilterActive ? '1' : '0');
     if (absAllResults.length) absReRender();
 }
+function absToggleGlobalBaseVolFilter() {
+    absBaseVolFilterActive = !absBaseVolFilterActive;
+    const btn = document.getElementById('absBaseVolFilterBtn');
+    if (btn) btn.classList.toggle('active', absBaseVolFilterActive);
+    ctSafeSetItem('abs_basevol_filter_active', absBaseVolFilterActive ? '1' : '0');
+    if (absAllResults.length) absReRender();
+}
 function absRestoreGlobalFilters() {
     const vf = document.getElementById('absVolFrom');
     const vt = document.getElementById('absVolTo');
     if (vf && absVolFrom !== null) vf.value = absVolFrom;
     if (vt && absVolTo !== null) vt.value = absVolTo;
+    const bvf = document.getElementById('absBaseVolFrom');
+    const bvt = document.getElementById('absBaseVolTo');
+    if (bvf && absBaseVolFrom !== null) bvf.value = absBaseVolFrom;
+    if (bvt && absBaseVolTo !== null) bvt.value = absBaseVolTo;
     const tf = document.getElementById('absTradesFrom');
     const tt = document.getElementById('absTradesTo');
     if (tf && absTradesFrom !== null) tf.value = absTradesFrom;
     if (tt && absTradesTo !== null) tt.value = absTradesTo;
     const vBtn = document.getElementById('absVolFilterBtn');
     if (vBtn) vBtn.classList.toggle('active', absVolFilterActive);
+    const bvBtn = document.getElementById('absBaseVolFilterBtn');
+    if (bvBtn) bvBtn.classList.toggle('active', absBaseVolFilterActive);
     const tBtn = document.getElementById('absTradesFilterBtn');
     if (tBtn) tBtn.classList.toggle('active', absTradesFilterActive);
 }
@@ -8111,7 +7487,10 @@ function absBuildCards() {
                 '</div>' +
                 '<div class="abs-link-line">' +
                     '<div class="abs-link-tabs" id="abs' + cap + 'LinkTabs">' +
-                        '<button type="button" class="abs-link-tab lm-now" data-lm="now" onclick="absSetSectionLink(\'' + id + '\',\'now\')" title="Свечи от текущего момента; «назад» сдвигает">Сейчас</button>' +
+                        // v34: «Сейчас» и «Закрытые» объединены в одну кнопку-якорь:
+                        // клик переключает Сейчас ↔ Закрытые; из линкованных режимов
+                        // («До»/«После»/«Внутри») клик возвращает на «Сейчас».
+                        '<button type="button" class="abs-link-tab abs-anchor-toggle lm-now" id="abs' + cap + 'AnchorBtn" data-lm="now" onclick="absToggleAnchor(\'' + id + '\')" title="Якорь «Сейчас»: последние N свечей от текущего момента, включая формирующуюся (сдвига «назад» нет). Клик — переключить на «Закрытые»: последние N ЗАКРЫТЫХ свечей, без формирующейся, со сдвигом «назад»">Сейчас</button>' +
                         '<button type="button" class="abs-link-tab lm-before" data-lm="before" onclick="absSetSectionLink(\'' + id + '\',\'before\')" title="Окно закрытых ДО начала окна секции-ссылки">До</button>' +
                         '<button type="button" class="abs-link-tab lm-after" data-lm="after" onclick="absSetSectionLink(\'' + id + '\',\'after\')" title="Окно ПОСЛЕ конца окна секции-ссылки">После</button>' +
                         '<button type="button" class="abs-link-tab lm-inside" data-lm="inside" onclick="absSetSectionLink(\'' + id + '\',\'inside\')" title="N свечей ВНУТРИ окна секции-ссылки">Внутри</button>' +
@@ -8119,30 +7498,40 @@ function absBuildCards() {
                     '<select class="abs-ref-select" id="abs' + cap + 'Ref" onchange="absSetSectionRef(\'' + id + '\', this.value)" title="Секция-ссылка"></select>' +
                     '<input type="number" class="abs-offset-input" id="abs' + cap + 'Offset" min="0" max="' + ABS_MAX_OFFSET + '" step="1" value="0" title="Сдвиг окна назад на K свечей" oninput="absChangeOffset(\'' + id + '\')">' +
                 '</div>' +
-            '</div>' +
-            '<div class="abs-tf-row">' +
-                '<label class="natr-tool-label" title="Таймфрейм">ТФ</label>' +
-                '<select class="abs-tf-select" id="abs' + cap + 'TfSelect" onchange="absSwitchTf(\'' + id + '\' , this.value)" title="Таймфрейм">' + tfOptions + '</select>' +
-                '<label class="natr-tool-label" for="abs' + cap + 'Count" title="Свечей (1–50)">Свечей</label>' +
-                '<input type="number" class="abs-count-input" id="abs' + cap + 'Count" min="1" max="' + ABS_MAX_WINDOW + '" step="1" oninput="absChangeCount(\'' + id + '\')">' +
+                '<div class="abs-link-line abs-tf-line">' +
+                    '<label class="natr-tool-label" title="Таймфрейм">ТФ</label>' +
+                    '<select class="abs-tf-select" id="abs' + cap + 'TfSelect" onchange="absSwitchTf(\'' + id + '\' , this.value)" title="Таймфрейм">' + tfOptions + '</select>' +
+                    '<label class="natr-tool-label" for="abs' + cap + 'Count" title="Свечей (1–50)">Свечей</label>' +
+                    '<input type="number" class="abs-count-input" id="abs' + cap + 'Count" min="1" max="' + ABS_MAX_WINDOW + '" step="1" oninput="absChangeCount(\'' + id + '\')">' +
+                '</div>' +
             '</div>' +
             metricRow('rvol', 'RVOL', 'Средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна', '0.1') +
-            metricRow('natr', 'NATR %', 'ATR (до 14 периодов) по окну ÷ цена × 100', '0.05') +
-            '<div class="abs-sec-row">' +
-                '<button type="button" class="abs-metric-toggle" id="abs' + cap + 'PctBtn" onclick="absTogglePctKind(\'' + id + '\' )"  title="H,L = (high−low)÷цена; O,C = (close−open)÷цена">H,L</button>' +
-                '<input type="number" class="natr-range-input" id="abs' + cap + 'PctFrom" placeholder="от" min="0" step="0.05" oninput="absChangeMetric(\'' + id + '\' ,\' pct\' )">' +
-                '<span class="natr-range-sep">—</span>' +
-                '<input type="number" class="natr-range-input" id="abs' + cap + 'PctTo" placeholder="до" min="0" step="0.05" oninput="absChangeMetric(\'' + id + '\' ,\' pct\' )">' +
+            metricRow('natr', 'NATR %', 'ATR (до 14 периодов) по окну ÷ «Отн.» цена × 100 — знаменатель тот же, что у «Диап. %» (кнопки «Отн.» ниже)', '0.05') +
+            '<div class="abs-pct-group" title="«Отн.» — знаменатель для «Диап. %», NATR % и R коэфф. На RVOL и OI Δ% не влияет">' +
+                '<div class="abs-sec-row">' +
+                    '<button type="button" class="abs-metric-toggle" id="abs' + cap + 'PctBtn" onclick="absToggleMetric(\'' + id + '\',\'pct\')" title="Размах окна свечей в %: (high − low) ÷ «Отн.» цена × 100. Ввод границ подсвечивает значения в таблице (фильтр сравнивает по модулю — знак не важен), кнопка скрывает строки вне диапазона">Диап. %</button>' +
+                    '<input type="number" class="natr-range-input" id="abs' + cap + 'PctFrom" placeholder="от" step="0.05" oninput="absChangeMetric(\'' + id + '\',\'pct\' )">' +
+                    '<span class="natr-range-sep">—</span>' +
+                    '<input type="number" class="natr-range-input" id="abs' + cap + 'PctTo" placeholder="до" step="0.05" oninput="absChangeMetric(\'' + id + '\',\'pct\' )">' +
+                '</div>' +
+                '<div class="abs-refprice-row">' +
+                    '<span class="abs-refprice-link" aria-hidden="true">↳</span>' +
+                    '<label class="natr-tool-label" title="Знаменатель «Отн.» для «Диап. %», NATR % и R коэфф.">Отн.</label>' +
+                    '<div class="abs-refprice-tabs" id="abs' + cap + 'RefPriceTabs" title="Источники знаменателя «Отн.»: относительно чего считать (high − low) окна, ATR и тела свечей. Можно выбрать несколько — тогда знаменатель это их среднее">' +
+                        ABS_REF_PRICE_OPTS.map(function(rp) { return '<button type="button" class="abs-refprice-tab" data-rp="' + rp + '" onclick="absToggleRefPrice(\'' + id + '\',\'' + rp + '\')">' + ABS_REF_PRICE_LABEL[rp] + '</button>'; }).join('') +
+                    '</div>' +
+                '</div>' +
             '</div>' +
+            metricRow('rcoef', 'R коэфф.', 'Тело последней свечи окна ÷ среднее тело предыдущих свечей окна (тела — в % от «Отн.», знаменатель общий, как у «Диап. %»). При 1 свече в окне — ÷ среднее тело свечей ДО окна. >1 = свеча крупнее обычного', '0.1') +
             metricRow('oi', 'OI Δ%', oiTitle, '0.1') +
-            '<div class="abs-sec-note">' + escapeHtml(absSecNote(id)) + '</div>' +
+            '<div class="abs-sec-note" id="abs' + cap + 'Note">' + escapeHtml(absSecNote(id)) + '</div>' +
         '</div>';
     }).join('') +
     '<button type="button" class="abs-sec-add-btn" onclick="absAddSection()" title="Добавить секцию">+ Добавить секцию</button>';
 }
 
 // === Thead таблицы: генерация под 7 секций ================================
-// Две строки: группы секций (colspan=4) и метрики. Видимость отдельных th
+// Две строки: группы секций (colspan=5) и метрики. Видимость отдельных th
 // настраивает absUpdateColumns; клики по сортировке ловит общий
 // document-делегат по data-tbl="abs" data-key="sNRvol|…".
 function absBuildThead() {
@@ -8150,9 +7539,9 @@ function absBuildThead() {
     if (!thead) return;
     let groupRow = '<tr><th colspan="3"></th>';
     ABS_SEC_IDS.forEach(id => {
-        groupRow += '<th colspan="4" class="abs-group-th" id="abs' + id.toUpperCase() + 'GroupTh" style="color:' + absSecColor(id) + '"></th>';
+        groupRow += '<th colspan="5" class="abs-group-th" id="abs' + id.toUpperCase() + 'GroupTh" style="color:' + absSecColor(id) + '"></th>';
     });
-    groupRow += '<th colspan="3"></th></tr>';
+    groupRow += '<th colspan="4" id="absTailGroupTh"></th></tr>';
     let mRow = '<tr>' +
         '<th class="sortable" data-tbl="abs" data-key="favorite" style="width:78px;text-align:center;" title="Закреп и избранное — клик сортирует по цвету звезды (gold→green→red→blue→purple)">📌 ★</th>' +
         '<th class="sortable" data-tbl="abs" data-key="symbol">Тикер</th>' +
@@ -8162,12 +7551,14 @@ function absBuildThead() {
         const low = absSecName(id).toLowerCase();
         mRow +=
             '<th class="sortable" data-tbl="abs" data-key="' + id + 'Rvol" id="absTh' + cap + 'Rvol" style="width:84px;text-align:right;" title="RVOL ' + low + ': средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна">RVOL</th>' +
-            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Natr" id="absTh' + cap + 'Natr" style="width:84px;text-align:right;" title="NATR ' + low + ': ATR (до 14 периодов) по окну ÷ цена × 100">NATR %</th>' +
-            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Pct" id="absTh' + cap + 'Pct" style="width:86px;text-align:right;" title="% метрика ' + low + ' (Диапазон или Δ — переключается на карточке)">%</th>' +
+            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Natr" id="absTh' + cap + 'Natr" style="width:84px;text-align:right;" title="NATR ' + low + ': ATR (до 14 периодов) по окну ÷ «Отн.» цена × 100 (знаменатель — кнопки «Отн.» на карточке секции)">NATR %</th>' +
+            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Pct" id="absTh' + cap + 'Pct" style="width:86px;text-align:right;" title="Размах окна ' + low + ' в %: (high − low) ÷ «Отн.» цена × 100; фильтр сравнивает по модулю">%</th>' +
+            '<th class="sortable" data-tbl="abs" data-key="' + id + 'Rcoef" id="absTh' + cap + 'Rcoef" style="width:84px;text-align:right;" title="R коэфф. ' + low + ': тело последней свечи окна ÷ среднее тело предыдущих свечей окна (тела — в % от «Отн.»; при 1 свече — ÷ среднее тело свечей ДО окна)">R коэфф.</th>' +
             '<th class="sortable" data-tbl="abs" data-key="' + id + 'Oi" id="absTh' + cap + 'Oi" style="width:84px;text-align:right;" title="Δ открытого интереса окна ' + low + ': (OI в конце − OI в начале) ÷ OI начала × 100. История OI Binance — 30 дней, минимальный период 5м">OI Δ%</th>';
     });
-    mRow += '<th class="sortable" data-tbl="abs" data-key="vol24h" style="width:100px;text-align:right;">Объём 24ч</th>' +
-        '<th class="sortable" data-tbl="abs" data-key="trades" style="width:84px;text-align:right;">Сделки</th>' +
+    mRow += '<th class="sortable" data-tbl="abs" data-key="vol24h" id="absThVol24h" style="width:100px;text-align:right;" title="Оборот 24ч — объём в USDT (quote volume). Колонка видна, только когда в фильтре «Оборот 24ч» задана граница (как у метрик секций)">Оборот 24ч</th>' +
+        '<th class="sortable" data-tbl="abs" data-key="basevol" id="absThBasevol" style="width:96px;text-align:right;" title="Объём 24ч — объём в монетах (base volume). Колонка видна, только когда в фильтре «Объём 24ч» задана граница">Объём 24ч</th>' +
+        '<th class="sortable" data-tbl="abs" data-key="trades" id="absThTrades" style="width:84px;text-align:right;" title="Число сделок за сутки. Колонка видна, только когда в фильтре «Сделки» задана граница">Сделки</th>' +
     '<th style="width:128px;text-align:center;">Действия</th></tr>';
     thead.innerHTML = groupRow + mRow;
 }
@@ -8178,21 +7569,37 @@ function absBuildThead() {
 function absSyncCard(id) {
     const cap = id.toUpperCase();
     const S = absSecs[id];
+    absSyncSecNote(id);
     const num = (suf, v) => { const el = document.getElementById('abs' + cap + suf); if (el && v !== null && v !== undefined) el.value = v; };
     ABS_METRIC_KINDS.forEach(k => {
         const K = k.charAt(0).toUpperCase() + k.slice(1);
         num(K + 'From', S[k + 'From']);
         num(K + 'To', S[k + 'To']);
-        // pct — кнопка теперь показывает H,L/O,C, а не Active; пропускаем
-        if (k === 'pct') return;
+        // v34: у «Диап. %» теперь тоже есть кнопка-фильтр — отдельного
+        // пропуска для pct больше не нужно
         const b = document.getElementById('abs' + cap + K + 'Btn');
         if (b) b.classList.toggle('active', !!S[k + 'Active']);
     });
     num('Count', S.count);
     const tfSel = document.getElementById('abs' + cap + 'TfSelect');
     if (tfSel) tfSel.value = S.tf;
+    absSyncRefPriceTabs(id);
     const lt = document.getElementById('abs' + cap + 'LinkTabs');
-    if (lt) lt.querySelectorAll('.abs-link-tab').forEach(t => t.classList.toggle('active', t.dataset.lm === S.linkMode));
+    if (lt) lt.querySelectorAll('.abs-link-tab:not(.abs-anchor-toggle)').forEach(t => t.classList.toggle('active', t.dataset.lm === S.linkMode));
+    // v34: единая кнопка-якорь «Сейчас»/«Закрытые» — текст и подсветка
+    // отражают текущий якорь; в линкованных режимах кнопка неактивна и
+    // показывает «Сейчас» (клик вернёт к якорю).
+    const anchorBtn = document.getElementById('abs' + cap + 'AnchorBtn');
+    if (anchorBtn) {
+        const anchorLm = (S.linkMode === 'now' || S.linkMode === 'closed') ? S.linkMode : 'now';
+        anchorBtn.textContent = anchorLm === 'closed' ? 'Закрытые' : 'Сейчас';
+        anchorBtn.dataset.lm = anchorLm;
+        anchorBtn.classList.toggle('active', anchorLm === S.linkMode);
+        anchorBtn.classList.toggle('lm-closed', anchorLm === 'closed');
+        anchorBtn.title = anchorLm === 'closed'
+            ? 'Якорь «Закрытые»: последние N ЗАКРЫТЫХ свечей, без формирующейся. Поле «назад» рядом сдвигает окно на K свечей в прошлое — нужно, если на эту секцию будет ссылаться «После». Клик — вернуть «Сейчас»'
+            : 'Якорь «Сейчас»: последние N свечей от текущего момента, включая формирующуюся (сдвига «назад» нет). Клик — переключить на «Закрытые»: без формирующейся, со сдвигом «назад»';
+    }
     // Ссылка: видима только у линкованных секций; варианты — все остальные
     const ref = document.getElementById('abs' + cap + 'Ref');
     if (ref) {
@@ -8205,20 +7612,10 @@ function absSyncCard(id) {
         if (S.ref && ABS_SEC_IDS.includes(S.ref) && S.ref !== id) ref.value = S.ref;
         else if (ref.selectedIndex === -1) ref.selectedIndex = 0;
     }
-    // «Свечей назад» — у якоря «Сейчас»
+    // «Свечей назад» — только у якоря «Закрытые» (в «Сейчас» смещения нет —
+    // окно всегда прижато к текущему моменту, поле игнорировалось бы)
     const off = document.getElementById('abs' + cap + 'Offset');
-    if (off) { off.style.display = (S.linkMode === 'now' || S.linkMode === 'closed') ? '' : 'none'; off.value = S.offset; }
-    // Кнопка %: показывает H,L или O,C, active = O,C (delta)
-    const pctBtn = document.getElementById('abs' + cap + 'PctBtn');
-    if (pctBtn) {
-        pctBtn.textContent = S.pctKind === 'delta' ? 'O,C' : 'H,L';
-        pctBtn.classList.toggle('active', S.pctKind === 'delta');
-    }
-    ['PctFrom', 'PctTo'].forEach(suf => {
-        const el = document.getElementById('abs' + cap + suf);
-        if (!el) return;
-        if (S.pctKind === 'delta') el.removeAttribute('min'); else el.setAttribute('min', '0');
-    });
+    if (off) { off.style.display = (S.linkMode === 'closed') ? '' : 'none'; off.value = S.offset; }
     // И/ИЛИ/НЕ — комбинирование фильтра секции с остальными
     const lgt = document.getElementById('abs' + cap + 'LogicTabs');
     if (lgt) lgt.querySelectorAll('.abs-logic-tab').forEach(t => t.classList.toggle('active', t.dataset.lg === (S.logic || 'and')));
@@ -8231,17 +7628,8 @@ function absSyncCard(id) {
     const btn = document.getElementById('abs' + cap + 'Toggle');
     if (btn) { btn.classList.toggle('active', absSecEnabled[id]); btn.textContent = absSecEnabled[id] ? 'ВКЛ' : 'ВЫКЛ'; }
 }
-// Порог ликвидности («Оборот 24ч»): меняет состав сканируемых пар, поэтому
-// сразу перезапускаем скан (как при смене ТФ). Клик во время идущего скана
-// останавливает его и начинает новый — уже с другим охватом.
-function absChangeLiq(v) {
-    const t = parseFloat(v);
-    if (isNaN(t) || !ABS_LIQ_OPTIONS.includes(t) || t === absMinVol24h) return;
-    absMinVol24h = t;
-    ctSafeSetItem('abs_min_vol24h', String(t));
-    if (absRefreshTimerId) absStopAutoRefresh();
-    absStartScan();
-}
+// (v32: absChangeLiq удалён вместе с селектом «Оборот 24ч» — пре-фильтр
+// скана уступил место глобальному фильтру оборота на результате)
 
 function absSavePinned() {
     ctSafeSetJSON('abs_pinned', Array.from(absPinned));
@@ -8269,8 +7657,7 @@ function absToggleFavorite(symbol, ev) {
         absReRender();
     }
     requestAnimationFrame(() => {
-        const cell = Array.from(document.querySelectorAll('#absTableBody .natr-fav-cell'))
-            .find(el => el.getAttribute('data-symbol') === symbol);
+        const cell = document.querySelector('#absTableBody .natr-fav-cell[data-symbol="' + jsAttr(symbol) + '"]');
         absShowFavPicker(symbol, cell || (ev && ev.currentTarget) || null);
     });
 }
@@ -8312,8 +7699,7 @@ function absSetFavoriteColor(color) {
     absReRender();
     requestAnimationFrame(() => {
         const sym = absFavPickerSymbol;
-        const cell = Array.from(document.querySelectorAll('#absTableBody .natr-fav-cell'))
-            .find(el => el.getAttribute('data-symbol') === sym);
+        const cell = document.querySelector('#absTableBody .natr-fav-cell[data-symbol="' + jsAttr(sym) + '"]');
         absShowFavPicker(sym, cell || null);
     });
 }
@@ -8383,10 +7769,12 @@ function absToggleAlerts() {
 //  РАСЧЁТ МЕТРИК ОКОН (обе секции)
 // ============================================================
 // Метрики окна (массив килайнов Binance): средний объём, NATR (ATR до 14
-// периодов внутри окна ÷ цена), Диапазон % ((high − low) ÷ средняя цена) и
-// Δ % ((закрытие − открытие) ÷ открытие). RVOL считает вызывающий код — ему
+// периодов внутри окна ÷ цена), Диапазон % ((high − low) ÷ «Отн.» цена —
+// она же % метрика секции), Δ % ((закрытие − открытие) ÷ «Отн.» цена,
+// вспомогательная, в интерфейсе не показывается) и R коэфф. (тело последней
+// свечи ÷ среднее тело предыдущих). RVOL считает вызывающий код — ему
 // нужна база (baseline) свечей ДО окна, у каждой секции своя.
-function absWindowMetrics(window) {
+function absWindowMetrics(window, base, S) {
     if (!window || window.length === 0) return null;
     let volSum = 0, hi = -Infinity, lo = Infinity, closeSum = 0;
     for (const c of window) {
@@ -8399,13 +7787,47 @@ function absWindowMetrics(window) {
     const avgClose = closeSum / window.length;
     const lastClose = +window[window.length - 1][4];
     const firstOpen = +window[0][1];
-    const period = Math.min(14, window.length - 1);
-    const atr = window.length >= 2 ? natrCalcATR(window, period) : null;
+    // v34: знаменатель «Отн.» — среднее выбранных источников секции
+    // (кнопки «Отн.»: Средняя/High/Low/Open/Close, можно несколько).
+    // Теперь он общий для «Диап. %», NATR % и R коэфф. — как в «Диап. %»;
+    // раньше NATR всегда делился на close последней свечи окна.
+    // Если «Отн.» не посчитался (не должно случаться) — запас close.
+    const ref0 = S ? absRefPriceValue({ hi: hi, lo: lo, firstOpen: firstOpen, avgClose: avgClose, lastClose: lastClose }, S) : null;
+    const denom = (ref0 !== null && ref0 !== undefined && !isNaN(ref0) && ref0 > 0) ? ref0 : (lastClose > 0 ? lastClose : null);
+    // FIX: ATR считался ТОЛЬКО по свечам самого окна — natrCalcATR нужна
+    // предыдущая свеча для TR, поэтому окно из 1 свечи давало period=0 и
+    // atr=null (NATR «—»), а окно из 2-3 свечей — период ATR всего 1-2,
+    // а не «до 14», как задумано. Теперь довешиваем историю base (те же
+    // свечи ДО окна, что уже загружены под RVOL), чтобы ATR считался по
+    // полноценным до 14 периодам даже у коротких окон (1+ свеча).
+    const atrSeries = (base && base.length) ? base.concat(window) : window;
+    const period = Math.min(14, atrSeries.length - 1);
+    const atr = period >= 1 ? natrCalcATR(atrSeries, period) : null;
+    // R коэфф. (v34): тело последней свечи ÷ среднее тело предыдущих свечей
+    // окна. Тела измеряются в ОДНОЙ шкале — в % от общего знаменателя
+    // «Отн.» (как «Диап. %»): при общем знаменателе он сокращается, так
+    // что это честное сравнение РАЗМЕРОВ тел; раньше каждая свеча
+    // нормировалась на собственный open. При 1 свече — null, дочисляется
+    // в absAnalyzeRaw (свечи ДО окна, затем окно секции-ссылки).
+    let rcoef = null;
+    if (window.length >= 2) {
+        const lastCandle = window[window.length - 1];
+        const lastBody = Math.abs(+lastCandle[4] - +lastCandle[1]);
+        let bodySum = 0, n = 0;
+        for (let i = 0; i < window.length - 1; i++) {
+            const b = Math.abs(+window[i][4] - +window[i][1]);
+            if (!isNaN(b)) { bodySum += b; n++; }
+        }
+        if (n > 0) {
+            const avgBody = bodySum / n;
+            rcoef = avgBody > 0 ? lastBody / avgBody : null;
+        }
+    }
     return {
         avgVol: volSum / window.length,
-        natr: (atr && lastClose) ? (atr / lastClose) * 100 : null,
-        rangePct: avgClose > 0 ? ((hi - lo) / avgClose) * 100 : null,
-        changePct: firstOpen ? ((lastClose - firstOpen) / firstOpen) * 100 : null,
+        natr: (atr && denom) ? (atr / denom) * 100 : null,
+        hi: hi, lo: lo, firstOpen: firstOpen, avgClose: avgClose, lastClose: lastClose,
+        rcoef: rcoef,
         close: lastClose,
         tStart: +window[0][0],
         tEnd: +window[window.length - 1][0]
@@ -8534,8 +7956,7 @@ function absDepthMinutes(id, memo, guard) {
         const rd = R ? absDepthMinutes(S.ref, memo, guard) : 0;
         if (rd === Infinity) d = Infinity;
         else if (S.linkMode === 'before') d = rd + S.count * tfMin + 2 * tfMin;
-        else if (S.linkMode === 'after') d = Math.max(0, rd - R.count * (ABS_TF_MIN[R.tf] || 5));
-        else d = rd;   // «Внутри» — не глубже начала окна ссылки
+        else if (S.linkMode === 'after') d = R ? Math.max(0, rd - R.count * (ABS_TF_MIN[R.tf] || 5)) : rd;        else d = rd;   // «Внутри» — не глубже начала окна ссылки
     }
     guard.delete(id);
     memo.set(id, d);
@@ -8639,7 +8060,7 @@ function absResolveSections(raw) {
 // Полный анализ пары из сырых килайнов (кэш absRawCache / absRawNext):
 // разрешаем цепочку секций и считаем метрики каждого окна — RVOL (объём
 // окна ÷ объём ABS_BASELINE свечей до окна), NATR, % метрику секции
-// («Диапазон» или «Δ») и OI Δ% по истории. Строка отбрасывается, когда ни
+// (размах окна high−low в % от «Отн.» цены), R коэфф. и OI Δ% по истории. Строка отбрасывается, когда ни
 // одна ВКЛЮЧЁННАЯ секция не собралась в окно.
 function absAnalyzeRaw(symbol, raw) {
     const reso = absResolveSections(raw);
@@ -8649,16 +8070,52 @@ function absAnalyzeRaw(symbol, raw) {
     ABS_SEC_IDS.forEach(id => {
         const S = absSecs[id];
         const R = reso[id];
-        const m = { rvol: null, natr: null, pct: null, changePct: null, rangePct: null, oi: null, tStart: null, tEnd: null };
+        const m = { rvol: null, natr: null, pct: null, rcoef: null, changePct: null, rangePct: null, oi: null, tStart: null, tEnd: null };
         if (R) {
-            const wm = absWindowMetrics(R.win);
+            const wm = absWindowMetrics(R.win, R.base, S);
             const baseVol = (R.base && R.base.length >= ABS_MIN_BASELINE) ? absAvgVolume(R.base) : null;
             if (wm) {
                 m.rvol = baseVol ? wm.avgVol / baseVol : null;
                 m.natr = wm.natr;
-                m.rangePct = wm.rangePct;
-                m.changePct = wm.changePct;
-                m.pct = S.pctKind === 'range' ? wm.rangePct : wm.changePct;
+                // % метрика: знаменатель — среднее выбранных источников секции
+                // («Отн.» теперь мультивыбор: один источник = как раньше,
+                // несколько — их среднее, например High и Low вместе)
+                const ref = absRefPriceValue(wm, S);
+                m.rangePct = (ref > 0 && wm.hi !== null && wm.lo !== null) ? ((wm.hi - wm.lo) / ref) * 100 : null;
+                m.changePct = (ref > 0 && wm.firstOpen != null) ? ((wm.lastClose - wm.firstOpen) / ref) * 100 : null;
+                m.pct = m.rangePct;   // v32: % — всегда размах окна (high−low)
+                m.rcoef = wm.rcoef;
+                // R коэфф. при 1 свече в окне (v34). Раньше сравнивали со
+                // средним телом свечей окна секции-ссылки — и только у
+                // линкованных секций (у якорей «Сейчас»/«Закрытые» S.ref
+                // пуст → R коэфф. всегда оставался «—», фильтр отбрасывал
+                // строки). Теперь база сравнения — свечи ДО окна (base —
+                // те же ABS_BASELINE свечей, что для RVOL, есть при любой
+                // привязке); запасной вариант — окно секции-ссылки.
+                // Тела в одной шкале, как у rcoef в absWindowMetrics.
+                if (m.rcoef === null && R.win.length === 1) {
+                    const c0 = R.win[0];
+                    const body = Math.abs(+c0[4] - +c0[1]);
+                    if (!isNaN(body)) {
+                        let bSum = 0, bN = 0;
+                        if (R.base && R.base.length) {
+                            for (const bc of R.base) {
+                                const b = Math.abs(+bc[4] - +bc[1]);
+                                if (!isNaN(b)) { bSum += b; bN++; }
+                            }
+                        }
+                        if (!bN && S.ref && reso[S.ref] && reso[S.ref].win && reso[S.ref].win.length) {
+                            for (const rc of reso[S.ref].win) {
+                                const b = Math.abs(+rc[4] - +rc[1]);
+                                if (!isNaN(b)) { bSum += b; bN++; }
+                            }
+                        }
+                        if (bN > 0) {
+                            const avg = bSum / bN;
+                            m.rcoef = avg > 0 ? body / avg : null;
+                        }
+                    }
+                }
                 m.tStart = wm.tStart;
                 m.tEnd = wm.tEnd;
                 price = wm.close;
@@ -8709,6 +8166,23 @@ function absTryRecompute() {
     for (const raw of absRawCache.values()) {
         const r = absAnalyzeRaw(raw.symbol, raw);
         if (r) out.push(r);
+    }
+    // FIX(comb): пересчёт из кэша возможен не всегда. Если настройкам нужны
+    // данные, которых в кэше нет (новый ТФ секции; цепочка «До»/сдвиг глубже
+    // взятой выборки), тихий пересчёт обнулял бы таблицу («Пересчитано: 0»
+    // и пустой экран — выглядело как «скринер не работает»). Честный вариант —
+    // перезапуск скана, как при первом включении OI: старые строки остаются
+    // на экране до атомарной подмены в конце скана.
+    const needTfs = new Set();
+    absNeededSecs().forEach(id => needTfs.add(absSecs[id].tf));
+    const sample = absRawCache.values().next().value;
+    const missingTf = [...needTfs].some(tf => !sample.kByTf[tf] || !sample.kByTf[tf].length);
+    if (missingTf || out.length === 0) {
+        if (absIsScanning || absIsBgUpdating) return;   // скан сам принесёт данные — старую таблицу не трогаем
+        absSetStatus(missingTf ? 'Нужны данные другого ТФ — сканирую...' : 'Окна глубже кэша — сканирую...', true, absAllResults.length > 0);
+        if (absRefreshTimerId) absStopAutoRefresh();
+        absStartScan();
+        return;
     }
     absAllResults = out;
     absCheckAlerts();
@@ -8766,22 +8240,16 @@ async function absStartScan(isBg) {
         return;
     }
 
-    // 24ч тикеры — для пре-фильтра ликвидности. По умолчанию (0 = «Все пары»)
-    // сканируется весь рынок ~706 перпетуалов: килайны идут с limit ≤ 100
-    // (вес 1 на запрос), полный скан ≈ 1400 веса — в пределах лимита
-    // Binance. Порог можно поднять селектором тулбара, тогда тихие пары
-    // не запрашиваются вовсе (быстрее и экономнее по весу).
+    // 24ч тикеры — питают колонки «Оборот/Объём/Сделки» и глобальные фильтры.
+    // (v32: пре-фильтр ликвидности убран — скан всегда идёт по всем парам;
+    // килайны идут с limit ≤ 100 (вес 1), полный скан ≈ 1400 веса — в
+    // пределах лимита Binance.)
     try { await natrFetchTicker24h(); } catch(e) { /* non-critical */ }
-    const scanPairs = pairs.filter(sym => {
-        const t = natrTicker24hMap.get(sym);
-        return !t || !t.volume || t.volume >= absMinVol24h;
-    });
+    const scanPairs = pairs;
     absLastScanTotal = scanPairs.length;
     absLastScanProcessed = 0;
     absLastScanTruncated = false;
-    // Статус сразу показывает охват: «X из Y» объясняет, сколько пар отсеял
-    // порог ликвидности (раньше молчаливые 244 из 706 выглядели как баг).
-    absSetStatus('Сканирование ' + scanPairs.length + (scanPairs.length < pairs.length ? ' из ' + pairs.length + ' пар' : ' пар') + '...', true, keepOldData);
+    absSetStatus('Сканирование ' + scanPairs.length + ' пар...', true, keepOldData);
 
     const results = [];
     absRawNext = new Map();
@@ -8926,7 +8394,7 @@ function absCheckAlerts() {
 function absStubRow(sym) {
     const row = { symbol: sym, stub: true, price: null, vol24h: null };
     ABS_SEC_IDS.forEach(id => {
-        row[id] = { rvol: null, natr: null, pct: null, changePct: null, rangePct: null, oi: null, tStart: null, tEnd: null };
+        row[id] = { rvol: null, natr: null, pct: null, rcoef: null, changePct: null, rangePct: null, oi: null, tStart: null, tEnd: null };
     });
     return row;
 }
@@ -8937,6 +8405,11 @@ function absStubRow(sym) {
 // метрика без диапазона не мешает. Пустой набор диапазонов (или все
 // кнопки выключены) = секция проходит автоматически.
 function absSectionPasses(m, S) {
+    // FIX: строка могла быть отсканирована до добавления новой секции — тогда
+    // r[id] для неё undefined, и первый же доступ m.rvol кидал TypeError,
+    // ломая весь ре-рендер таблицы. Нет данных => секция с активными фильтрами
+    // строку отбрасывает; секция без активных фильтров ничего не ограничивает.
+    if (m === null || m === undefined) return !absHasActiveFilters(S);
     if (S.rvolActive && (S.rvolFrom !== null || S.rvolTo !== null)) {
         if (m.rvol === null || m.rvol === undefined) return false;
         if (S.rvolFrom !== null && m.rvol < S.rvolFrom) return false;
@@ -8949,8 +8422,14 @@ function absSectionPasses(m, S) {
     }
     if (S.pctActive && (S.pctFrom !== null || S.pctTo !== null)) {
         if (m.pct === null || m.pct === undefined) return false;
-        if (S.pctFrom !== null && m.pct < S.pctFrom) return false;
-        if (S.pctTo   !== null && m.pct > S.pctTo)   return false;
+        const a = Math.abs(m.pct);   // знак не важен — фильтруем по модулю
+        if (S.pctFrom !== null && a < S.pctFrom) return false;
+        if (S.pctTo   !== null && a > S.pctTo)   return false;
+    }
+    if (S.rcoefActive && (S.rcoefFrom !== null || S.rcoefTo !== null)) {
+        if (m.rcoef === null || m.rcoef === undefined) return false;
+        if (S.rcoefFrom !== null && m.rcoef < S.rcoefFrom) return false;
+        if (S.rcoefTo   !== null && m.rcoef > S.rcoefTo)   return false;
     }
     if (S.oiActive && (S.oiFrom !== null || S.oiTo !== null)) {
         if (m.oi === null || m.oi === undefined) return false;
@@ -8966,6 +8445,7 @@ function absHasActiveFilters(S) {
     return (S.rvolActive && (S.rvolFrom !== null || S.rvolTo !== null))
         || (S.natrActive && (S.natrFrom !== null || S.natrTo !== null))
         || (S.pctActive && (S.pctFrom !== null || S.pctTo !== null))
+        || (S.rcoefActive && (S.rcoefFrom !== null || S.rcoefTo !== null))
         || (S.oiActive && (S.oiFrom !== null || S.oiTo !== null));
 }
 
@@ -9007,10 +8487,14 @@ function absGetFilteredResults() {
             return absFavColorFilter.has(c);
         });
     }
-    // Глобальные фильтры: объём 24ч и сделки
+    // Глобальные фильтры: оборот 24ч (USDT), объём 24ч (в монетах) и сделки
     if (absVolFilterActive) {
         if (absVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= absVolFrom; });
         if (absVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume <= absVolTo; });
+    }
+    if (absBaseVolFilterActive) {
+        if (absBaseVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.base != null && t.base >= absBaseVolFrom; });
+        if (absBaseVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.base != null && t.base <= absBaseVolTo; });
     }
     if (absTradesFilterActive) {
         if (absTradesFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.count >= absTradesFrom; });
@@ -9078,6 +8562,13 @@ function absSortData(data) {
                 const vb = tb && tb.volume != null ? tb.volume : 0;
                 return mult * (va - vb);
             }
+            case 'basevol': {
+                const ta = natrTicker24hMap ? natrTicker24hMap.get(a.symbol) : null;
+                const tb = natrTicker24hMap ? natrTicker24hMap.get(b.symbol) : null;
+                const va = ta && ta.base != null ? ta.base : 0;
+                const vb = tb && tb.base != null ? tb.base : 0;
+                return mult * (va - vb);
+            }
             case 'trades': {
                 const ta = natrTicker24hMap ? natrTicker24hMap.get(a.symbol) : null;
                 const tb = natrTicker24hMap ? natrTicker24hMap.get(b.symbol) : null;
@@ -9086,8 +8577,8 @@ function absSortData(data) {
                 return mult * (va - vb);
             }
             default: {
-                // Метрики секций: 's1Rvol'…'s7Oi'
-                const mm = /^s(\d+)(Rvol|Natr|Pct|Oi)$/.exec(key);
+                // Метрики секций: 's1Rvol'…'s7Rcoef', 's7Oi'
+                const mm = /^s(\d+)(Rvol|Natr|Pct|Rcoef|Oi)$/.exec(key);
                 if (!mm) return 0;
                 const va = a['s' + mm[1]] ? a['s' + mm[1]][mm[2].toLowerCase()] : null;
                 const vb = b['s' + mm[1]] ? b['s' + mm[1]][mm[2].toLowerCase()] : null;
@@ -9165,10 +8656,12 @@ function absReRender() {
     const MF = (S, k) => ({ from: S[k + 'From'], to: S[k + 'To'] });
     const flt = {};
     ABS_SEC_IDS.forEach(id => {
-        flt[id] = { rvol: MF(absSecs[id], 'rvol'), natr: MF(absSecs[id], 'natr'), pct: MF(absSecs[id], 'pct'), oi: MF(absSecs[id], 'oi') };
+        flt[id] = { rvol: MF(absSecs[id], 'rvol'), natr: MF(absSecs[id], 'natr'), pct: MF(absSecs[id], 'pct'), rcoef: MF(absSecs[id], 'rcoef'), oi: MF(absSecs[id], 'oi') };
     });
     // Видимость колонок метрик — та же карта, что у thead (absUpdateColumns)
     const vis = absVisibleMetrics();
+    // v34: глобальные колонки «Оборот/Объём/Сделки» — та же карта, что у thead
+    const gVis = absGlobalColVis();
     const rvolHot = v => v >= 2 ? 'abs-rvol-hot' : v >= 1.5 ? 'abs-rvol-warm' : '';
     const fmtWin = ts => new Date(ts).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -9177,9 +8670,9 @@ function absReRender() {
         const typeCell  = natrAssetTypeBadge(item.symbol);
         const isFav    = absFavorites.has(item.symbol);
         const isPinned = absPinned.has(item.symbol);
-        const favColorHex = isFav ? (CONT_FAV_COLOR_HEX[absFavColors[item.symbol]] || CONT_FAV_COLOR_HEX.gold) : null;
+        const favColorHex = isFav ? (NATR_FAV_COLOR_HEX[absFavColors[item.symbol]] || NATR_FAV_COLOR_HEX.gold) : null;
         const displaySymbol = escapeHtml(item.symbol.replace(/USDT$|USD1$/, ''));
-        const winTip = id => isStub ? '' : 'Окно: ' + fmtWin(item[id].tStart) + ' – ' + fmtWin(item[id].tEnd);
+        const winTip = id => (isStub || !item[id]) ? '' : 'Окно: ' + fmtWin(item[id].tStart) + ' – ' + fmtWin(item[id].tEnd);
 
         // Ячейка числовой метрики — как в NATR Scanner: заданный диапазон
         // подсвечивает значения ВСЕГДА (в диапазоне — золотой, ниже «от» —
@@ -9209,10 +8702,9 @@ function absReRender() {
             const low = absSecName(id).toLowerCase();
             cells +=
                 (vis[id + 'Rvol'] ? numCell(m.rvol, flt[id].rvol, fRvol, rvolHot, 'RVOL ' + low + ': средний объём окна ÷ средний объём ' + ABS_BASELINE + ' свечей до окна. ' + winTip(id)) : '') +
-                (vis[id + 'Natr'] ? numCell(m.natr, flt[id].natr, fPct, null, 'NATR ' + low + ': ATR (до 14 периодов) по окну ÷ цена × 100. ' + winTip(id)) : '') +
-                (vis[id + 'Pct']  ? numCell(m.pct, flt[id].pct, S.pctKind === 'delta' ? fPctS : fPct, null, (S.pctKind === 'range'
-                    ? 'Диапазон окна: (high − low) ÷ средняя цена × 100 — чем меньше, тем плотнее проторговка'
-                    : 'Δ окна: (закрытие − открытие) ÷ открытие × 100') + '. ' + winTip(id)) : '') +
+                (vis[id + 'Natr'] ? numCell(m.natr, flt[id].natr, fPct, null, 'NATR ' + low + ': ATR (до 14 периодов) по окну ÷ «Отн.» цена × 100 — знаменатель тот же, что у «Диап. %» (кнопки «Отн.» на карточке секции). ' + winTip(id)) : '') +
+                (vis[id + 'Pct']  ? numCell(m.pct, flt[id].pct, fPct, null, 'Размах окна: (high − low) ÷ «Отн.» цена × 100 — измеряет всё окно свечей в %; фильтр сравнивает по модулю. ' + winTip(id)) : '') +
+                (vis[id + 'Rcoef'] ? numCell(m.rcoef, flt[id].rcoef, v => v.toFixed(2) + 'x', null, 'R коэфф. ' + low + ': тело последней свечи ÷ среднее тело предыдущих свечей окна (тела — в % от «Отн.», знаменатель общий; при 1 свече — ÷ среднее тело свечей ДО окна). >1 = свеча крупнее обычного. ' + winTip(id)) : '') +
                 (vis[id + 'Oi']   ? numCell(m.oi, flt[id].oi, fPctS, null, 'Δ открытого интереса окна: (OI в конце − OI в начале) ÷ OI начала × 100. Данные OI подгружаются при заданном диапазоне OI. ' + winTip(id)) : '');
         });
 
@@ -9223,7 +8715,14 @@ function absReRender() {
                 '<svg class="copy-icon" style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
             '</td>' +
             '<td>' + typeCell + '</td>' +
-            '<td class="natr-price-cell mono">' + (function() {
+            cells +
+            // Колонки «Оборот/Объём/Сделки» идут ПОСЛЕ колонок метрик — строго
+            // под своими th в absBuildThead (v32: оборот = USDT/quote, объём =
+            // монеты/base; подсветка — по границам соответствующего фильтра).
+            // v34: как колонки метрик, показываются только при заданном
+            // диапазоне в соответствующем глобальном фильтре (gVis — та же
+            // карта, что у thead), иначе колонок в таблице нет вовсе.
+            (gVis.vol24h ? '<td class="natr-price-cell mono">' + (function() {
                 const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
                 if (!t || t.volume == null) return '—';
                 let cls = '';
@@ -9232,8 +8731,18 @@ function absReRender() {
                     cls = inR ? 'natr-range-hit' : (absVolFrom !== null && t.volume < absVolFrom ? 'natr-below-threshold' : 'natr-above-threshold');
                 }
                 return '<span class="mono ' + cls + '">' + natrFmtVolShort(t.volume) + '</span>';
-            })() + '</td>' +
-            '<td class="natr-price-cell mono">' + (function() {
+            })() + '</td>' : '') +
+            (gVis.basevol ? '<td class="natr-price-cell mono">' + (function() {
+                const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
+                if (!t || t.base == null) return '—';
+                let cls = '';
+                if (absBaseVolFrom !== null || absBaseVolTo !== null) {
+                    const inR = (absBaseVolFrom === null || t.base >= absBaseVolFrom) && (absBaseVolTo === null || t.base <= absBaseVolTo);
+                    cls = inR ? 'natr-range-hit' : (absBaseVolFrom !== null && t.base < absBaseVolFrom ? 'natr-below-threshold' : 'natr-above-threshold');
+                }
+                return '<span class="mono ' + cls + '">' + natrFmtBaseVolShort(t.base) + '</span>';
+            })() + '</td>' : '') +
+            (gVis.trades ? '<td class="natr-price-cell mono">' + (function() {
                 const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
                 if (!t || t.count == null) return '—';
                 let cls = '';
@@ -9242,8 +8751,7 @@ function absReRender() {
                     cls = inR ? 'natr-range-hit' : (absTradesFrom !== null && t.count < absTradesFrom ? 'natr-below-threshold' : 'natr-above-threshold');
                 }
                 return '<span class="mono ' + cls + '">' + t.count.toLocaleString('ru') + '</span>';
-            })() + '</td>' +
-            cells +
+            })() + '</td>' : '') +
             '<td style="text-align:center;"><div class="natr-actions-cell">' +
                 '<button type="button" class="natr-icon-btn" title="Открыть в CryptoAI" onclick="event.stopPropagation(); natrOpenInCryptoAI(\'' + jsAttr(item.symbol) + '\')">AI</button>' +
                 '<button type="button" class="natr-icon-btn natr-tiger-btn" title="Открыть в Tiger.com Terminal на ' + absTigerExchange + ' (локальный сервер, порт 7819)" onclick="event.stopPropagation(); absOpenInTiger(\'' + jsAttr(item.symbol) + '\')">' + NATR_TIGER_SVG + '</button>' +
@@ -9280,7 +8788,6 @@ function absReRender() {
 // их уже не отменяет). Выделение хранится по символу и переживает
 // ре-рендер (авто-обновление, смена сортировки/фильтров) — рендеры
 // добавляют класс обратно при сборке строки.
-let natrSelectedSymbol = null;
 let contSelectedSymbol = null;
 let absSelectedSymbol = null;
 function ctInitRowSelection(tbodyId, setSel) {
@@ -9295,9 +8802,7 @@ function ctInitRowSelection(tbodyId, setSel) {
         if (sym) tr.classList.add('natr-row-selected');
     }, true);   // capture — см. комментарий выше
 }
-ctInitRowSelection('contTableBody', v => contSelectedSymbol = v);
-ctInitRowSelection('absTableBody',  v => absSelectedSymbol = v);
-
+ctInitRowSelection('contTableBody', v => contSelectedSymbol = v);ctInitRowSelection('absTableBody',  v => absSelectedSymbol = v);
 // ============================================================
 //  INIT
 // ===========================================================
@@ -9329,9 +8834,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // natrCategoryMap would stay null until the first scan and every stub would render
     // as "Крипто" by default, hiding the real TradFi/ETF/Asset typing.
     natrInitCategories();
-    contApplyRestoredUI();
-    caiRenderHistoryChips();
-    // If "★ Избранное" was left on from the previous session, render the favorites list
+    contApplyRestoredUI();    caiRenderHistoryChips();    // If "★ Избранное" was left on from the previous session, render the favorites list
     // immediately — without waiting for a scan — so the user can
     // quickly recall what they added before.
     if (contWatchlistOnly) contReFilterAndRender();
