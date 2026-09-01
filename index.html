@@ -1338,6 +1338,28 @@
 }
 .abs-sec-del:hover { color: var(--red); border-color: rgba(246,70,93,0.35); background: rgba(246,70,93,0.08); }
 .abs-sec-del[disabled] { opacity: 0.25; pointer-events: none; }
+/* v38: пресеты и история — селекты в тулбаре (стиль как у natr-range-input,
+   но шире и с усечением длинных имён) */
+.abs-preset-select, .abs-history-select {
+    height: 36px; max-width: 210px; min-width: 120px; padding: 0 8px;
+    border-radius: 8px; font-size: 12.5px; color: var(--fg); background: var(--bg-card);
+    border: 1px solid var(--border); cursor: pointer; font-family: 'Space Grotesk', sans-serif;
+    text-overflow: ellipsis; transition: border-color 0.15s;
+}
+.abs-preset-select:hover, .abs-history-select:hover, .abs-preset-select:focus, .abs-history-select:focus {
+    border-color: rgba(240,185,11,0.4); box-shadow: 0 4px 16px rgba(240,185,11,0.12); outline: none;
+}
+.abs-preset-select option, .abs-history-select option, .abs-preset-select optgroup, .abs-history-select optgroup {
+    background: var(--bg-card); color: var(--fg);
+}
+/* v38: баннер «вы смотрите снимок истории» над таблицей */
+.abs-hist-banner {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin: 10px 0; padding: 9px 14px; border-radius: 10px; font-size: 12.5px;
+    background: rgba(59,130,246,0.10); border: 1px solid rgba(59,130,246,0.30); color: var(--fg);
+}
+.abs-hist-banner .abs-hist-info { color: var(--muted); }
+.abs-hist-banner .natr-tool-btn { height: 30px; padding: 0 12px; margin-left: auto; }
 .abs-logic-tabs { display: flex; gap: 3px; }
 .abs-logic-tab {
     height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
@@ -1905,6 +1927,23 @@
 
     <div class="natr-tools-card">
     <div class="natr-tools" id="absTools">
+        <div class="natr-tool-group" id="absPresetGroup" title="Пресеты — именованные наборы секций и фильтров. Пресет хранит: состав и порядок секций, привязки, ТФ, число свечей, «Отн.», И/ИЛИ/НЕ, фильтры метрик, глобальные фильтры, сортировку и категорию. Переключение мгновенное — метрики пересчитываются из кэша, недостающие таймфреймы доберёт кнопка «Сканировать». 💾 — сохранить текущие настройки как пресет (или обновить свой), 📤 — скачать JSON-файлом, 📥 — загрузить из файла, 🗑 — удалить свой">
+            <label class="natr-tool-label" for="absPresetSelect">Пресет:</label>
+            <select class="abs-preset-select" id="absPresetSelect" onchange="absPresetSelectApply(this.value)">
+                <option value="">— без пресета —</option>
+            </select>
+            <button type="button" class="natr-tool-btn" id="absPresetSaveBtn" onclick="absPresetSave()" title="Сохранить текущие настройки как новый пресет; если выбран свой пресет — обновить его">💾</button>
+            <button type="button" class="natr-tool-btn" id="absPresetExportBtn" onclick="absPresetExport()" title="Скачать пресет JSON-файлом — перенос на другое устройство/браузер или передача связки секций другому человеку">📤</button>
+            <button type="button" class="natr-tool-btn" id="absPresetImportBtn" onclick="document.getElementById('absPresetFile').click()" title="Загрузить пресет из JSON-файла (экспорт 📤)">📥</button>
+            <button type="button" class="natr-tool-btn" id="absPresetDelBtn" onclick="absPresetDelete()" title="Удалить выбранный свой пресет; текущие настройки не меняются">🗑</button>
+            <input type="file" id="absPresetFile" accept=".json,application/json" style="display:none;" onchange="absPresetImportFile(this)">
+        </div>
+        <div class="natr-tool-group" id="absHistoryGroup" title="История сканов: каждый ручной скан автоматически сохраняется как снимок (тикеры + метрики + оборот/объём/сделки на момент скана). Выбор снимка показывает «что было тогда» без повторного запроса к Binance — фильтры и сортировка работают по данным снимка. Уведомления 🔔 всегда считаются по живым данным">
+            <label class="natr-tool-label" for="absHistorySelect">История:</label>
+            <select class="abs-history-select" id="absHistorySelect" onchange="absHistoryApply(this.value)">
+                <option value="" selected>живые данные</option>
+            </select>
+        </div>
         <button type="button" class="natr-tool-btn" id="absAlertBtn" onclick="absToggleAlerts()" title="Уведомления о новых монетах в текущем фильтре">🔔</button>
         <button type="button" class="natr-tool-btn" id="absWatchlistBtn" onclick="absToggleWatchlistOnly()" title="Показывать только избранное — отдельный просмотр: фильтры (категория, глобальные, секции) на список не действуют, работают только цветовой фильтр избранного и сортировка. В обычном режиме фильтры действуют на избранные строки как на все остальные">★ Избранное</button>
         <div class="natr-tool-group" id="absFavColorFilterGroup" title="Оставить только избранные определённого цвета (можно выбрать несколько). Ничего не выбрано — фильтр по цвету не действует.">
@@ -1930,6 +1969,12 @@
             <input type="number" class="natr-range-input" id="absTradesTo" placeholder="до" min="0" step="1000" oninput="absChangeGlobalTrades()">
         </div>
     </div>
+    </div>
+
+    <div class="abs-hist-banner" id="absHistBanner" style="display:none;">
+        <span>🕓 Снимок <strong class="mono" id="absHistBannerTime">--:--</strong></span>
+        <span class="abs-hist-info" id="absHistBannerInfo"></span>
+        <button type="button" class="natr-tool-btn" onclick="absHistoryApply('')" title="Показать текущие (живые) данные последнего скана">Вернуться к живым данным</button>
     </div>
 
     <div class="natr-stats" id="absStatsBar" style="display:none;"></div>
@@ -1984,6 +2029,31 @@
 </div>
 
 <script>
+// ============================================================
+//  v39 — УПРАВЛЕНИЕ НАСТРОЙКАМИ (уточнение: без встроенных пресетов
+//        и без конструктора порядка):
+//   • Пресеты — только СВОИ именованные: dropdown в тулбаре, 💾
+//     сохранить/обновить, 🗑 удалить. Пресет = ВСЁ: состав секций,
+//     привязки, «Сдвиг», ТФ, число свечей, «Отн.», И/ИЛИ/НЕ,
+//     фильтры метрик, глобальные фильтры, сортировка, категория.
+//     Применение мгновенное: метрики пересчитываются из сырого кэша,
+//     недостающие ТФ доберёт «Сканировать». Один набор в localStorage
+//     (как раньше) остаётся «рабочим», пресеты — именованные слоты
+//     (модель «открыл документ → правишь → Save As…»)
+//   • Экспорт 📤 / импорт 📥 пресета JSON-файлом — перенос между
+//     браузерами/устройствами и обмен связками секций
+//   • История сканов: после каждого ручного (не фонового) скана
+//     автоматически пишется снимок — тикеры + метрики секций +
+//     оборот/объём/сделки на момент скана. Dropdown «История» показывает
+//     «что было час назад» БЕЗ повторного запроса к Binance: фильтры,
+//     сортировка и подсветка работают по данным снимка, баннер сверху
+//     напоминает, что это снимок. Уведомления 🔔 всегда считаются по
+//     живым данным. Снимков — до 5, при нехватке квоты старые
+//     вытесняются (последний всегда выживает)
+//   • Убрано из v38 по уточнению пользователя: встроенные пресеты
+//     («Пробой после застоя», «Реакция на импульс», «Ретест уровня»)
+//     и конструктор порядка секций (кнопки ◀/▶ в карточках)
+// ============================================================
 // ============================================================
 //  v37 — SUPER SCREENER (избранное: фильтры действуют, режим «★» —
 //        только цвет и сортировка; RVOL ниже R коэфф.):
@@ -6936,6 +7006,8 @@ function absInit() {
         });
     }
     document.querySelectorAll('#absCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === absSelectedCategory));
+    // v39: пресеты (только свои, экспорт/импорт) и история сканов
+    absPresetsInit();
     // Request Notification permission up-front only if the user previously
     // turned alerts on — no surprise "allow notifications" prompt otherwise.
     if (absAlertsEnabled && 'Notification' in window && Notification.permission === 'default') {
@@ -7091,6 +7163,380 @@ function absPersistFilters() {
     ABS_SEC_IDS.forEach(id => { secs[id] = absSecs[id]; });
     ctSafeSetJSON('abs_filters', { v: 4, order: ABS_SEC_IDS.slice(), nextId: absSecIdSeq, secs: secs, secEnabled: absSecEnabled });
 }
+
+// ============================================================
+//  v39 — ПРЕСЕТЫ / ИСТОРИЯ СКАНОВ
+// ============================================================
+// Пресет — именованный снимок ВСЕЙ настройки Super Screener: секции
+// (состав, порядок, привязки, «Сдвиг», ТФ, свечи, «Отн.», И/ИЛИ/НЕ,
+// фильтры метрик), глобальные фильтры, сортировка, категория. Хранится
+// отдельно от «рабочего» набора abs_filters: переключение пресета
+// переписывает рабочий набор (дальше он живёт своей жизнью, как раньше),
+// сам пресет остаётся нетронутым слотом, пока его не обновят (💾) —
+// привычная модель «открыл документ → правишь → Save As…».
+let absUserPresets = [];      // [{ name, data }]
+let absActivePreset = '';     // '' | 'u:<name>'
+// Копия исходного порядка s1..s7 (ABS_SEC_IDS мутируется при удалении секций;
+// нужна для «чистого холста» перед применением пресета)
+const ABS_SEC_IDS_INIT = ['s1', 's2', 's3', 's4', 's5', 's6', 's7'];
+// Снимок текущих настроек → объект пресета (тот же формат, что abs_filters v4,
+// плюс глобальные фильтры/сортировка/категория)
+function absPresetSnapshot() {
+    const secs = {};
+    ABS_SEC_IDS.forEach(id => { secs[id] = absSecs[id]; });
+    return {
+        v: 4,
+        order: ABS_SEC_IDS.slice(),
+        nextId: absSecIdSeq,
+        secs: secs,
+        secEnabled: Object.assign({}, absSecEnabled),
+        globals: {
+            volFrom: absVolFrom, volTo: absVolTo, volActive: absVolFilterActive,
+            baseVolFrom: absBaseVolFrom, baseVolTo: absBaseVolTo, baseVolActive: absBaseVolFilterActive,
+            tradesFrom: absTradesFrom, tradesTo: absTradesTo, tradesActive: absTradesFilterActive
+        },
+        sort: { key: absSortState.key, dir: absSortState.dir },
+        category: absSelectedCategory
+    };
+}
+// Сброс секций к заводским 7 (перед применением пресета — чистый холст:
+// применяемый пресет сам скажет, сколько и каких секций должно быть)
+function absResetSectionsDefaults() {
+    ABS_SEC_IDS.length = 0;
+    Object.keys(absSecs).forEach(id => { delete absSecs[id]; });
+    ABS_SEC_IDS_INIT.forEach(id => {
+        ABS_SEC_IDS.push(id);
+        absSecs[id] = absNewSection(id);
+        absSecEnabled[id] = ABS_SEC_DEF[id].on;
+    });
+    absSecIdSeq = ABS_SEC_IDS_INIT.length + 1;
+}
+// Валидация ссылок после применения снимка: ref существует, не цикл —
+// иначе секция падает на якорь «Сейчас» (тот же проход, что при старте)
+function absValidateRefs() {
+    ABS_SEC_IDS.forEach(id => {
+        const S = absSecs[id];
+        if (S.linkMode === 'before' || S.linkMode === 'after' || S.linkMode === 'inside') {
+            if (!S.ref || !ABS_SEC_IDS.includes(S.ref) || S.ref === id || absWouldCycle(id, S.ref)) {
+                S.linkMode = 'now'; S.ref = null; S.offset = 0; S.uiShift = 0;
+            }
+        }
+    });
+}
+// Применение данных пресета к живому состоянию (секции + глобальные
+// фильтры + сортировка + категория), с персистентностью рабочего набора
+function absPresetApplyData(data) {
+    if (!data || typeof data !== 'object' || !Array.isArray(data.order) || !data.secs || typeof data.secs !== 'object') return false;
+    absResetSectionsDefaults();
+    data.order.forEach(id => {
+        if (typeof id !== 'string' || !/^s\d+$/.test(id)) return;
+        if (!absSecs[id]) { absSecs[id] = absNewSection(id); absSecEnabled[id] = true; }
+        if (!ABS_SEC_IDS.includes(id)) ABS_SEC_IDS.push(id);
+    });
+    const kept = new Set(data.order.filter(id => absSecs[id]));
+    ABS_SEC_IDS.length = 0;
+    data.order.forEach(id => { if (kept.has(id)) ABS_SEC_IDS.push(id); });
+    Object.keys(absSecs).forEach(id => { if (!kept.has(id)) { delete absSecs[id]; delete absSecEnabled[id]; } });
+    ABS_SEC_IDS.forEach(id => absRestoreSec(id, data.secs[id]));
+    if (data.secEnabled && typeof data.secEnabled === 'object')
+        ABS_SEC_IDS.forEach(id => { if (typeof data.secEnabled[id] === 'boolean') absSecEnabled[id] = data.secEnabled[id]; });
+    if (Number.isInteger(data.nextId) && data.nextId > absSecIdSeq) absSecIdSeq = data.nextId;
+    absValidateRefs();
+    // Глобальные фильтры — в живые переменные, в DOM и в localStorage
+    // (рабочий набор остаётся самосогласованным, как после ручного ввода)
+    const g = data.globals || {};
+    absVolFrom = (typeof g.volFrom === 'number') ? g.volFrom : null;
+    absVolTo = (typeof g.volTo === 'number') ? g.volTo : null;
+    absVolFilterActive = !!g.volActive;
+    absBaseVolFrom = (typeof g.baseVolFrom === 'number') ? g.baseVolFrom : null;
+    absBaseVolTo = (typeof g.baseVolTo === 'number') ? g.baseVolTo : null;
+    absBaseVolFilterActive = !!g.baseVolActive;
+    absTradesFrom = (typeof g.tradesFrom === 'number') ? g.tradesFrom : null;
+    absTradesTo = (typeof g.tradesTo === 'number') ? g.tradesTo : null;
+    absTradesFilterActive = !!g.tradesActive;
+    ctSafeSetItem('abs_vol_from', absVolFrom === null ? '' : String(absVolFrom));
+    ctSafeSetItem('abs_vol_to', absVolTo === null ? '' : String(absVolTo));
+    ctSafeSetItem('abs_vol_filter_active', absVolFilterActive ? '1' : '0');
+    ctSafeSetItem('abs_basevol_from', absBaseVolFrom === null ? '' : String(absBaseVolFrom));
+    ctSafeSetItem('abs_basevol_to', absBaseVolTo === null ? '' : String(absBaseVolTo));
+    ctSafeSetItem('abs_basevol_filter_active', absBaseVolFilterActive ? '1' : '0');
+    ctSafeSetItem('abs_trades_from', absTradesFrom === null ? '' : String(absTradesFrom));
+    ctSafeSetItem('abs_trades_to', absTradesTo === null ? '' : String(absTradesTo));
+    ctSafeSetItem('abs_trades_filter_active', absTradesFilterActive ? '1' : '0');
+    absRestoreGlobalFilters();
+    // Сортировка (ключ из пресета может не существовать у нового набора
+    // колонок — absUpdateColumns сбросит невидимый ключ сам)
+    if (data.sort && typeof data.sort.key === 'string') {
+        absSortState.key = data.sort.key;
+        absSortState.dir = data.sort.dir === 'asc' ? 'asc' : 'desc';
+    }
+    // Категория
+    absSelectedCategory = (typeof data.category === 'string' && data.category) ? data.category : 'all';
+    ctSafeSetItem('abs_category', absSelectedCategory);
+    document.querySelectorAll('#absCatTabs .natr-cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === absSelectedCategory));
+    // Рабочий набор = применённый пресет; карточки/thead/колонки/рендер
+    absPersistFilters();
+    absRebuildSectionsUI(false);
+    absReflectSortHeaders();
+    return true;
+}
+function absPresetDisplayName() {
+    if (!absActivePreset) return null;
+    if (absActivePreset[0] === 'u') {
+        const p = absUserPresets.find(p => 'u:' + p.name === absActivePreset);
+        return p ? p.name : null;
+    }
+    return null;
+}
+function absPresetNameTaken(name) {
+    return absUserPresets.some(p => p.name === name);
+}
+function absRefreshPresetSelect() {
+    const sel = document.getElementById('absPresetSelect');
+    if (!sel) return;
+    let html = '<option value="">' + (absUserPresets.length ? '— без пресета —' : '— пресетов пока нет —') + '</option>';
+    if (absUserPresets.length)
+        html += '<optgroup label="Мои">' +
+            absUserPresets.map(p => '<option value="u:' + escapeHtml(p.name) + '">' + escapeHtml(p.name) + '</option>').join('') +
+            '</optgroup>';
+    sel.innerHTML = html;
+    // Активный пресет мог быть удалён/импортирован под другим именем —
+    // тогда честно показываем «без пресета»
+    if (absActivePreset && !absPresetDisplayName()) absActivePreset = '';
+    sel.value = absActivePreset || '';
+}
+function absPresetSelectApply(v) {
+    if (v === '') {
+        absActivePreset = '';
+        ctSafeSetItem('abs_preset_active', '');
+        showToast('Пресет не выбран — настройки остаются как есть');
+        return;
+    }
+    let name = null, data = null;
+    if (v.slice(0, 2) === 'u:') {
+        const p = absUserPresets.find(p => 'u:' + p.name === v);
+        if (p) { name = p.name; data = p.data; }
+    }
+    if (!data || !absPresetApplyData(data)) {
+        showToast('Пресет не применился — файл повреждён?');
+        absRefreshPresetSelect();
+        return;
+    }
+    absActivePreset = v;
+    ctSafeSetItem('abs_preset_active', v);
+    absRefreshPresetSelect();
+    const hint = absRawCache.size ? '' : ' — запустите «Сканировать»';
+    showToast('Пресет «' + name + '» применён' + hint);
+}
+function absPresetSave() {
+    if (absActivePreset.slice(0, 2) === 'u:') {
+        const name = absActivePreset.slice(2);
+        if (!confirm('Обновить пресет «' + name + '» текущими настройками?')) return;
+        const p = absUserPresets.find(p => p.name === name);
+        if (!p) { showToast('Пресет не найден'); return; }
+        p.data = absPresetSnapshot();
+        ctSafeSetJSON('abs_presets', absUserPresets);
+        showToast('Пресет «' + name + '» обновлён');
+        return;
+    }
+    const name = prompt('Название пресета:', 'Мой скан');
+    if (name === null) return;
+    const trimmed = name.trim().slice(0, 60);
+    if (!trimmed) return;
+    if (absPresetNameTaken(trimmed)) { showToast('Пресет «' + trimmed + '» уже есть — придумайте другое имя'); return; }
+    absUserPresets.push({ name: trimmed, data: absPresetSnapshot() });
+    ctSafeSetJSON('abs_presets', absUserPresets);
+    absActivePreset = 'u:' + trimmed;
+    ctSafeSetItem('abs_preset_active', absActivePreset);
+    absRefreshPresetSelect();
+    showToast('Пресет «' + trimmed + '» сохранён');
+}
+function absPresetDelete() {
+    if (absActivePreset.slice(0, 2) !== 'u:') {
+        showToast('Сначала выберите свой пресет');
+        return;
+    }
+    const name = absActivePreset.slice(2);
+    if (!confirm('Удалить пресет «' + name + '»? (текущие настройки не изменятся)')) return;
+    absUserPresets = absUserPresets.filter(p => p.name !== name);
+    ctSafeSetJSON('abs_presets', absUserPresets);
+    absActivePreset = '';
+    ctSafeSetItem('abs_preset_active', '');
+    absRefreshPresetSelect();
+    showToast('Пресет «' + name + '» удалён');
+}
+function absPresetExport() {
+    let name, data;
+    if (absActivePreset.slice(0, 2) === 'u:') {
+        const p = absUserPresets.find(p => 'u:' + p.name === absActivePreset);
+        if (!p) return;
+        name = p.name; data = p.data;
+    } else {
+        const nm = prompt('Название пресета для файла:', 'Мой скан');
+        if (nm === null) return;
+        name = nm.trim().slice(0, 60);
+        if (!name) return;
+        data = absPresetSnapshot();
+    }
+    const payload = { app: 'CryptoTerminal', type: 'abs-preset', v: 1, name: name, exported: new Date().toISOString(), data: data };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Preset_' + name.replace(/[^\wа-яА-ЯёЁ\- ]/g, '').replace(/\s+/g, '_') + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+    showToast('Пресет «' + name + '» выгружен в файл');
+}
+// Импорт из текста JSON (файловый ввод просто читает файл и зовёт это)
+function absPresetImportText(text) {
+    let obj;
+    try { obj = JSON.parse(text); } catch(e) { showToast('Файл не читается — это не JSON'); return false; }
+    if (!obj || typeof obj !== 'object' || obj.type !== 'abs-preset' || !obj.data || typeof obj.data !== 'object' ||
+        !Array.isArray(obj.data.order) || !obj.data.secs || typeof obj.data.secs !== 'object') {
+        showToast('Это не пресет Super Screener');
+        return false;
+    }
+    let name = (typeof obj.name === 'string' && obj.name.trim()) ? obj.name.trim().slice(0, 60) : 'Импорт';
+    const base = name;
+    let i = 2;
+    while (absPresetNameTaken(name) && i < 100) name = base + ' (' + (i++) + ')';
+    absUserPresets.push({ name: name, data: obj.data });
+    ctSafeSetJSON('abs_presets', absUserPresets);
+    showToast('Пресет «' + name + '» импортирован — применяю');
+    absPresetSelectApply('u:' + name);
+    return true;
+}
+function absPresetImportFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function() { absPresetImportText(String(reader.result || '')); };
+    reader.onerror = function() { showToast('Не удалось прочитать файл'); };
+    reader.readAsText(file, 'utf-8');
+    input.value = '';   // тот же файл можно выбрать повторно
+}
+// ---------- История сканов (v38) -------------------------------------------
+// Снимок = тикеры + метрики секций + оборот/объём/сделки на момент скана.
+// Пишется после каждого РУЧНОГО скана (фоновое автообновление не пишет —
+// иначе история забивалась бы почти одинаковыми минутными копиями).
+// Просмотр снимка не ходит в Binance: фильтры/сортировка/подсветка
+// работают по данным снимка; уведомления 🔔 всегда по живым данным.
+const ABS_HISTORY_MAX = 5;
+let absHistorySnaps = [];     // [{ ts, preset, total, rows, tickers }]
+let absHistoryView = null;    // null = живые данные, иначе индекс снимка
+let absHistoryTickers = new Map();   // symbol -> {volume, base, count} снимка
+function absHistoryTime(ts) {
+    return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+function absHistoryTrimRow(r) {
+    const o = { symbol: r.symbol };
+    ABS_SEC_IDS.forEach(id => {
+        const m = r[id];
+        if (m) o[id] = { rvol: m.rvol, natr: m.natr, pct: m.pct, changePct: m.changePct, rcoef: m.rcoef, oi: m.oi, tStart: m.tStart, tEnd: m.tEnd };
+    });
+    return o;
+}
+function absHistoryPersist() {
+    // Квота localStorage общая с кэшами календаря — при нехватке места
+    // вытесняем самые старые снимки, но последний оставляем всегда
+    let ok = ctSafeSetJSON('abs_scan_history', { v: 1, snaps: absHistorySnaps });
+    while (!ok && absHistorySnaps.length > 1) {
+        absHistorySnaps.shift();
+        ok = ctSafeSetJSON('abs_scan_history', { v: 1, snaps: absHistorySnaps });
+    }
+    return ok;
+}
+function absHistoryPush(results) {
+    if (!results || !results.length) return;
+    const tickers = {};
+    results.forEach(r => {
+        const t = natrTicker24hMap ? natrTicker24hMap.get(r.symbol) : null;
+        if (t) tickers[r.symbol] = { v: t.volume, b: t.base, c: t.count };
+    });
+    const preset = absPresetDisplayName();
+    absHistorySnaps.unshift({
+        ts: Date.now(),
+        preset: preset,
+        total: absLastScanTotal,
+        rows: results.map(absHistoryTrimRow),
+        tickers: tickers
+    });
+    if (absHistorySnaps.length > ABS_HISTORY_MAX) absHistorySnaps.length = ABS_HISTORY_MAX;
+    absHistoryPersist();
+    absRefreshHistorySelect();
+}
+function absRefreshHistorySelect() {
+    const sel = document.getElementById('absHistorySelect');
+    if (sel) {
+        let html = '<option value="">живые данные</option>';
+        absHistorySnaps.forEach((s, i) => {
+            html += '<option value="' + i + '">' + absHistoryTime(s.ts) + ' · ' + s.rows.length + ' пар' + (s.preset ? ' · ' + escapeHtml(s.preset) : '') + '</option>';
+        });
+        sel.innerHTML = html;
+        sel.value = absHistoryView === null ? '' : String(absHistoryView);
+    }
+    const banner = document.getElementById('absHistBanner');
+    if (banner) {
+        if (absHistoryView === null) {
+            banner.style.display = 'none';
+        } else {
+            const s = absHistorySnaps[absHistoryView];
+            banner.style.display = 'flex';
+            const tEl = document.getElementById('absHistBannerTime');
+            if (tEl) tEl.textContent = absHistoryTime(s.ts);
+            const iEl = document.getElementById('absHistBannerInfo');
+            if (iEl) iEl.textContent = s.rows.length + ' пар' + (s.preset ? ' · пресет «' + s.preset + '»' : '') + ' — данные на момент скана, без запроса к Binance';
+        }
+    }
+}
+function absHistoryApply(v) {
+    let idx = (v === '' || v === null || v === undefined) ? null : parseInt(v, 10);
+    if (idx !== null && (isNaN(idx) || idx < 0 || idx >= absHistorySnaps.length)) idx = null;
+    absHistoryView = idx;
+    absHistoryTickers = new Map();
+    if (idx !== null) {
+        const tk = absHistorySnaps[idx].tickers || {};
+        Object.keys(tk).forEach(sym => absHistoryTickers.set(sym, { volume: tk[sym].v, base: tk[sym].b, count: tk[sym].c }));
+    }
+    absRefreshHistorySelect();
+    if (absAllResults.length || absHistorySnaps.length) absReRender();
+    if (idx === null && absAllResults.length) absSetStatus('Готово: ' + absAllResults.length, true);
+}
+// Источник строк для таблицы: снимок (когда выбран) или живые данные
+function absResultsSource() {
+    return absHistoryView !== null ? absHistorySnaps[absHistoryView].rows : absAllResults;
+}
+// 24ч тикер строки: у снимка — свой (замороженный на момент скана), у живых
+// данных — текущий natrTicker24hMap. Единая точка для фильтров/сортировки/
+// ячеек, чтобы история показывала оборот «как тогда».
+function absTicker24h(sym) {
+    if (absHistoryView !== null) return absHistoryTickers.get(sym) || null;
+    return natrTicker24hMap ? natrTicker24hMap.get(sym) : null;
+}
+function absPresetsInit() {
+    // Пользовательские пресеты + активный
+    try {
+        const saved = ctSafeGetJSON('abs_presets', []);
+        if (Array.isArray(saved))
+            absUserPresets = saved.filter(p => p && typeof p === 'object' && typeof p.name === 'string' && p.name.trim() && p.data && typeof p.data === 'object' && Array.isArray(p.data.order));
+    } catch(e) { absUserPresets = []; }
+    try { absActivePreset = localStorage.getItem('abs_preset_active') || ''; } catch(e) { absActivePreset = ''; }
+    // v39: встроенных пресетов больше нет — сохранённый активный 'b:*'
+    // (из v38) сбрасываем в «без пресета»
+    if (absActivePreset.slice(0, 2) === 'b:') absActivePreset = '';
+    absRefreshPresetSelect();
+    // История сканов
+    try {
+        const h = ctSafeGetJSON('abs_scan_history', null);
+        if (h && typeof h === 'object' && Array.isArray(h.snaps))
+            absHistorySnaps = h.snaps.filter(s => s && typeof s === 'object' && typeof s.ts === 'number' && Array.isArray(s.rows));
+    } catch(e) { absHistorySnaps = []; }
+    absHistoryView = null;
+    absRefreshHistorySelect();
+}
+
 // Смена ТФ секции — нужны другие килайны, пересчитываем из кэша
 // (если кэша нет — предложим нажать «Сканировать»)
 function absSwitchTf(id, tf) {
@@ -7319,7 +7765,9 @@ function absLinkLabel(id) {
     const S = absSecs[id];
     if (S.linkMode === 'now') return 'якорь · сейчас';
     if (S.linkMode === 'closed') return 'якорь · закрытые' + (S.offset > 0 ? ' −' + S.offset : '');
-    const n = S.ref ? S.ref.slice(1) : '?';
+    // Номер секции-ссылки — её ПОЗИЦИЯ в списке, как в заголовке карточки
+    // «Секция N» (после удалений id не совпадает с видимой нумерацией)
+    const n = S.ref ? (ABS_SEC_IDS.indexOf(S.ref) + 1) : '?';
     if (S.linkMode === 'before') return '⟵ до С' + n;
     if (S.linkMode === 'after')  return '⟶ после С' + n;
     return '⤵ внутри С' + n;
@@ -7368,7 +7816,7 @@ function absSetSectionRef(id, ref) {
     const S = absSecs[id];
     if (!ABS_SEC_IDS.includes(ref) || ref === id) { absSyncCard(id); return; }
     if (absWouldCycle(id, ref)) {
-        showToast('Цикл: секция ' + ref.slice(1) + ' уже ссылается на эту');
+        showToast('Цикл: секция «' + absSecName(ref) + '» уже ссылается на эту');
         absSyncCard(id);
         return;
     }
@@ -7738,9 +8186,10 @@ function absSyncCard(id) {
         ref.disabled = anchor || single;
         // Пересобирается каждый раз (секций обычно немного) — иначе после
         // добавления/удаления/переименования секции список отставал бы от
-        // фактического состава ABS_SEC_IDS.
+        // фактического состава ABS_SEC_IDS. Номер в подписи — позиция в
+        // списке (как «Секция N» в заголовке карточки, не id).
         ref.innerHTML = ABS_SEC_IDS.filter(o => o !== id)
-            .map(o => '<option value="' + o + '">С' + o.slice(1) + ' · ' + escapeHtml(absSecName(o)) + '</option>').join('');
+            .map(o => '<option value="' + o + '">С' + (ABS_SEC_IDS.indexOf(o) + 1) + ' · ' + escapeHtml(absSecName(o)) + '</option>').join('');
         if (S.ref && ABS_SEC_IDS.includes(S.ref) && S.ref !== id) ref.value = S.ref;
         else if (ref.selectedIndex === -1) ref.selectedIndex = 0;
     }
@@ -8436,6 +8885,14 @@ async function absStartScan(isBg) {
     absAllResults = results;
     absRawCache = absRawNext;
     absRawNext = new Map();
+    // v38: снимок в историю — после каждого РУЧНОГО скана (фоновое
+    // автообновление не пишет: минутные дубли забили бы историю).
+    // Оборванный баном скан не снимается — данные неполные.
+    // Новый ручной скан возвращает таблицу к живым данным.
+    if (!isBg) {
+        if (!bannedMidScan) absHistoryPush(results);
+        if (absHistoryView !== null) absHistoryApply('');
+    }
     absCheckAlerts();
     absUpdateCatTabCounts();
     absReRender();
@@ -8504,9 +8961,12 @@ function absCheckAlerts() {
     // уведомления по заглушкам не имеют смысла и снесли бы память
     // absAlertedSymbols — при возврате в обычный режим всё переуведомило бы).
     const savedView = absWatchlistOnly;
+    const savedHist = absHistoryView;
     absWatchlistOnly = false;
+    absHistoryView = null;   // v38: уведомления — только по живым данным, снимок не считается
     const filtered = absGetFilteredResults();
     absWatchlistOnly = savedView;
+    absHistoryView = savedHist;
     const current = new Set(filtered.map(r => r.symbol));
     filtered.forEach(r => {
         if (absAlertedSymbols.has(r.symbol)) return;
@@ -8596,7 +9056,9 @@ function absHasActiveFilters(S) {
 // отфильтрованный список (без сортировки — ей занимается absSortData).
 // Каждый ввод фильтра живой: пересекаивает уже загруженные данные без скана.
 function absGetFilteredResults() {
-    let list = absAllResults.slice();
+    // v38: источник строк — снимок истории, если он выбран, иначе живые данные
+    const src = absResultsSource();
+    let list = src.slice();
     // Режим «★ Избранное» (v37) — отдельный ПРОСМОТР списка, а не фильтр:
     // показываем весь состав избранного — строки последнего скана с метриками
     // для тех, кто в него попал, и заготовки «—» для остальных. На этот список
@@ -8607,10 +9069,10 @@ function absGetFilteredResults() {
     // как на все остальные.
     if (absWatchlistOnly) {
         let favRows;
-        if (absAllResults.length === 0) {
+        if (src.length === 0) {
             favRows = [...absFavorites].map(sym => absStubRow(sym));
         } else {
-            const scanned = absAllResults.filter(r => absFavorites.has(r.symbol));
+            const scanned = src.filter(r => absFavorites.has(r.symbol));
             const scannedSet = new Set(scanned.map(r => r.symbol));
             const missing = [...absFavorites]
                 .filter(sym => !scannedSet.has(sym))
@@ -8648,16 +9110,16 @@ function absGetFilteredResults() {
     // избранное целиком, не трогая фильтры, — кнопка «★ Избранное» выше.
     // Глобальные фильтры: оборот 24ч (USDT), объём 24ч (в монетах) и сделки
     if (absVolFilterActive) {
-        if (absVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume >= absVolFrom; });
-        if (absVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.volume <= absVolTo; });
+        if (absVolFrom !== null) list = list.filter(r => { const t = absTicker24h(r.symbol); return t && t.volume >= absVolFrom; });
+        if (absVolTo !== null) list = list.filter(r => { const t = absTicker24h(r.symbol); return t && t.volume <= absVolTo; });
     }
     if (absBaseVolFilterActive) {
-        if (absBaseVolFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.base != null && t.base >= absBaseVolFrom; });
-        if (absBaseVolTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.base != null && t.base <= absBaseVolTo; });
+        if (absBaseVolFrom !== null) list = list.filter(r => { const t = absTicker24h(r.symbol); return t && t.base != null && t.base >= absBaseVolFrom; });
+        if (absBaseVolTo !== null) list = list.filter(r => { const t = absTicker24h(r.symbol); return t && t.base != null && t.base <= absBaseVolTo; });
     }
     if (absTradesFilterActive) {
-        if (absTradesFrom !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.count >= absTradesFrom; });
-        if (absTradesTo !== null) list = list.filter(r => { const t = natrTicker24hMap.get(r.symbol); return t && t.count <= absTradesTo; });
+        if (absTradesFrom !== null) list = list.filter(r => { const t = absTicker24h(r.symbol); return t && t.count >= absTradesFrom; });
+        if (absTradesTo !== null) list = list.filter(r => { const t = absTicker24h(r.symbol); return t && t.count <= absTradesTo; });
     }
     // Комбинирование секций — три группы по метке И/ИЛИ/НЕ (absSetSectionLogic),
     // отключённые секции всегда пропускаются, не участвуя ни в одной группе:
@@ -8715,22 +9177,22 @@ function absSortData(data) {
                 return mult * typeOf(a.symbol).localeCompare(typeOf(b.symbol));
             }
             case 'vol24h': {
-                const ta = natrTicker24hMap ? natrTicker24hMap.get(a.symbol) : null;
-                const tb = natrTicker24hMap ? natrTicker24hMap.get(b.symbol) : null;
+                const ta = absTicker24h(a.symbol);
+                const tb = absTicker24h(b.symbol);
                 const va = ta && ta.volume != null ? ta.volume : 0;
                 const vb = tb && tb.volume != null ? tb.volume : 0;
                 return mult * (va - vb);
             }
             case 'basevol': {
-                const ta = natrTicker24hMap ? natrTicker24hMap.get(a.symbol) : null;
-                const tb = natrTicker24hMap ? natrTicker24hMap.get(b.symbol) : null;
+                const ta = absTicker24h(a.symbol);
+                const tb = absTicker24h(b.symbol);
                 const va = ta && ta.base != null ? ta.base : 0;
                 const vb = tb && tb.base != null ? tb.base : 0;
                 return mult * (va - vb);
             }
             case 'trades': {
-                const ta = natrTicker24hMap ? natrTicker24hMap.get(a.symbol) : null;
-                const tb = natrTicker24hMap ? natrTicker24hMap.get(b.symbol) : null;
+                const ta = absTicker24h(a.symbol);
+                const tb = absTicker24h(b.symbol);
                 const va = ta && ta.count != null ? ta.count : 0;
                 const vb = tb && tb.count != null ? tb.count : 0;
                 return mult * (va - vb);
@@ -8756,13 +9218,16 @@ function absReRender() {
     let shown = absGetFilteredResults();
     shown = absSortData(shown);
 
-    // Закреплённые строки — наверх (тот же паттерн, что в NATR/Cont)
+    // Закреплённые строки — наверх (тот же паттерн, что в NATR/Cont).
+    // v38: в режиме истории закрепы работают по строкам снимка (если
+    // снимок пуст или тикера в нём нет — заглушка, как обычно).
+    const src = absResultsSource();
     let pinnedRows = [];
     if (absPinned.size > 0) {
-        if (absAllResults.length === 0) {
+        if (src.length === 0) {
             pinnedRows = [...absPinned].map(sym => absStubRow(sym));
         } else {
-            pinnedRows = absSortData(absAllResults.filter(r => absPinned.has(r.symbol)));
+            pinnedRows = absSortData(src.filter(r => absPinned.has(r.symbol)));
         }
         const pinnedSet = new Set(pinnedRows.map(r => r.symbol));
         shown = pinnedRows.concat(shown.filter(r => !pinnedSet.has(r.symbol)));
@@ -8773,14 +9238,18 @@ function absReRender() {
     // Binance виден как «X/Y» (обработано из запланированных).
     const stats = document.getElementById('absStatsBar');
     if (stats) {
+        // v38: в режиме истории «Всего пар» — охват СНИМКА (момент того
+        // скана), а не текущего; для снимка нет обрыва/лимита — честное N
         let sh = '<div>Всего пар: <strong class="mono">' +
-            (absLastScanTruncated
-                ? absLastScanProcessed + '/' + absLastScanTotal
-                : (absLastScanTotal || absAllResults.length)) + '</strong></div>';
+            (absHistoryView !== null
+                ? absHistorySnaps[absHistoryView].total || src.length
+                : (absLastScanTruncated
+                    ? absLastScanProcessed + '/' + absLastScanTotal
+                    : (absLastScanTotal || src.length))) + '</strong></div>';
         ABS_SEC_IDS.forEach(id => {
             if (!absSecEnabled[id]) return;
             sh += '<div>' + absSecName(id) + ' ✓: <strong class="mono" style="color:' + absSecColor(id) + '">' +
-                absAllResults.filter(r => absSectionPasses(r[id], absSecs[id])).length + '</strong></div>';
+                src.filter(r => absSectionPasses(r[id], absSecs[id])).length + '</strong></div>';
         });
         // v37: в режиме «★ Избранное» итог честно называется «В избранном» —
         // фильтры на список не действуют
@@ -8793,7 +9262,9 @@ function absReRender() {
         body.innerHTML = '';
         const p = empty.querySelector('p');
         if (p) {
-            if (absWatchlistOnly) {
+            if (absHistoryView !== null) {
+                p.textContent = 'Снимок пуст — текущие фильтры отсекли все строки снимка';
+            } else if (absWatchlistOnly) {
                 // v37: фильтры в этом режиме не действуют — пусто может быть
                 // только от цветового фильтра (либо избранное ещё не набрано)
                 p.textContent = absFavorites.size === 0
@@ -8802,9 +9273,11 @@ function absReRender() {
             } else if (absFavColorFilter.size > 0) {
                 p.textContent = 'Нет избранных тикеров выбранного цвета';
             } else {
-                p.textContent = absAllResults.length === 0
-                    ? (natrIsBanned() ? 'Лимит Binance — скан прерван, ждём паузу и повторите' : 'Сканирование...')
-                    : 'Нет сигналов по текущим фильтрам';
+                p.textContent = absHistoryView !== null
+                    ? 'Снимок пуст'
+                    : (absAllResults.length === 0
+                        ? (natrIsBanned() ? 'Лимит Binance — скан прерван, ждём паузу и повторите' : 'Сканирование...')
+                        : 'Нет сигналов по текущим фильтрам');
             }
         }
         empty.style.display = 'block';
@@ -8908,7 +9381,7 @@ function absReRender() {
             // диапазоне в соответствующем глобальном фильтре (gVis — та же
             // карта, что у thead), иначе колонок в таблице нет вовсе.
             (gVis.vol24h ? '<td class="natr-price-cell mono">' + (function() {
-                const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
+                const t = absTicker24h(item.symbol);
                 if (!t || t.volume == null) return '—';
                 let cls = '';
                 if (absVolFrom !== null || absVolTo !== null) {
@@ -8918,7 +9391,7 @@ function absReRender() {
                 return '<span class="mono ' + cls + '">' + natrFmtVolShort(t.volume) + '</span>';
             })() + '</td>' : '') +
             (gVis.basevol ? '<td class="natr-price-cell mono">' + (function() {
-                const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
+                const t = absTicker24h(item.symbol);
                 if (!t || t.base == null) return '—';
                 let cls = '';
                 if (absBaseVolFrom !== null || absBaseVolTo !== null) {
@@ -8928,7 +9401,7 @@ function absReRender() {
                 return '<span class="mono ' + cls + '">' + natrFmtBaseVolShort(t.base) + '</span>';
             })() + '</td>' : '') +
             (gVis.trades ? '<td class="natr-price-cell mono">' + (function() {
-                const t = natrTicker24hMap ? natrTicker24hMap.get(item.symbol) : null;
+                const t = absTicker24h(item.symbol);
                 if (!t || t.count == null) return '—';
                 let cls = '';
                 if (absTradesFrom !== null || absTradesTo !== null) {
