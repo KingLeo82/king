@@ -329,6 +329,45 @@ html.ct-light .abs-hidden-col-un:hover{background:rgba(240,185,11,.4)}
     .abs-canvas-filter-node{width:198px}
     .natr-range-input{width:56px;min-width:50px}
 }
+</style><style id="v104ZoomCss">
+/* ============ v104: масштаб конструктора фильтров ============ */
+/* Слой узлов масштабируется трансформом; позиции узлов остаются
+   в логических координатах холста. Связи (SVG) не масштабируются —
+   линии и подписи рисуются в визуальных координатах и не «толстеют». */
+#absSecGrid{transform-origin:0 0;will-change:auto}
+/* Сенсорные жесты холста обрабатывает сам редактор: один палец — пан,
+   два пальца (щипок) — масштаб. Внутри контролов оставляем натив. */
+#absCanvas{touch-action:none;-ms-touch-action:none}
+#absCanvas input,#absCanvas select,#absCanvas textarea{touch-action:auto}
+/* Кнопки масштаба в тулбаре конструктора */
+.abs-canvas-zoom-btn{min-width:34px;padding:6px 8px;text-align:center;flex-shrink:0;font-size:14px}
+.abs-canvas-zoom-btn.abs-canvas-zoom-level{min-width:58px;font-family:'JetBrains Mono','SF Mono',Menlo,monospace;font-weight:700;font-size:12px}
+/* Подсказка в правом нижнем углу холста */
+#absZoomHint{position:absolute;right:10px;bottom:8px;z-index:6;pointer-events:none;font-size:10px;line-height:1.3;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:4px 9px;opacity:.75;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+@media (pointer:coarse){
+    .abs-canvas-zoom-btn{min-width:42px;padding:8px 9px}
+    #absZoomHint{font-size:11px;opacity:.9}
+}
+@media (max-width:768px){
+    #absZoomHint{max-width:52vw;white-space:normal;text-align:right;bottom:6px;right:8px}
+}
+@media (max-width:420px){#absZoomHint{display:none}}
+</style><style id="v105Css">
+/* ============ v105: безграничный холст + чёткий текст ============ */
+/* Логический (0,0) холста стоит в 120000px от края прокрутки — панорамировать
+   можно ~150 экранов в любую сторону, границ нет. */
+#absSecGrid{left:120000px;top:120000px;right:auto;bottom:auto;width:0;height:0}
+/* Дизайнерский холст: полос прокрутки нет (панорама — перетаскиванием фона),
+   сетка едет вместе с контентом (attachment:local) и масштабируется из JS. */
+#absCanvas{background-attachment:local;scrollbar-width:none;-ms-overflow-style:none}
+#absCanvas::-webkit-scrollbar{display:none;width:0;height:0}
+/* Баннер режима связи: копия живёт на НЕпрокручиваемой обёртке — оригинал на
+   #absCanvas уезжает вместе с панорамой, поэтому гасим его и рисуем сверху */
+#absCanvas.abs-canvas-connecting::after{display:none}
+#absCanvasWrap.abs-canvas-connecting::after{content:'Потяните связь к целевому узлу или кликните его. Esc — отмена';position:absolute;top:56px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0c1117;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;z-index:100;pointer-events:none;box-shadow:0 4px 16px rgba(240,185,11,0.4);white-space:nowrap}
+@media (max-width:768px){
+    #absCanvasWrap.abs-canvas-connecting::after{top:52px;font-size:10px;padding:5px 10px;max-width:88%;text-align:center;white-space:normal}
+}
 </style></head><body><script>try{"light"===localStorage.getItem("ct_theme")&&document.documentElement.classList.add("ct-light")}catch(e){}</script><nav class="top-nav"><div class="nav-brand"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>Crypto</span>Terminal
     </div><div class="nav-tabs" role="tablist" aria-label="Разделы терминала"><button class="nav-tab active" role="tab" aria-selected="true"  data-section="abs" onclick="switchSection('abs')">Super Screener</button><button class="nav-tab" role="tab" aria-selected="false" data-section="tw" onclick="switchSection('tw')">Trader Clock</button><button class="nav-tab" role="tab" aria-selected="false" data-section="cai" onclick="switchSection('cai')">CryptoAI</button></div><div class="natr-tiger-settings-wrap"><button class="natr-tool-btn" id="natrTigerSettingsBtn" onclick="natrToggleTigerSettings()" title="Настройки — часовой пояс и подключение Tiger.com Terminal"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Настройки</span></button><div id="natrTigerSettings" class="natr-tiger-settings-panel" role="dialog" aria-label="Настройки"><div class="stg-header"><div class="stg-header-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><em>Настройки</em></div><button type="button" class="stg-close" onclick="natrToggleTigerSettings()" title="Закрыть" aria-label="Закрыть настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div><div class="stg-body"><div class="stg-section"><div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>Оформление</div><div class="stg-field"><label for="ctThemeSelect">Тема интерфейса</label><select class="sec-select stg-select-sm" id="ctThemeSelect" onchange="ctSetTheme(this.value)"><option value="dark">Тёмная — по умолчанию</option><option value="light">Светлая</option></select><div class="stg-hint">Светлая тема для яркого окружения — применяется сразу ко всему интерфейсу и сохраняется между сессиями</div></div></div><div class="stg-divider"></div><div class="stg-section"><div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Часовой пояс — Часы и Календарь</div><div class="stg-field"><label for="globalTZSelect">Часовой пояс</label><select class="sec-select stg-select-sm" id="globalTZSelect" onchange="globalTZChanged(this.value)"><option value="auto">Автоопределение</option><option value="local">Моё время</option><option value="UTC">UTC</option><option value="Asia/Irkutsk">Иркутск, UTC+8</option><option value="Europe/Moscow">Москва, UTC+3</option><option value="Europe/Istanbul">Стамбул, UTC+3</option><option value="Asia/Dubai">Дубай, UTC+4</option><option value="Asia/Kolkata">Мумбаи, UTC+5:30</option><option value="Asia/Singapore">Сингапур, UTC+8</option><option value="Asia/Hong_Kong">Гонконг, UTC+8</option><option value="Asia/Shanghai">Шанхай, UTC+8</option><option value="Asia/Tokyo">Токио, UTC+9</option><option value="Asia/Seoul">Сеул, UTC+9</option><option value="Australia/Sydney">Сидней, UTC+10/11</option><option value="Europe/Berlin">Берлин, UTC+1/2</option><option value="Europe/London">Лондон, UTC+0/1</option><option value="America/Sao_Paulo">Сан-Паулу, UTC-3</option><option value="America/New_York">Нью-Йорк, UTC-5/4</option><option value="America/Toronto">Торонто, UTC-5/4</option><option value="America/Los_Angeles">Лос-Анджелес, UTC-8/7</option></select></div></div><div class="stg-divider"></div><div class="stg-section"><div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Tiger.com Terminal</div><div class="stg-field"><label for="absTigerExchangeSelect">Биржа в Tiger</label><select class="sec-select" id="absTigerExchangeSelect" onchange="absChangeTigerExchange(this.value)"></select></div><div class="stg-field"><label for="absTigerLinkGroupSelect">Группа линковки</label><select class="sec-select" id="absTigerLinkGroupSelect" onchange="absChangeTigerLinkGroup(this.value)"></select></div></div><div class="stg-divider"></div><div class="stg-section"><div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Vataga.Terminal</div><div class="stg-field"><input type="text" class="stg-input stg-input-sm" id="vatagaPartnerIdInput" placeholder="CryptoTerminal" maxlength="64" onchange="vatagaChangePartnerId(this.value)"><div class="stg-hint">partner_ID из документации Vataga.Terminal</div></div><div class="stg-field"><label for="absVatagaExchangeSelect">Биржа в Vataga</label><select class="sec-select" id="absVatagaExchangeSelect" onchange="absChangeVatagaExchange(this.value)"></select></div><div class="stg-field"><label for="absVatagaTypeSelect">Тип инструмента</label><select class="sec-select" id="absVatagaTypeSelect" onchange="absChangeVatagaType(this.value)"><option value="F">F — фьючерсы</option><option value="S">S — спот</option></select></div></div><div class="stg-divider"></div><div class="stg-section"><div class="stg-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>Резервная копия</div><div class="stg-field"><label>Все настройки терминала</label><div class="stg-hint">Пресеты, секции и фильтры, избранное и пины, скрытые тикеры, тема, часовой пояс, подключения Tiger/Vataga — всё в один JSON-файл. Перенос между браузерами и страховка от очистки кэша</div></div><div class="stg-field" style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="natr-tool-btn" onclick="ctBackupExport()" title="Собрать все ключи настроек этого приложения из localStorage и скачать одним JSON-файлом">📥 Скачать все настройки</button><button type="button" class="natr-tool-btn" onclick="document.getElementById('ctBackupFile').click()" title="Загрузить настройки из ранее сохранённого файла: текущие настройки будут перезаписаны, страница перезагрузится">📤 Загрузить из файла</button><input type="file" id="ctBackupFile" accept=".json,application/json" style="display:none;" onchange="ctBackupImportFile(this)"></div><div class="stg-hint">Загрузка предварительно спросит подтверждение и перезапишет текущие настройки</div></div></div></div></nav><div class="section-panel" id="section-tw" role="tabpanel" aria-label="Trader Clock"><div class="natr-wrap"><div class="natr-header"><h1><em>Trader</em> Clock</h1><div class="natr-controls"><div class="badge-status" style="gap:10px;"><span>Местное</span><span class="mono" style="color:var(--fg);font-weight:700;font-size:13px;" id="tcDLocal">--:--</span><span class="mono" style="font-size:10px;opacity:0.6;" id="tcDLocalTag"></span></div><div class="badge-status" style="gap:10px;"><span>UTC</span><span class="mono" style="color:var(--fg);font-weight:700;font-size:13px;" id="tcDUtc">--:--</span><span class="mono" style="font-size:10px;opacity:0.6;">GMT+0</span></div></div></div><div class="tc-body"><div class="tc-canvas-area"><canvas id="tcClockCanvas"></canvas></div><div class="tc-side-panel"><select class="sec-select" id="tcTzSelect" style="display:none;"></select><div id="tcLegend"></div></div></div></div></div><div class="section-panel" id="section-cai" role="tabpanel" aria-label="CryptoAI"><div class="cai-wrap"><div class="natr-header"><div><h1 class="cai-title"><em>CryptoAI</em> Agent</h1></div></div><div class="cai-search-box"><input type="text" id="caiInput" placeholder="BTC, ETH, QUSDT, SOL..." onkeydown="if(event.key==='Enter')caiSearch()"><button class="cai-paste-btn" id="caiPasteBtn" onclick="caiPasteFromClipboard()" title="Вставить из буфера обмена"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
             Вставить
@@ -14194,6 +14233,1085 @@ function absCanvasAddRoot() {
     };
 })();
 
-console.log('[abs-canvas] Visual filter canvas initialized (filters as nodes) v103 — drag-to-connect, mobile adaptive');
+/* ================================================================
+   v104: МАСШТАБ ХОЛСТА (колесо мыши / щипок / кнопки)
+   ────────────────────────────────────────────────────────────────
+   • колесо мыши над холстом плавно приближает/отдаляет фильтры,
+     масштаб «к курсору» — точка под мышью остаётся на месте;
+   • слой узлов (#absSecGrid) масштабируется CSS-transform'ом,
+     логические координаты узлов не меняются — сохранённые позиции
+     и расчёт свободных мест остаются корректными;
+   • SVG связей не масштабируется: линии рисуются в визуальных
+     координатах, толщина линий и шрифт подписей постоянны;
+   • драг узлов, размеры холста, точки портов и «Уместить»
+     пересчитаны с учётом масштаба (переопределения ниже);
+   • планшет/телефон: масштабирование щипком двух пальцев,
+     панорама — перетаскивание фона (как раньше);
+   • масштаб сохраняется в localStorage и восстанавливается
+     после перезагрузки браузера.
+   ================================================================ */
 
+var absCanvasZoom = {
+    level: 1,
+    min: 0.35,
+    max: 2.0,
+    key: 'abs_canvas_zoom_v1',
+    saveTimer: null
+};
+
+function absCanvasZoomApply() {
+    const grid = document.getElementById('absSecGrid');
+    if (grid) grid.style.transform = 'scale(' + absCanvasZoom.level + ')';
+}
+
+function absCanvasZoomPersist() {
+    clearTimeout(absCanvasZoom.saveTimer);
+    absCanvasZoom.saveTimer = setTimeout(function () {
+        try { ctSafeSetItem(absCanvasZoom.key, String(absCanvasZoom.level)); } catch (e) {}
+    }, 250);
+}
+
+/* Клиентские координаты → логические координаты холста (с учётом масштаба) */
+function absCanvasClientToLogical(clientX, clientY) {
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return { x: 0, y: 0 };
+    const r = canvas.getBoundingClientRect();
+    return {
+        x: (clientX - r.left + (canvas.scrollLeft || 0)) / absCanvasZoom.level,
+        y: (clientY - r.top + (canvas.scrollTop || 0)) / absCanvasZoom.level
+    };
+}
+
+/* Установка масштаба. Якорь (anchorClientX/Y) — точка экрана, которая
+   должна указывать на ту же логическую точку холста после зума. */
+function absCanvasSetZoom(newZ, anchorClientX, anchorClientY) {
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    if (!isFinite(newZ) || newZ <= 0) return;
+    newZ = Math.min(absCanvasZoom.max, Math.max(absCanvasZoom.min, newZ));
+    if (Math.abs(newZ - 1) < 0.025) newZ = 1;   /* мягкая магнитика к 100% */
+    const zOld = absCanvasZoom.level;
+    if (Math.abs(newZ - zOld) < 0.0005) { absCanvasZoomUpdateUi(); return; }
+    const r = canvas.getBoundingClientRect();
+    let ax, ay;
+    if (anchorClientX != null && anchorClientY != null) {
+        ax = anchorClientX - r.left;
+        ay = anchorClientY - r.top;
+    } else {
+        ax = r.width * 0.5;
+        ay = r.height * 0.5;
+    }
+    /* логическая точка под якорем */
+    const lx = (canvas.scrollLeft + ax) / zOld;
+    const ly = (canvas.scrollTop + ay) / zOld;
+    absCanvasZoom.level = newZ;
+    absCanvasZoomApply();
+    absCanvasEnsureCanvasSize();
+    /* та же логическая точка остаётся под якорем */
+    canvas.scrollLeft = Math.max(0, lx * newZ - ax);
+    canvas.scrollTop = Math.max(0, ly * newZ - ay);
+    absCanvasRenderConnections();
+    absCanvasZoomUpdateUi();
+    absCanvasZoomPersist();
+}
+
+/* Кнопочный шаг зума — якорь в центре видимой области */
+function absCanvasZoomStep(factor) {
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    const r = canvas.getBoundingClientRect();
+    absCanvasSetZoom(absCanvasZoom.level * factor, r.left + r.width / 2, r.top + r.height / 2);
+}
+
+/* ================================================================
+   Переопределения v102/v103 с учётом масштаба
+   ================================================================ */
+
+/* Связи: getBoundingClientRect узлов уже даёт ВИЗУАЛЬНЫЕ координаты
+   (слой узлов отмасштабирован) — они совпадают с системой координат
+   несмасштабированного SVG. Смещения портов (24/25 логич. px) и
+   пороги изгибов умножаются на масштаб. */
+function absCanvasRenderConnections() {
+    const svg = document.getElementById('absConnectionsSvg');
+    if (!svg) return;
+    const defs = svg.querySelector('defs');
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    if (defs) svg.appendChild(defs);
+
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    const scrollL = canvas.scrollLeft || 0;
+    const scrollT = canvas.scrollTop || 0;
+    const PORT_Y_OFFSET = 25;
+    const zLvl = absCanvasZoom.level;
+
+    // v102: все инстансы всех корней
+    const insts = [];
+    absCanvasSids().forEach(sid => {
+        const sec = absSecs[sid];
+        if (sec) insts.push.apply(insts, absInstsOf(sec));
+    });
+
+    // For each filter with a parent, draw a connection FROM parent TO child
+    insts.forEach((inst, idx) => {
+        const parentId = inst.parent;  // null/undefined = disconnected, 'root' = root, 'iX'/'rX' = node
+        if (!parentId) return;  // disconnected — no connection drawn
+
+        const childEl = document.getElementById('absFilterNode_' + inst.id);
+        if (!childEl) return;
+
+        // Determine source (parent) element
+        let sourceEl, sourceIsRoot;
+        if (parentId === 'root') {
+            sourceEl = document.getElementById('absRootCard');
+            sourceIsRoot = true;
+        } else if (/^r\d+$/.test(parentId)) {
+            // Extra root node (r1, r2, ...)
+            sourceEl = document.getElementById('absExtraRoot_' + parentId);
+            sourceIsRoot = true;  // treat as root-like for port positioning
+        } else {
+            sourceEl = document.getElementById('absFilterNode_' + parentId);
+            sourceIsRoot = false;
+        }
+        if (!sourceEl) return;
+
+        const sr = sourceEl.getBoundingClientRect();
+        const cr = childEl.getBoundingClientRect();
+
+        // Source = parent (output port on right side), target = child (input port on left side)
+        // Arrow goes FROM parent TO child
+        let fromX, fromY, toX, toY;
+        if (sourceIsRoot) {
+            // root's output port is on the right side
+            fromX = sr.right - canvasRect.left + scrollL;
+            fromY = sr.top + 24 * zLvl - canvasRect.top + scrollT;
+        } else {
+            // parent filter's output port is on the right side
+            fromX = sr.right - canvasRect.left + scrollL;
+            fromY = sr.top + PORT_Y_OFFSET * zLvl - canvasRect.top + scrollT;
+        }
+        // child's input port is on the left side
+        toX = cr.left - canvasRect.left + scrollL;
+        toY = cr.top + PORT_Y_OFFSET * zLvl - canvasRect.top + scrollT;
+
+        // If parent is to the right of child, swap sides (connect parent's left to child's right)
+        if (fromX > toX + 50 * zLvl) {
+            fromX = sr.left - canvasRect.left + scrollL;
+            toX = cr.right - canvasRect.left + scrollL;
+        }
+
+        const dx = Math.max(40 * zLvl, Math.abs(toX - fromX));
+        const cp1x = fromX + dx * 0.5, cp1y = fromY;
+        const cp2x = toX - dx * 0.5, cp2y = toY;
+        const path = 'M ' + fromX + ' ' + fromY + ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + toX + ' ' + toY;
+        absCanvasDrawConnection(svg, path, inst, idx);
+    });
+
+    // Draw connections for extra Главный фильтр (root) nodes — FROM parent TO child root
+    absCanvasState.extraRoots.forEach((root, idx) => {
+        const parentId = root.parent;
+        if (!parentId) return;  // disconnected
+
+        const childEl = document.getElementById('absExtraRoot_' + root.id);
+        if (!childEl) return;
+
+        // Determine source (parent) element
+        let sourceEl;
+        if (parentId === 'root') {
+            sourceEl = document.getElementById('absRootCard');
+        } else {
+            sourceEl = document.getElementById('absExtraRoot_' + parentId);
+        }
+        if (!sourceEl) return;
+
+        const sr = sourceEl.getBoundingClientRect();
+        const cr = childEl.getBoundingClientRect();
+
+        // Source = parent root (output port on right), target = child root (input port on left)
+        let fromX = sr.right - canvasRect.left + scrollL;
+        let fromY = sr.top + 24 * zLvl - canvasRect.top + scrollT;
+        let toX = cr.left - canvasRect.left + scrollL;
+        let toY = cr.top + 24 * zLvl - canvasRect.top + scrollT;
+
+        // If parent is to the right of child, swap sides
+        if (fromX > toX + 50 * zLvl) {
+            fromX = sr.left - canvasRect.left + scrollL;
+            toX = cr.right - canvasRect.left + scrollL;
+        }
+
+        const dx = Math.max(40 * zLvl, Math.abs(toX - fromX));
+        const cp1x = fromX + dx * 0.5, cp1y = fromY;
+        const cp2x = toX - dx * 0.5, cp2y = toY;
+        const path = 'M ' + fromX + ' ' + fromY + ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + toX + ' ' + toY;
+        absCanvasDrawRootConnection(svg, path, root);
+    });
+}
+
+/* Размеры холста: логический экстент × масштаб — спейсер и SVG
+   задают прокручиваемую область в визуальных координатах. */
+function absCanvasEnsureCanvasSize() {
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    const svg = document.getElementById('absConnectionsSvg');
+    const zLvl = absCanvasZoom.level;
+    let maxX = 0, maxY = 0;
+
+    // Measure each filter node — v102: все корни
+    absCanvasSids().forEach(sid => {
+        const sec = absSecs[sid];
+        if (!sec) return;
+        absInstsOf(sec).forEach(inst => {
+            const el = document.getElementById('absFilterNode_' + inst.id);
+            if (!el) return;
+            const left = parseFloat(el.style.left) || 0;
+            const top = parseFloat(el.style.top) || 0;
+            const w = el.offsetWidth || ABS_CANVAS_FILTER_W;
+            const h = el.offsetHeight || ABS_CANVAS_FILTER_H_EST;
+            maxX = Math.max(maxX, left + w + 60);
+            maxY = Math.max(maxY, top + h + 60);
+        });
+    });
+    // Measure root
+    const rootEl = document.getElementById('absRootCard');
+    if (rootEl) {
+        const rLeft = parseFloat(rootEl.style.left) || 0;
+        const rTop = parseFloat(rootEl.style.top) || 0;
+        const rW = rootEl.offsetWidth || ABS_CANVAS_ROOT_W;
+        const rH = rootEl.offsetHeight || ABS_CANVAS_ROOT_H_EST;
+        maxX = Math.max(maxX, rLeft + rW + 60);
+        maxY = Math.max(maxY, rTop + rH + 60);
+    }
+    // Measure extra root nodes
+    absCanvasState.extraRoots.forEach(root => {
+        const el = document.getElementById('absExtraRoot_' + root.id);
+        if (!el) return;
+        const left = parseFloat(el.style.left) || 0;
+        const top = parseFloat(el.style.top) || 0;
+        const w = el.offsetWidth || ABS_CANVAS_ROOT_W;
+        const h = el.offsetHeight || ABS_CANVAS_ROOT_H_EST;
+        maxX = Math.max(maxX, left + w + 60);
+        maxY = Math.max(maxY, top + h + 60);
+    });
+    const visW = canvas.clientWidth || 0;
+    const visH = canvas.clientHeight || 0;
+    /* v104: запас «воздуха» в один экран справа/снизу — якорь зума
+       у края контента не съезжает (скролл не упирается в спейсер) */
+    maxX = maxX + visW / zLvl;
+    maxY = maxY + visH / zLvl;
+
+    let spacer = document.getElementById('absCanvasSpacer');
+    if (!spacer) {
+        spacer = document.createElement('div');
+        spacer.id = 'absCanvasSpacer';
+        spacer.style.position = 'absolute';
+        spacer.style.top = '0';
+        spacer.style.left = '0';
+        spacer.style.pointerEvents = 'none';
+        spacer.style.zIndex = '0';
+        canvas.appendChild(spacer);
+    }
+    spacer.style.width = (maxX * zLvl) + 'px';
+    spacer.style.height = (maxY * zLvl) + 'px';
+
+    if (svg) {
+        svg.setAttribute('width', maxX * zLvl);
+        svg.setAttribute('height', maxY * zLvl);
+        svg.style.width = (maxX * zLvl) + 'px';
+        svg.style.height = (maxY * zLvl) + 'px';
+    }
+    /* v104: превью-SVG живёт в той же визуальной системе координат */
+    try {
+        const psvg = document.getElementById('absConnPreviewSvg');
+        if (psvg) {
+            psvg.setAttribute('width', maxX * zLvl);
+            psvg.setAttribute('height', maxY * zLvl);
+        }
+    } catch (e) {}
+}
+
+/* Драг узлов: указатель переводится в логические координаты холста */
+function absCanvasStartDrag(nodeId, e) {
+    absCanvasState.draggedNode = nodeId;
+    absCanvasState.hasMoved = false;
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    let el;
+    if (nodeId === 'root') {
+        el = document.getElementById('absRootCard');
+    } else if (nodeId.startsWith('r') && /^r\d+$/.test(nodeId)) {
+        // Extra root node
+        el = document.getElementById('absExtraRoot_' + nodeId);
+    } else {
+        el = document.getElementById('absFilterNode_' + nodeId);
+    }
+    if (!el) return;
+    const curLeft = parseFloat(el.style.left) || 0;
+    const curTop = parseFloat(el.style.top) || 0;
+    /* v104: смещение захвата считается в логических координатах */
+    const p = absCanvasClientToLogical(e.clientX, e.clientY);
+    absCanvasState.dragOffset = {
+        x: p.x - curLeft,
+        y: p.y - curTop
+    };
+    el.classList.add('abs-canvas-dragging');
+    document.addEventListener('pointermove', absCanvasOnDragMove);
+    document.addEventListener('pointerup', absCanvasOnDragEnd);
+    document.addEventListener('pointercancel', absCanvasOnDragEnd);
+    e.preventDefault();
+}
+
+function absCanvasOnDragMove(e) {
+    if (!absCanvasState.draggedNode) return;
+    absCanvasState.hasMoved = true;
+    const id = absCanvasState.draggedNode;
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    const p = absCanvasClientToLogical(e.clientX, e.clientY);
+    let x = p.x - absCanvasState.dragOffset.x;
+    let y = p.y - absCanvasState.dragOffset.y;
+    x = Math.max(4, x);
+    y = Math.max(4, y);
+    if (id === 'root') {
+        absCanvasState.rootPos = {x, y};
+        const el = document.getElementById('absRootCard');
+        if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+    } else if (id.startsWith('r') && /^r\d+$/.test(id)) {
+        // Extra root node
+        const root = absCanvasState.extraRoots.find(r => r.id === id);
+        if (root) root.pos = {x, y};
+        const el = document.getElementById('absExtraRoot_' + id);
+        if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+    } else {
+        absCanvasState.filterPositions[id] = {x, y};
+        const el = document.getElementById('absFilterNode_' + id);
+        if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+    }
+    absCanvasRenderConnections();
+    absCanvasEnsureCanvasSize();
+}
+
+/* «Уместить» — подбирает масштаб под содержимое и показывает всё дерево */
+function absCanvasFitView() {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    absCanvasSids().forEach(sid => {
+        const sec = absSecs[sid];
+        if (!sec) return;
+        absInstsOf(sec).forEach(inst => {
+            const p = absCanvasState.filterPositions[inst.id];
+            if (!p) return;
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x + ABS_CANVAS_FILTER_W);
+            maxY = Math.max(maxY, p.y + ABS_CANVAS_FILTER_H_EST);
+        });
+    });
+    minX = Math.min(minX, absCanvasState.rootPos.x);
+    minY = Math.min(minY, absCanvasState.rootPos.y);
+    maxX = Math.max(maxX, absCanvasState.rootPos.x + ABS_CANVAS_ROOT_W);
+    maxY = Math.max(maxY, absCanvasState.rootPos.y + ABS_CANVAS_ROOT_H_EST);
+    absCanvasState.extraRoots.forEach(r => {
+        if (!r.pos) return;
+        minX = Math.min(minX, r.pos.x);
+        minY = Math.min(minY, r.pos.y);
+        maxX = Math.max(maxX, r.pos.x + ABS_CANVAS_ROOT_W);
+        maxY = Math.max(maxY, r.pos.y + ABS_CANVAS_ROOT_H_EST);
+    });
+    if (!isFinite(minX)) {
+        showToast('Нет узлов', 'error');
+        return;
+    }
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    const w = (maxX - minX) + 80;
+    const h = (maxY - minY) + 80;
+    let z = Math.min((canvas.clientWidth || 0) / w, (canvas.clientHeight || 0) / h);
+    if (!isFinite(z) || z <= 0) z = 1;
+    if (z > 1) z = 1;                                  /* ближе 100% не приближаем */
+    z = Math.min(absCanvasZoom.max, Math.max(absCanvasZoom.min, z));
+    if (Math.abs(z - 1) < 0.025) z = 1;
+    absCanvasSetZoom(z);
+    canvas.scrollTo({ left: Math.max(0, minX * z - 30), top: Math.max(0, minY * z - 30), behavior: 'smooth' });
+    showToast('Вид выровнен · масштаб ' + Math.round(z * 100) + '%', 'success');
+}
+
+/* v103-хелпер точки порта для превью-линии: смещение порта × масштаб */
+function absCanvasSourcePortPoint(nodeId) {
+    const el = absCanvasNodeEl(nodeId);
+    const canvas = document.getElementById('absCanvas');
+    if (!el || !canvas) return null;
+    const sr = el.getBoundingClientRect();
+    const cr = canvas.getBoundingClientRect();
+    const isRoot = (nodeId === 'root') || /^r\d+$/.test(nodeId);
+    const zLvl = absCanvasZoom.level;
+    return {
+        x: sr.right - cr.left + (canvas.scrollLeft || 0),
+        y: sr.top + (isRoot ? 24 : 25) * zLvl - cr.top + (canvas.scrollTop || 0)
+    };
+}
+
+/* ================================================================
+   Жесты: колесо мыши + пан фоном + щипок (v104)
+   ================================================================ */
+
+function absCanvasSetupWheelZoom() {
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas || canvas.__absV104WheelBound) return;
+    canvas.__absV104WheelBound = true;
+    canvas.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        let dy = e.deltaY;
+        if (e.deltaMode === 1) dy *= 33;          /* DOM_DELTA_LINE */
+        else if (e.deltaMode === 2) dy *= 300;    /* DOM_DELTA_PAGE */
+        let f = Math.exp(-dy * 0.00125);          /* плавная экспонента */
+        if (!isFinite(f) || f <= 0) return;
+        if (f > 1.25) f = 1.25;
+        else if (f < 0.8) f = 0.8;
+        absCanvasSetZoom(absCanvasZoom.level * f, e.clientX, e.clientY);
+    }, { passive: false });
+}
+
+/* Панорама фоном (как v102/v103) + масштабирование щипком двух пальцев.
+   Вызывается из absCanvasLateInit после построения узлов. */
+absCanvasSetupPanning = function () {
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas || canvas.__absCanvasPanningBound) return;
+    canvas.__absCanvasPanningBound = true;
+    canvas.classList.add('abs-canvas-pannable');
+
+    const pointers = new Map();   /* активные указатели фона: id → {x, y} */
+    let pinchLast = null;         /* {dist, mx, my} — предыдущий кадр щипка */
+    const panState = { active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0, moved: false };
+
+    const SVG_TAGS = ['path', 'rect', 'text', 'circle', 'tspan'];
+    const isBg = function (target) {
+        if (!target) return false;
+        if (target === canvas || target.id === 'absCanvasSpacer' || target.id === 'absSecGrid') return true;
+        if (target === document.getElementById('absConnectionsSvg') || target.id === 'absConnPreviewSvg') return true;
+        if (target.classList && target.classList.contains('abs-canvas-empty-hint')) return true;
+        return false;
+    };
+
+    canvas.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        const target = e.target;
+        /* линии, зоны клика и плашки связей не трогаем — у них свои клики */
+        if (target && target.tagName && SVG_TAGS.indexOf(String(target.tagName).toLowerCase()) >= 0) return;
+        if (!isBg(target)) return;
+        /* в режиме создания связи фон не панорамируем */
+        if (absCanvasState.connectingFrom) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+        if (pointers.size === 1) {
+            panState.active = true;
+            panState.startX = e.clientX;
+            panState.startY = e.clientY;
+            panState.scrollLeft = canvas.scrollLeft;
+            panState.scrollTop = canvas.scrollTop;
+            panState.moved = false;
+            canvas.classList.add('abs-canvas-panning');
+            e.preventDefault();
+        } else {
+            /* второй палец — начинается щипок, панорама отменяется */
+            panState.active = false;
+            canvas.classList.remove('abs-canvas-panning');
+            pinchLast = null;
+        }
+    });
+
+    canvas.addEventListener('pointermove', function (e) {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size >= 2) {
+            const pts = Array.from(pointers.values());
+            const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+            const mx = (pts[0].x + pts[1].x) / 2;
+            const my = (pts[0].y + pts[1].y) / 2;
+            if (pinchLast) {
+                const f = dist / pinchLast.dist;
+                /* якорь в середине щипка — зум и панорамирование разом */
+                if (isFinite(f) && f > 0.5 && f < 2) {
+                    absCanvasSetZoom(absCanvasZoom.level * f, mx, my);
+                }
+            }
+            pinchLast = { dist: dist, mx: mx, my: my };
+        } else if (panState.active) {
+            const dx = e.clientX - panState.startX;
+            const dy = e.clientY - panState.startY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panState.moved = true;
+            canvas.scrollLeft = panState.scrollLeft - dx;
+            canvas.scrollTop = panState.scrollTop - dy;
+        }
+    });
+
+    const onEnd = function (e) {
+        pointers.delete(e.pointerId);
+        if (pointers.size < 2) pinchLast = null;
+        if (pointers.size === 1) {
+            /* щипок закончился, палец остался — продолжаем панораму без рывка */
+            const pt = Array.from(pointers.values())[0];
+            panState.active = true;
+            panState.startX = pt.x;
+            panState.startY = pt.y;
+            panState.scrollLeft = canvas.scrollLeft;
+            panState.scrollTop = canvas.scrollTop;
+            panState.moved = true;
+            canvas.classList.add('abs-canvas-panning');
+        } else if (pointers.size === 0) {
+            const wasActive = panState.active;
+            panState.active = false;
+            canvas.classList.remove('abs-canvas-panning');
+            try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+            /* короткий тап по фону — отменяет режим связи (как раньше) */
+            if (wasActive && !panState.moved && absCanvasState.connectingFrom) {
+                absCanvasCancelConnection();
+            }
+        }
+    };
+    canvas.addEventListener('pointerup', onEnd);
+    canvas.addEventListener('pointercancel', onEnd);
+};
+
+/* ================================================================
+   UI: кнопки масштаба в тулбаре + подсказка на холсте
+   ================================================================ */
+
+function absCanvasZoomSetupUi() {
+    const bar = document.getElementById('absCanvasToolbar');
+    if (!bar || document.getElementById('absZoomOutBtn')) return;
+    const mk = function (id, txt, title, cls) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'abs-canvas-tool-btn abs-canvas-zoom-btn' + (cls ? ' ' + cls : '');
+        b.id = id;
+        b.textContent = txt;
+        b.title = title;
+        return b;
+    };
+    const outBtn = mk('absZoomOutBtn', '−', 'Отдалить фильтры (также колесо мыши от себя)', null);
+    const lvlBtn = mk('absZoomLevel', '100%', 'Масштаб холста — клик сбрасывает к 100%. Колесо мыши над холстом — плавный масштаб', 'abs-canvas-zoom-level');
+    const inBtn = mk('absZoomInBtn', '＋', 'Приблизить фильтры (также колесо мыши к себе)', null);
+    outBtn.addEventListener('click', function () { absCanvasZoomStep(1 / 1.18); });
+    inBtn.addEventListener('click', function () { absCanvasZoomStep(1.18); });
+    lvlBtn.addEventListener('click', function () { absCanvasSetZoom(1); });
+    const spacer = bar.querySelector('.abs-canvas-spacer');
+    if (spacer) {
+        bar.insertBefore(outBtn, spacer);
+        bar.insertBefore(lvlBtn, spacer);
+        bar.insertBefore(inBtn, spacer);
+    } else {
+        bar.appendChild(outBtn);
+        bar.appendChild(lvlBtn);
+        bar.appendChild(inBtn);
+    }
+    absCanvasZoomUpdateUi();
+}
+
+function absCanvasZoomSetupHint() {
+    const canvas = document.getElementById('absCanvas');
+    if (!canvas || document.getElementById('absZoomHint')) return;
+    const hint = document.createElement('div');
+    hint.id = 'absZoomHint';
+    canvas.appendChild(hint);
+    absCanvasZoomUpdateUi();
+}
+
+function absCanvasZoomUpdateUi() {
+    const lvl = document.getElementById('absZoomLevel');
+    if (lvl) lvl.textContent = Math.round(absCanvasZoom.level * 100) + '%';
+    const hint = document.getElementById('absZoomHint');
+    if (hint) {
+        const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        hint.textContent = coarse
+            ? 'Щипок — масштаб · перетаскивание фона — панорама'
+            : 'Колесо мыши — масштаб · перетаскивание фона — панорама';
+    }
+}
+
+/* ================================================================
+   Инициализация: восстановить сохранённый масштаб, поднять UI
+   ================================================================ */
+(function () {
+    try {
+        const saved = parseFloat(ctSafeGetItem(absCanvasZoom.key));
+        if (isFinite(saved) && saved > 0 && saved >= absCanvasZoom.min && saved <= absCanvasZoom.max) {
+            absCanvasZoom.level = (Math.abs(saved - 1) < 0.025) ? 1 : saved;
+        }
+    } catch (e) {}
+    absCanvasZoomApply();
+    absCanvasZoomSetupUi();
+    absCanvasZoomSetupHint();
+    absCanvasSetupWheelZoom();
+    /* поздний проход: узлы строит absCanvasLateInit (~100 мс) — пересчитать
+       размеры холста и связи уже с восстановленным масштабом */
+    setTimeout(function () {
+        try {
+            absCanvasZoomApply();
+            absCanvasEnsureCanvasSize();
+            absCanvasRenderConnections();
+            absCanvasZoomUpdateUi();
+        } catch (e) { ctLogError(e, 'absCanvasZoom@late'); }
+    }, 300);
+})();
+
+console.log('[abs-canvas] Visual filter canvas initialized (filters as nodes) v104 — wheel zoom, pinch, adaptive connections');
+
+</script><script id="v105Script">
+/* ================================================================
+   v105: БЕЗГРАНИЧНЫЙ ХОЛСТ + ЧЁТКИЙ ТЕКСТ ПРИ МАСШТАБЕ
+   ────────────────────────────────────────────────────────────────
+   • Панорама без границ: логический (0,0) холста сдвинут в центр
+     огромной прокручиваемой области (ORIGIN = 120 000 px) — тяните
+     фон в любую сторону сколько угодно, края не достигаются.
+   • Сетка едет вместе с фильтрами и растёт с масштабом.
+   • Чёткий текст: will-change:transform — только на время жеста,
+     через 260 мс после последнего тика снимается (+reflow), браузер
+     перерисовывает текст в новом масштабе, а не растягивает старый
+     растровый слой — это была причина «размытых букв и цифр».
+   • Зум к курсору: якорь не упирается в край прокрутки, «мёртвая
+     зона» около 100% убрана — колесо отзывчиво всегда.
+   • Масштаб и панорама сохраняются и восстанавливаются.
+   • Пределы масштаба: 35% … 300%.
+   ================================================================ */
+
+var ABS_CANVAS_ORIGIN = 120000;   /* логический (0,0) внутри области прокрутки */
+var ABS_CANVAS_SPAN   = 240000;   /* общий размер прокручиваемой области */
+
+/* Пределы масштаба (в v104 было 0.35–2.0) */
+absCanvasZoom.min = 0.35;
+absCanvasZoom.max = 3.0;
+
+/* ---------- Фон-сетка: движется с контентом и растёт с масштабом ---------- */
+function absCanvasApplyBackdrop() {
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    var base = (window.innerWidth <= 480) ? 22 : 28;   /* базовый шаг сетки как в CSS */
+    var g = base * absCanvasZoom.level;
+    canvas.style.backgroundAttachment = 'local';
+    canvas.style.backgroundSize = g + 'px ' + g + 'px';
+    canvas.style.backgroundPosition = ABS_CANVAS_ORIGIN + 'px ' + ABS_CANVAS_ORIGIN + 'px';
+}
+
+/* ---------- Трансформация слоя узлов ---------- */
+function absCanvasZoomApply() {
+    var grid = document.getElementById('absSecGrid');
+    if (grid) grid.style.transform = 'scale(' + absCanvasZoom.level + ')';
+    absCanvasApplyBackdrop();
+}
+
+/* ---------- Чёткость: will-change только на время жеста ---------- */
+var absCanvasSharpTimer = null;
+function absCanvasMarkZoomActivity() {
+    var grid = document.getElementById('absSecGrid');
+    try { if (grid) grid.style.willChange = 'transform'; } catch (e) {}
+    clearTimeout(absCanvasSharpTimer);
+    absCanvasSharpTimer = setTimeout(function () {
+        try {
+            if (grid) grid.style.willChange = 'auto';
+            var c = document.getElementById('absCanvas');
+            if (c) void c.offsetWidth;   /* принудительная перерисовка — текст чёткий */
+        } catch (e) {}
+    }, 260);
+}
+
+/* ---------- Клиент → логические координаты (сдвиг нуля + масштаб) ---------- */
+function absCanvasClientToLogical(clientX, clientY) {
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas) return { x: 0, y: 0 };
+    var r = canvas.getBoundingClientRect();
+    return {
+        x: (clientX - r.left + (canvas.scrollLeft || 0) - ABS_CANVAS_ORIGIN) / absCanvasZoom.level,
+        y: (clientY - r.top + (canvas.scrollTop || 0) - ABS_CANVAS_ORIGIN) / absCanvasZoom.level
+    };
+}
+
+/* ---------- Сохранение/восстановление вида (масштаб + панорама) ---------- */
+var absCanvasViewTimer = null;
+function absCanvasPersistView() {
+    clearTimeout(absCanvasViewTimer);
+    absCanvasViewTimer = setTimeout(absCanvasSaveViewNow, 250);
+}
+function absCanvasSaveViewNow() {
+    try {
+        var canvas = document.getElementById('absCanvas');
+        if (!canvas) return;
+        ctSafeSetItem('abs_canvas_view_v2', JSON.stringify({
+            z: +absCanvasZoom.level.toFixed(4),
+            px: Math.round(canvas.scrollLeft - ABS_CANVAS_ORIGIN),
+            py: Math.round(canvas.scrollTop - ABS_CANVAS_ORIGIN)
+        }));
+    } catch (e) {}
+}
+function absCanvasLoadView() {
+    var out = { z: null, px: 0, py: 0 };
+    try {
+        var raw = ctSafeGetItem('abs_canvas_view_v2');
+        if (raw) {
+            var v = JSON.parse(raw);
+            if (v && isFinite(v.z) && v.z > 0) {
+                out.z = v.z;
+                out.px = isFinite(v.px) ? v.px : 0;
+                out.py = isFinite(v.py) ? v.py : 0;
+                return out;
+            }
+        }
+        var old = parseFloat(ctSafeGetItem('abs_canvas_zoom_v1'));   /* миграция с v104 */
+        if (isFinite(old) && old > 0) out.z = old;
+    } catch (e) {}
+    return out;
+}
+
+/* ---------- Масштаб к якорю: без мёртвой зоны и без «магнитика» ---------- */
+function absCanvasSetZoom(newZ, anchorClientX, anchorClientY) {
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    if (!isFinite(newZ) || newZ <= 0) return;
+    newZ = Math.min(absCanvasZoom.max, Math.max(absCanvasZoom.min, newZ));
+    var zOld = absCanvasZoom.level;
+    if (Math.abs(newZ - zOld) < 1e-6) { absCanvasZoomUpdateUi(); return; }
+    var r = canvas.getBoundingClientRect();
+    var ax, ay;
+    if (anchorClientX != null && anchorClientY != null) {
+        ax = anchorClientX - r.left;
+        ay = anchorClientY - r.top;
+    } else {
+        ax = r.width * 0.5;
+        ay = r.height * 0.5;
+    }
+    /* логическая точка под якорем (с учётом сдвига нуля) */
+    var lx = (canvas.scrollLeft + ax - ABS_CANVAS_ORIGIN) / zOld;
+    var ly = (canvas.scrollTop + ay - ABS_CANVAS_ORIGIN) / zOld;
+    absCanvasZoom.level = newZ;
+    absCanvasZoomApply();
+    absCanvasEnsureCanvasSize();
+    /* та же логическая точка остаётся под якорем: прокрутке всегда есть
+       куда идти — по 120 000 px «воздуха» во все стороны от нуля */
+    canvas.scrollLeft = ABS_CANVAS_ORIGIN + lx * newZ - ax;
+    canvas.scrollTop = ABS_CANVAS_ORIGIN + ly * newZ - ay;
+    absCanvasRenderConnections();
+    absCanvasZoomUpdateUi();
+    absCanvasMarkZoomActivity();
+    absCanvasPersistView();
+}
+
+/* ---------- Размеры: постоянная огромная область = холст без границ ---------- */
+var absCanvasViewInitDone = false;
+var absCanvasInitView = { z: null, px: 0, py: 0 };
+/* Первичная установка скролла — лениво: секция холста при старте страницы
+   может быть ещё display:none, тогда scrollWidth=0 и скролл «клампится» в 0.
+   Ждём, пока спейсер реально разложится, и только тогда применяем вид. */
+function absCanvasApplyInitialView() {
+    if (absCanvasViewInitDone) return;
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    if (!canvas.clientWidth || (canvas.scrollWidth || 0) < ABS_CANVAS_SPAN - 2000) return;
+    absCanvasViewInitDone = true;
+    /* логический ноль — в левый верхний угол, либо сохранённая панорама */
+    canvas.scrollLeft = ABS_CANVAS_ORIGIN + (isFinite(absCanvasInitView.px) ? absCanvasInitView.px : 0);
+    canvas.scrollTop = ABS_CANVAS_ORIGIN + (isFinite(absCanvasInitView.py) ? absCanvasInitView.py : 0);
+    absCanvasApplyBackdrop();
+}
+function absCanvasEnsureCanvasSize() {
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    var svg = document.getElementById('absConnectionsSvg');
+    var spacer = document.getElementById('absCanvasSpacer');
+    if (!spacer) {
+        spacer = document.createElement('div');
+        spacer.id = 'absCanvasSpacer';
+        spacer.style.position = 'absolute';
+        spacer.style.top = '0';
+        spacer.style.left = '0';
+        spacer.style.pointerEvents = 'none';
+        spacer.style.zIndex = '0';
+        canvas.appendChild(spacer);
+    }
+    spacer.style.width = ABS_CANVAS_SPAN + 'px';
+    spacer.style.height = ABS_CANVAS_SPAN + 'px';
+    if (svg) {
+        svg.setAttribute('width', ABS_CANVAS_SPAN);
+        svg.setAttribute('height', ABS_CANVAS_SPAN);
+        svg.style.width = ABS_CANVAS_SPAN + 'px';
+        svg.style.height = ABS_CANVAS_SPAN + 'px';
+    }
+    try {
+        var psvg = document.getElementById('absConnPreviewSvg');
+        if (psvg) {
+            psvg.setAttribute('width', ABS_CANVAS_SPAN);
+            psvg.setAttribute('height', ABS_CANVAS_SPAN);
+        }
+    } catch (e) {}
+    absCanvasApplyInitialView();
+}
+
+/* ---------- Драг узлов: без клампа к 4px — холст безграничный ---------- */
+function absCanvasOnDragMove(e) {
+    if (!absCanvasState.draggedNode) return;
+    absCanvasState.hasMoved = true;
+    var id = absCanvasState.draggedNode;
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    var p = absCanvasClientToLogical(e.clientX, e.clientY);
+    var x = p.x - absCanvasState.dragOffset.x;
+    var y = p.y - absCanvasState.dragOffset.y;
+    /* мягкий предел «бесконечности»: не дальше 90% области от нуля */
+    var lim = ABS_CANVAS_ORIGIN * 0.9;
+    if (x < -lim) x = -lim;
+    if (x > lim) x = lim;
+    if (y < -lim) y = -lim;
+    if (y > lim) y = lim;
+    if (id === 'root') {
+        absCanvasState.rootPos = { x: x, y: y };
+        var el0 = document.getElementById('absRootCard');
+        if (el0) { el0.style.left = x + 'px'; el0.style.top = y + 'px'; }
+    } else if (id.charAt(0) === 'r' && /^r\d+$/.test(id)) {
+        var root = absCanvasState.extraRoots.find(function (r) { return r.id === id; });
+        if (root) root.pos = { x: x, y: y };
+        var el1 = document.getElementById('absExtraRoot_' + id);
+        if (el1) { el1.style.left = x + 'px'; el1.style.top = y + 'px'; }
+    } else {
+        absCanvasState.filterPositions[id] = { x: x, y: y };
+        var el2 = document.getElementById('absFilterNode_' + id);
+        if (el2) { el2.style.left = x + 'px'; el2.style.top = y + 'px'; }
+    }
+    absCanvasRenderConnections();
+    absCanvasEnsureCanvasSize();
+}
+
+/* ---------- «Уместить»: панорама с учётом сдвига нуля ---------- */
+function absCanvasFitView() {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    absCanvasSids().forEach(function (sid) {
+        var sec = absSecs[sid];
+        if (!sec) return;
+        absInstsOf(sec).forEach(function (inst) {
+            var p = absCanvasState.filterPositions[inst.id];
+            if (!p) return;
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x + ABS_CANVAS_FILTER_W);
+            maxY = Math.max(maxY, p.y + ABS_CANVAS_FILTER_H_EST);
+        });
+    });
+    minX = Math.min(minX, absCanvasState.rootPos.x);
+    minY = Math.min(minY, absCanvasState.rootPos.y);
+    maxX = Math.max(maxX, absCanvasState.rootPos.x + ABS_CANVAS_ROOT_W);
+    maxY = Math.max(maxY, absCanvasState.rootPos.y + ABS_CANVAS_ROOT_H_EST);
+    absCanvasState.extraRoots.forEach(function (r) {
+        if (!r.pos) return;
+        minX = Math.min(minX, r.pos.x);
+        minY = Math.min(minY, r.pos.y);
+        maxX = Math.max(maxX, r.pos.x + ABS_CANVAS_ROOT_W);
+        maxY = Math.max(maxY, r.pos.y + ABS_CANVAS_ROOT_H_EST);
+    });
+    if (!isFinite(minX)) { showToast('Нет узлов', 'error'); return; }
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas) return;
+    var w = (maxX - minX) + 80;
+    var h = (maxY - minY) + 80;
+    var z = Math.min((canvas.clientWidth || 0) / w, (canvas.clientHeight || 0) / h);
+    if (!isFinite(z) || z <= 0) z = 1;
+    if (z > 1) z = 1;                                   /* ближе 100% не приближаем */
+    z = Math.min(absCanvasZoom.max, Math.max(absCanvasZoom.min, z));
+    if (Math.abs(z - 1) < 0.025) z = 1;
+    absCanvasSetZoom(z);
+    canvas.scrollTo({ left: ABS_CANVAS_ORIGIN + minX * z - 30, top: ABS_CANVAS_ORIGIN + minY * z - 30, behavior: 'smooth' });
+    setTimeout(absCanvasSaveViewNow, 450);
+    showToast('Вид выровнен · масштаб ' + Math.round(z * 100) + '%', 'success');
+}
+
+/* ---------- Панорама фоном + щипок (как v104) + запоминание вида ---------- */
+absCanvasSetupPanning = function () {
+    var canvas = document.getElementById('absCanvas');
+    if (!canvas || canvas.__absV105PanningBound) return;
+    canvas.__absV105PanningBound = true;
+    canvas.classList.add('abs-canvas-pannable');
+
+    var pointers = new Map();   /* активные указатели фона: id → {x, y} */
+    var pinchLast = null;       /* {dist, mx, my} — предыдущий кадр щипка */
+    var panState = { active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0, moved: false };
+
+    var SVG_TAGS = ['path', 'rect', 'text', 'circle', 'tspan'];
+    var isBg = function (target) {
+        if (!target) return false;
+        if (target === canvas || target.id === 'absCanvasSpacer' || target.id === 'absSecGrid') return true;
+        if (target === document.getElementById('absConnectionsSvg') || target.id === 'absConnPreviewSvg') return true;
+        if (target.classList && target.classList.contains('abs-canvas-empty-hint')) return true;
+        return false;
+    };
+
+    canvas.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        var target = e.target;
+        /* линии, зоны клика и плашки связей не трогаем — у них свои клики */
+        if (target && target.tagName && SVG_TAGS.indexOf(String(target.tagName).toLowerCase()) >= 0) return;
+        if (!isBg(target)) return;
+        /* в режиме создания связи фон не панорамируем */
+        if (absCanvasState.connectingFrom) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+        if (pointers.size === 1) {
+            panState.active = true;
+            panState.startX = e.clientX;
+            panState.startY = e.clientY;
+            panState.scrollLeft = canvas.scrollLeft;
+            panState.scrollTop = canvas.scrollTop;
+            panState.moved = false;
+            canvas.classList.add('abs-canvas-panning');
+            e.preventDefault();
+        } else {
+            /* второй палец — щипок, панорама отменяется */
+            panState.active = false;
+            canvas.classList.remove('abs-canvas-panning');
+            pinchLast = null;
+        }
+    });
+
+    canvas.addEventListener('pointermove', function (e) {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size >= 2) {
+            var pts = Array.from(pointers.values());
+            var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+            var mx = (pts[0].x + pts[1].x) / 2;
+            var my = (pts[0].y + pts[1].y) / 2;
+            if (pinchLast) {
+                var f = dist / pinchLast.dist;
+                /* якорь в середине щипка — зум и панорамирование разом */
+                if (isFinite(f) && f > 0.5 && f < 2) {
+                    absCanvasSetZoom(absCanvasZoom.level * f, mx, my);
+                }
+            }
+            pinchLast = { dist: dist, mx: mx, my: my };
+        } else if (panState.active) {
+            var dx = e.clientX - panState.startX;
+            var dy = e.clientY - panState.startY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panState.moved = true;
+            canvas.scrollLeft = panState.scrollLeft - dx;
+            canvas.scrollTop = panState.scrollTop - dy;
+        }
+    });
+
+    var onEnd = function (e) {
+        pointers.delete(e.pointerId);
+        if (pointers.size < 2) pinchLast = null;
+        if (pointers.size === 1) {
+            /* щипок закончился, палец остался — продолжаем панораму без рывка */
+            var pt = Array.from(pointers.values())[0];
+            panState.active = true;
+            panState.startX = pt.x;
+            panState.startY = pt.y;
+            panState.scrollLeft = canvas.scrollLeft;
+            panState.scrollTop = canvas.scrollTop;
+            panState.moved = true;
+            canvas.classList.add('abs-canvas-panning');
+        } else if (pointers.size === 0) {
+            var wasActive = panState.active;
+            panState.active = false;
+            canvas.classList.remove('abs-canvas-panning');
+            try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+            /* короткий тап по фону — отменяет режим связи (как раньше) */
+            if (wasActive && !panState.moved && absCanvasState.connectingFrom) {
+                absCanvasCancelConnection();
+            }
+            absCanvasPersistView();   /* v105: запомнить панораму */
+        }
+    };
+    canvas.addEventListener('pointerup', onEnd);
+    canvas.addEventListener('pointercancel', onEnd);
+};
+
+/* ---------- Подсказка зума: в обёртке, не уезжает с панорамой ---------- */
+function absCanvasZoomSetupHint() {
+    var wrap = document.getElementById('absCanvasWrap');
+    if (!wrap || document.getElementById('absZoomHint')) return;
+    var hint = document.createElement('div');
+    hint.id = 'absZoomHint';
+    wrap.appendChild(hint);
+    absCanvasZoomUpdateUi();
+}
+
+function absCanvasZoomUpdateUi() {
+    var lvl = document.getElementById('absZoomLevel');
+    if (lvl) lvl.textContent = Math.round(absCanvasZoom.level * 100) + '%';
+    var hint = document.getElementById('absZoomHint');
+    if (hint) {
+        var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        hint.textContent = coarse
+            ? 'Щипок — масштаб · фон — панорама · холст без границ'
+            : 'Колесо — масштаб · фон — панорама · холст без границ';
+    }
+}
+
+/* ---------- Инициализация v105 ---------- */
+(function () {
+    var wrap = document.getElementById('absCanvasWrap');
+    var canvas = document.getElementById('absCanvas');
+    if (!wrap || !canvas) return;
+
+    /* подсказку зума и «холст пуст» переносим из прокрутки в обёртку —
+       иначе они уезжают вместе с панорамой */
+    try {
+        var hint = document.getElementById('absZoomHint');
+        if (hint && hint.parentElement !== wrap) wrap.appendChild(hint);
+        var empty = document.getElementById('absCanvasEmptyHint');
+        if (empty && empty.parentElement !== wrap) wrap.appendChild(empty);
+    } catch (e) {}
+
+    /* баннер «создание связи» — зеркалим класс на обёртку (непрокручиваемую) */
+    try {
+        var syncBanner = function () {
+            wrap.classList.toggle('abs-canvas-connecting', canvas.classList.contains('abs-canvas-connecting'));
+        };
+        if (window.MutationObserver) {
+            new MutationObserver(syncBanner).observe(canvas, { attributes: true, attributeFilter: ['class'] });
+        }
+        syncBanner();
+    } catch (e) {}
+
+    /* восстановить масштаб и панораму, применить, поднять спейсер */
+    absCanvasInitView = absCanvasLoadView();
+    if (absCanvasInitView.z != null) {
+        var z = Math.min(absCanvasZoom.max, Math.max(absCanvasZoom.min, absCanvasInitView.z));
+        absCanvasZoom.level = (Math.abs(z - 1) < 0.01) ? 1 : z;
+    }
+    absCanvasZoomApply();
+    absCanvasEnsureCanvasSize();
+    absCanvasZoomUpdateUi();
+
+    /* первичный вид применяем, как только секция холста станет видимой
+       (при старте она может быть display:none — scrollWidth тогда 0) */
+    var tries = 0;
+    var iv = setInterval(function () {
+        absCanvasApplyInitialView();
+        if (absCanvasViewInitDone || ++tries >= 200) clearInterval(iv);
+    }, 50);
+
+    /* страховка: если после возврата на вкладку (display:none в некоторых
+       браузерах сбрасывает скролл в 0) вид «уехал» — вернуть сохранённый */
+    function absCanvasRestoreViewIfReset() {
+        var c = document.getElementById('absCanvas');
+        if (!c || !c.clientWidth) return;          /* секция скрыта */
+        if (c.scrollLeft === 0 && c.scrollTop === 0) {
+            var v = absCanvasLoadView();
+            c.scrollLeft = ABS_CANVAS_ORIGIN + (isFinite(v.px) ? v.px : 0);
+            c.scrollTop = ABS_CANVAS_ORIGIN + (isFinite(v.py) ? v.py : 0);
+            absCanvasApplyBackdrop();
+        }
+    }
+    try {
+        var sec = document.getElementById('section-abs');
+        if (sec && window.MutationObserver) {
+            new MutationObserver(absCanvasRestoreViewIfReset).observe(sec, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+    } catch (e) {}
+    setInterval(absCanvasRestoreViewIfReset, 700);
+
+    /* при изменении окна пересчитать сетку */
+    window.addEventListener('resize', function () {
+        absCanvasApplyBackdrop();
+    });
+})();
+
+console.log('[abs-canvas] v105 — infinite canvas (origin offset), sharp re-raster zoom-to-cursor, live grid, view persistence');
 </script></body></html>
