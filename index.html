@@ -3595,8 +3595,9 @@ function absCndlModelLabel(e) {
 
 function absCndlMatchAt(e, t, a, n) {
     for (let s = 0; s < t.length; s++) {
-        const l = e[a + s],
-            o = t[s],
+        const l = e[a + s];
+        if (!l) return !1;
+        const o = t[s],
             c = +l[1],
             r = +l[4],
             i = +l[2],
@@ -6008,7 +6009,7 @@ function absPctOf(e, t, a, n) {
     };
     return {
         range: null !== e.hi && null !== e.lo ? (e.hi - e.lo) / d * 100 : null,
-        change: null != e.firstOpen ? (e.lastClose - e.firstOpen) / d * 100 : null
+        change: null != e.firstOpen && null != e.lastClose && !isNaN(+e.firstOpen) && !isNaN(+e.lastClose) ? (e.lastClose - e.firstOpen) / d * 100 : null
     }
 }
 
@@ -6127,7 +6128,9 @@ function absHistBaseVol(e, t, a, n) {
             d = [];
         for (let k = s.length - 1; k >= 0; k--) {
             if (+s[k][0] >= l) continue;
-            d.unshift(s[k])
+            for (let j = k; j >= 0; j--) d.push(s[j]);
+            d.reverse();
+            break
         }
         if (!d.length) return;
         const u = Math.max(1, Math.ceil(o * c / g)),
@@ -7581,7 +7584,7 @@ function absKlinePlan(e) {
         const a = absSecs[e],
             n = ABS_TF_MIN[a.tf] || 5,
             s = absDepthMinutes(e),
-            l = s === 1 / 0 ? 500 : Math.min(500, Math.ceil(s / n) + 50 + 8 + absIndicatorLookback(a));
+            l = s === 1 / 0 ? 500 : Math.min(500, Math.ceil(s / n) + 50 + 8 + ("function" == typeof absIndicatorLookback2 ? absIndicatorLookback2(e, a) : absIndicatorLookback(a)));
         t[a.tf] = Math.max(t[a.tf] || 15, l)
     });
     ABS_SEC_IDS.forEach(a => {
@@ -8108,7 +8111,7 @@ function absAnalyzeRaw(e, t) {
                 tEnd: null
             };
         if (r) {
-            const insts = absInstsOf(c),
+            const insts = "function" == typeof absAnalyzeInstsOf ? absAnalyzeInstsOf(o, c) : absInstsOf(c),
                 fi = {},
                 firstOf = k => {
                     for (let z = 0; z < insts.length; z++)
@@ -8293,7 +8296,10 @@ function absAnalyzeRaw(e, t) {
                     }
                 });
             }
-            i.fi = fi
+            i.fi = fi;
+            try {
+                "function" == typeof absMirrorOwnerFi && absMirrorOwnerFi(o, insts, fi, s)
+            } catch (err) {}
         }
         s[o] = i
     }), s.price = l;
@@ -11612,7 +11618,7 @@ function absCanvasSyncRootSecs() {
                 pos: { x: 40, y: 30 },
                 tf: sec.tf || '15m',
                 count: sec.count || 20,
-                shift: 0,
+                shift: (typeof absShiftOf === 'function' ? Math.max(0, absShiftOf(sec) || 0) : 0),
                 linkMode: 'now',
                 ref: null,
                 parent: 'root',
@@ -11639,7 +11645,7 @@ function absCanvasSyncRootSecs() {
         });
         const sig = JSON.stringify([
             rootIds,
-            absCanvasState.extraRoots.map(r => [r.tf, r.count, r.condition || 'and', r.parent || null]),
+            absCanvasState.extraRoots.map(r => [r.tf, r.count, r.condition || 'and', r.parent || null, Math.max(0, Math.min(100, parseInt(r.shift) || 0))]),
             ABS_SEC_IDS.filter(x => x === ABS_CANVAS_MAIN_SEC || /^r\d+$/.test(x)),
             pool0.map(x => x.id + ':' + (x.parent === undefined ? '' : String(x.parent)))
         ]);
@@ -11683,15 +11689,27 @@ function absCanvasSyncRootSecs() {
             if (!ABS_SEC_IDS.includes(r.id)) ABS_SEC_IDS.push(r.id);
             sec.tf = r.tf || '15m';
             sec.count = Math.max(1, Math.min(50, r.count || 20));
-            sec.offset = 0;
-            sec.uiShift = 0;
+            // v106: «Сдвиг» Главного фильтра → якорь окна секции
+            //   0   → linkMode 'now'    (окно включает формирующуюся свечу)
+            //   1+  → linkMode 'closed', offset = K−1 (закрытые со смещением)
+            //   привязка (До/После/Внутри) → сдвиг не действует
+            const rShift = Math.max(0, Math.min(100, parseInt(r.shift) || 0));
             const cond = r.condition || 'and';
             if (['before', 'after', 'inside'].includes(cond)) {
+                sec.uiShift = rShift;
+                sec.offset = 0;
                 sec.linkMode = cond;
                 sec.ref = (r.parent && r.parent !== 'root' && rootIds.includes(r.parent)) ? r.parent : ABS_CANVAS_MAIN_SEC;
+            } else if (rShift > 0) {
+                sec.linkMode = 'closed';
+                sec.ref = null;
+                sec.offset = rShift - 1;
+                sec.uiShift = rShift;
             } else {
                 sec.linkMode = 'now';
                 sec.ref = null;
+                sec.offset = 0;
+                sec.uiShift = 0;
             }
             sec.name = 'Главный фильтр ' + r.id;
             sec.logic = 'and';
@@ -11874,6 +11892,9 @@ function absCanvasBuildRootNode() {
         +     '<select class="abs-root-tf-select" id="absS3TfSelect" onchange="absSwitchTf(\'' + ABS_CANVAS_MAIN_SEC + '\',this.value)" title="Таймфрейм окна">' + tfOpts + '</select>'
         +     '<span class="abs-root-label" style="min-width:auto">Свечей</span>'
         +     '<input type="number" class="abs-root-count-input" id="absS3Count" min="1" max="50" step="1" value="' + (sec.count || 0) + '" oninput="absChangeCount(\'' + ABS_CANVAS_MAIN_SEC + '\')" onblur="absBlurCount(\'' + ABS_CANVAS_MAIN_SEC + '\')" title="Свечей в окне (1–50)"></div>'
+        +   '<div class="abs-root-row"><span class="abs-root-label">Сдвиг</span>'
+        +     '<input type="number" class="abs-root-shift-input" id="absS3Shift" min="0" max="100" step="1" value="' + absShiftOf(sec) + '" oninput="absChangeShift(\'' + ABS_CANVAS_MAIN_SEC + '\')" onblur="absBlurShift(\'' + ABS_CANVAS_MAIN_SEC + '\')" title="Сдвиг окна Главного фильтра: 0 — от текущей незакрытой (формирующейся) свечи «Сейчас»; 1 — от последней закрытой свечи; 2 и больше — закрытые свечи со смещением на K−1 свечей назад («импульс был K−1 свечей назад»). Применяется к расчёту сразу и сохраняется">'
+        +     '<span class="abs-root-shift-mode" id="absS3ShiftMode">' + absCanvasShiftModeText(absShiftOf(sec)) + '</span></div>'
         + '</div>'
         + '<div class="abs-node-port abs-node-port-out" data-port="out" data-root="1" title="Соединить с другим Главным фильтром или фильтром"></div>'
         + '<div class="abs-node-port abs-node-port-in" data-port="in"></div>'
@@ -12078,9 +12099,14 @@ function absCanvasSyncRootUI() {
     document.querySelectorAll('#absS3LinkTabs .abs-root-link-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.lm === linkMode);
     });
-    // sync shift
+    // sync shift (v106: «Сдвиг» Главного фильтра)
+    const anchorLm = ['now', 'closed'].includes(linkMode);
     const shiftEl = document.getElementById('absS3Shift');
-    if (shiftEl) shiftEl.value = absShiftOf(sec);
+    if (shiftEl) {
+        shiftEl.value = absShiftOf(sec);
+        shiftEl.classList.toggle('abs-shift-dimmed', !anchorLm);
+    }
+    absCanvasSyncShiftMode('absS3Shift', 'absS3ShiftMode', !anchorLm);
     // sync count
     const countEl = document.getElementById('absS3Count');
     if (countEl) countEl.value = sec.count || 0;
@@ -12227,6 +12253,9 @@ function absCanvasBuildExtraRootNode(root) {
         +     '<select class="abs-root-tf-select" onchange="absCanvasExtraRootSet(\'' + root.id + '\',\'tf\',this.value)" title="Таймфрейм окна">' + tfOpts + '</select>'
         +     '<span class="abs-root-label" style="min-width:auto">Свечей</span>'
         +     '<input type="number" class="abs-root-count-input" min="1" max="50" step="1" value="' + (root.count || 0) + '" oninput="absCanvasExtraRootSet(\'' + root.id + '\',\'count\',this.value)" title="Свечей в окне"></div>'
+        +   '<div class="abs-root-row"><span class="abs-root-label">Сдвиг</span>'
+        +     '<input type="number" class="abs-root-shift-input' + (["before","after","inside"].includes(root.condition) ? " abs-shift-dimmed" : "") + '" id="absExtraRootShift_' + root.id + '" min="0" max="100" step="1" value="' + (root.shift || 0) + '" oninput="absCanvasExtraRootSet(\'' + root.id + '\',\'shift\',this.value)" onblur="absCanvasBlurExtraRootShift(\'' + root.id + '\')" title="Сдвиг окна этого Главного фильтра: 0 — от текущей незакрытой (формирующейся) свечи; 1 — от последней закрытой; 2 и больше — закрытые со смещением на K−1 свечей назад. В привязке (До/После/Внутри) поле приглушено — ввод числа вернёт окно к якорю">'
+        +     '<span class="abs-root-shift-mode" id="absExtraRootShiftMode_' + root.id + '">' + absCanvasShiftModeText(root.shift || 0, ["before","after","inside"].includes(root.condition)) + '</span></div>'
         + '</div>'
         + '<div class="abs-node-port abs-node-port-out" data-port="out" data-root="' + root.id + '" title="Создать связь"></div>'
         + '<div class="abs-node-port abs-node-port-in" data-port="in" data-root="' + root.id + '"></div>'
@@ -12303,8 +12332,23 @@ function absCanvasExtraRootSet(rootId, field, value) {
         if (absRawCache.size) absRecomputeDebounced();
         else if (absAllResults && absAllResults.length) absReRenderDebounced();
     } else if (field === 'shift') {
-        root.shift = parseInt(value) || 0;
+        // v106: «Сдвиг» Главного фильтра — 0 от формирующейся свечи, 1+ от закрытых
+        const n = String(value == null ? '' : value).trim();
+        if ('' === n) return;                     // пусто — восстановит blur
+        let s = parseInt(n, 10);
+        if (isNaN(s)) return;
+        s = Math.max(0, Math.min(100, s));
+        root.shift = s;
+        // в привязке (До/После/Внутри) ввод числа возвращает окно к якорю — как у секций
+        if (['before', 'after', 'inside'].includes(root.condition || 'and')) root.condition = 'and';
         absCanvasSavePositions();
+        absCanvasSyncRootSecs();                  // применит shift к секции окна
+        absPersistFilters();
+        absUpdateGroupHeaders();
+        absCanvasExtraRootSyncShiftUI(root.id);   // значение + подпись режима
+        // v102-стиль: БЕЗ ребилда канваса — инпут не теряет фокус
+        if (absRawCache.size) absRecomputeDebounced();
+        else if (absAllResults && absAllResults.length) absReRenderDebounced();
     } else if (field === 'linkMode') {
         root.linkMode = value;
         if (value === 'now') root.ref = null;
@@ -13206,134 +13250,6 @@ function absCanvasRestoreCollapse() {
     }
 })();
 
-/* Древовидная оценка цепочек.
-   - s3: своя цепочка (дети root) + объединение со всеми связанными доп. Главными фильтрами
-     по их условию: И — обязательна, ИЛИ — достаточно этой или предыдущих,
-     До/После/Внутри — окно позиционируется относительно родителя, цепочка обязательна.
-   - rN: своя цепочка (дети этого корня) — используется и для счётчика. */
-function absCanvasTreeEval(coin, secId, sec) {
-    if (secId === ABS_CANVAS_MAIN_SEC) {
-        let result = absCanvasEvalSectionChain(coin, ABS_CANVAS_MAIN_SEC);
-        absCanvasState.extraRoots.forEach(r => {
-            if (!r.parent) return;  // отключённый корень не участвует в фильтрации
-            const rres = absCanvasEvalSectionChain(coin, r.id);
-            if ((r.condition || 'and') === 'or') result = result || rres;
-            else result = result && rres;   // И / До / После / Внутри
-        });
-        return result;
-    }
-    if (/^r\d+$/.test(secId)) {
-        return absCanvasEvalSectionChain(coin, secId);
-    }
-    return true;
-}
-
-/* Оценить цепочку ОДНОГО Главного фильтра (его окно + его фильтры). */
-function absCanvasEvalSectionChain(coin, secId) {
-    const sec = absSecs[secId];
-    if (!sec) return true;
-    const insts = absInstsOf(sec);
-    if (insts.length === 0) return true;
-    const rootTag = (secId === ABS_CANVAS_MAIN_SEC) ? 'root' : secId;
-    const secData = coin ? coin[secId] : null;
-    const ticker24h = coin ? absTicker24h(coin.symbol) : null;
-    const rootChildren = insts.filter(i => i.parent === rootTag);
-    if (rootChildren.length === 0) return true;   // нет подключённых фильтров — цепочка пуста
-    return absCanvasEvalChildren(rootChildren, insts, coin, secId, secData, ticker24h, null);
-}
-
-function absCanvasEvalChildren(children, allInsts, coin, secId, secData, ticker24h, parentInst) {
-    if (children.length === 0) return true;
-
-    // Group children by condition
-    const andChildren = [], orChildren = [], notChildren = [], cmpChildren = [];
-    children.forEach(c => {
-        if (!absInstParticipates(c)) return;
-        const cond = c.condition || 'and';
-        if (cond === 'and') andChildren.push(c);
-        else if (cond === 'or') orChildren.push(c);
-        else if (cond === 'not') notChildren.push(c);
-        else if (ABS_SEC_CMP_KINDS.includes(cond)) cmpChildren.push(c);
-        else andChildren.push(c);  // default
-    });
-
-    let result = true;
-
-    // AND: all must pass
-    for (const child of andChildren) {
-        if (!absCanvasEvalNode(child, allInsts, coin, secId, secData, ticker24h)) {
-            result = false;
-            break;
-        }
-    }
-
-    // OR: at least one must pass
-    if (result && orChildren.length > 0) {
-        let anyPassed = false;
-        for (const child of orChildren) {
-            if (absCanvasEvalNode(child, allInsts, coin, secId, secData, ticker24h)) {
-                anyPassed = true;
-                break;
-            }
-        }
-        if (!anyPassed) result = false;
-    }
-
-    // NOT: none must pass
-    if (result) {
-        for (const child of notChildren) {
-            if (absCanvasEvalNode(child, allInsts, coin, secId, secData, ticker24h)) {
-                result = false;
-                break;
-            }
-        }
-    }
-
-    // cmp: compare with parent's value
-    if (result && cmpChildren.length > 0 && parentInst) {
-        for (const child of cmpChildren) {
-            const childVal = absFltInstValue(coin, child, secId, absSecs[secId], secData, ticker24h);
-            const parentVal = absFltInstValue(coin, parentInst, secId, absSecs[secId], secData, ticker24h);
-            if (childVal == null || parentVal == null || isNaN(childVal) || isNaN(parentVal)) {
-                result = false;
-                break;
-            }
-            const cond = child.condition;
-            if (cond === 'lt' && !(parentVal < childVal)) { result = false; break; }
-            if (cond === 'gt' && !(parentVal > childVal)) { result = false; break; }
-            if (cond === 'eq' && !absCmpVals(parentVal, childVal, 'eq')) { result = false; break; }
-            // crossUp/crossDown/crossAny — use absInstCrossPass
-            if (cond === 'crossUp' || cond === 'crossDown' || cond === 'crossAny') {
-                const crossPass = absInstCrossPass(coin, secId, parentInst, child, cond);
-                if (!crossPass) { result = false; break; }
-            }
-        }
-    } else if (result && cmpChildren.length > 0 && !parentInst) {
-        // cmp children at root level — compare with 0 or just treat as 'and'
-        for (const child of cmpChildren) {
-            if (!absCanvasEvalNode(child, allInsts, coin, secId, secData, ticker24h)) {
-                result = false;
-                break;
-            }
-        }
-    }
-
-    return result;
-}
-
-function absCanvasEvalNode(inst, allInsts, coin, secId, secData, ticker24h) {
-    // Check if this filter passes
-    const passes = absFltInstPass(coin, inst, secId, absSecs[secId], secData, ticker24h);
-    if (!passes) return false;
-
-    // Get children of this filter
-    const children = allInsts.filter(i => i.parent === inst.id);
-    if (children.length === 0) return true;
-
-    // Evaluate children
-    return absCanvasEvalChildren(children, allInsts, coin, secId, secData, ticker24h, inst);
-}
-
 /* After absAllResults changes, update root count */
 (function(){
     if (typeof window.__absReRender_orig === 'undefined' && typeof absReRender === 'function') {
@@ -13558,15 +13474,27 @@ function absCanvasAddSearchPins() {
                 if (!ABS_SEC_IDS.includes(r.id)) ABS_SEC_IDS.push(r.id);
                 sec.tf = r.tf || '15m';
                 sec.count = Math.max(1, Math.min(50, r.count || 20));
-                sec.offset = 0;
-                sec.uiShift = 0;
+                // v106: «Сдвиг» Главного фильтра → якорь окна секции
+                //   0   → linkMode 'now'    (окно включает формирующуюся свечу)
+                //   1+  → linkMode 'closed', offset = K−1 (закрытые со смещением)
+                //   привязка (До/После/Внутри) → сдвиг не действует
+                const rShift = Math.max(0, Math.min(100, parseInt(r.shift) || 0));
                 const cond = r.condition || 'and';
                 if (['before', 'after', 'inside'].includes(cond)) {
+                    sec.uiShift = rShift;
+                    sec.offset = 0;
                     sec.linkMode = cond;
                     sec.ref = (r.parent && r.parent !== 'root' && rootIds.includes(r.parent)) ? r.parent : ABS_CANVAS_MAIN_SEC;
+                } else if (rShift > 0) {
+                    sec.linkMode = 'closed';
+                    sec.ref = null;
+                    sec.offset = rShift - 1;
+                    sec.uiShift = rShift;
                 } else {
                     sec.linkMode = 'now';
                     sec.ref = null;
+                    sec.offset = 0;
+                    sec.uiShift = 0;
                 }
                 sec.name = 'Главный фильтр ' + r.id;
                 sec.logic = 'and';
@@ -13655,7 +13583,8 @@ function absCanvasAddSearchPins() {
             if (visited.has(cur.id)) return ABS_CANVAS_MAIN_SEC;
             visited.add(cur.id);
             const parent = cur.parent;
-            if (!parent) return null;  // disconnected
+            if (parent === null) return null;  // явно отвязан
+            if (parent === undefined) return ABS_CANVAS_MAIN_SEC;  // не задан — как «root» (canonical absNormInst)
             if (parent === 'root') return ABS_CANVAS_MAIN_SEC;
             if (/^r\d+$/.test(parent)) return parent;  // owner is extra root
             // parent is a filter — walk up
@@ -13668,19 +13597,22 @@ function absCanvasAddSearchPins() {
     window.absCanvasFindOwnerRoot = absCanvasFindOwnerRoot;
 
     window.absCanvasEvalSectionChain = function(coin, secId) {
-        // Collect ALL filters from all canvas sections (s3 + extra roots)
-        const allInsts = [];
-        absCanvasSids().forEach(sid => {
-            const sec = absSecs[sid];
-            if (sec) allInsts.push.apply(allInsts, absInstsOf(sec));
-        });
+        // Collect ALL filters from all canvas sections (s3 + extra roots) — v107: пул с кэшем
+        const __poolInfo = "function" == typeof absCanvasGetPool ? absCanvasGetPool() : null;
+        const allInsts = __poolInfo ? __poolInfo.pool : [];
+        if (!__poolInfo) {
+            absCanvasSids().forEach(sid => {
+                const sec = absSecs[sid];
+                if (sec) allInsts.push.apply(allInsts, absInstsOf(sec));
+            });
+        }
         if (allInsts.length === 0) return true;
 
         // Determine the root tag for this section
         const rootTag = (secId === ABS_CANVAS_MAIN_SEC) ? 'root' : secId;
 
-        // Find children whose parent === rootTag
-        const rootChildren = allInsts.filter(i => i.parent === rootTag);
+        // Find children whose parent === rootTag (undefined = «root» для главного корня, как absNormInst)
+        const rootChildren = allInsts.filter(i => i.parent === rootTag || (rootTag === 'root' && i.parent === undefined));
         if (rootChildren.length === 0) return true;  // no connected filters — chain empty
 
         // Evaluate children — pass secId for secData lookup
@@ -13688,80 +13620,55 @@ function absCanvasAddSearchPins() {
         return absCanvasEvalChildren2(rootChildren, allInsts, coin, secId, ticker24h, null);
     };
 
-    /* New eval children that passes the correct secData based on owner root. */
+    /* New eval children that passes the correct secData based on owner root.
+       v107: ЛИНЕЙНАЯ семантика цепочки (как в документации и в карточках секций):
+       дети оцениваются ПО ПОРЯДКУ; условие ребёнка — связь с предыдущим соседом
+       (на корневом уровне) или с родителем (во вложенной ветке):
+       И — фильтр обязателен; ИЛИ — спасает цепочку; НЕ — прошлый результат И НЕ этот;
+       <,>,= — сравнение значений соседей/родителя; пересечения — ряды по окнам
+       владельцев фильтров. До v107: ИЛИ не спасало проваленный И, сравнения на
+       корне игнорировались, cross-условия не проверялись вовсе. */
     function absCanvasEvalChildren2(children, allInsts, coin, secId, ticker24h, parentInst) {
         if (children.length === 0) return true;
-
-        // Group children by condition
-        const andChildren = [], orChildren = [], notChildren = [], cmpChildren = [];
-        children.forEach(c => {
-            if (!absInstParticipates(c)) return;
-            const cond = c.condition || 'and';
-            if (cond === 'and') andChildren.push(c);
-            else if (cond === 'or') orChildren.push(c);
-            else if (cond === 'not') notChildren.push(c);
-            else if (ABS_SEC_CMP_KINDS.includes(cond)) cmpChildren.push(c);
-            else andChildren.push(c);
-        });
-
-        let result = true;
-
-        // AND: all must pass
-        for (const child of andChildren) {
-            if (!absCanvasEvalNode2(child, allInsts, coin, secId, ticker24h)) {
-                result = false;
-                break;
-            }
-        }
-        // OR: at least one must pass
-        if (result && orChildren.length > 0) {
-            let anyPassed = false;
-            for (const child of orChildren) {
-                if (absCanvasEvalNode2(child, allInsts, coin, secId, ticker24h)) {
-                    anyPassed = true;
-                    break;
+        let result = null,
+            prev = null;
+        for (const child of children) {
+            if (!absInstParticipates(child)) continue;
+            const p = absCanvasEvalNode2(child, allInsts, coin, secId, ticker24h);
+            const cond = "string" == typeof child.condition && ABS_FLT_CONN_KINDS.includes(child.condition) ? child.condition : "and";
+            if (result === null) {
+                result = p;
+            } else if ("or" === cond) {
+                result = result || p;
+            } else if ("not" === cond) {
+                result = result && !p;
+            } else if (ABS_SEC_CMP_KINDS.includes(cond)) {
+                const refInst = parentInst || prev;
+                if (!refInst) {
+                    result = result && p;
+                } else {
+                    const cRoot = absCanvasFindOwnerRoot(child, allInsts) || secId,
+                        rRoot = absCanvasFindOwnerRoot(refInst, allInsts) || secId;
+                    if ("crossUp" === cond || "crossDown" === cond || "crossAny" === cond) {
+                        result = result && ("function" == typeof absCanvasCrossPass2
+                            ? absCanvasCrossPass2(coin, refInst, child, cond, rRoot, cRoot)
+                            : false);
+                    } else {
+                        const childVal = absFltInstValue(coin, child, cRoot, absSecs[cRoot] || absSecs[secId], coin ? coin[cRoot] : null, ticker24h),
+                            refVal = absFltInstValue(coin, refInst, rRoot, absSecs[rRoot] || absSecs[secId], coin ? coin[rRoot] : null, ticker24h);
+                        if (childVal == null || refVal == null || isNaN(childVal) || isNaN(refVal)) result = false;
+                        else if ("lt" === cond) result = result && refVal < childVal;
+                        else if ("gt" === cond) result = result && refVal > childVal;
+                        else result = result && absCmpVals(refVal, childVal, "eq");
+                    }
                 }
+            } else {
+                result = result && p;
             }
-            if (!anyPassed) result = false;
+            prev = child;
         }
-        // NOT: none must pass
-        if (result) {
-            for (const child of notChildren) {
-                if (absCanvasEvalNode2(child, allInsts, coin, secId, ticker24h)) {
-                    result = false;
-                    break;
-                }
-            }
-        }
-        // cmp: compare with parent's value
-        if (result && cmpChildren.length > 0 && parentInst) {
-            for (const child of cmpChildren) {
-                const ownerRoot = absCanvasFindOwnerRoot(child, allInsts) || secId;
-                const secDataChild = coin ? coin[ownerRoot] : null;
-                const secDataParent = coin ? coin[absCanvasFindOwnerRoot(parentInst, allInsts) || secId] : null;
-                const childVal = absFltInstValue(coin, child, ownerRoot, absSecs[ownerRoot], secDataChild, ticker24h);
-                const parentVal = absFltInstValue(coin, parentInst, ownerRoot, absSecs[ownerRoot], secDataParent, ticker24h);
-                if (childVal == null || parentVal == null || isNaN(childVal) || isNaN(parentVal)) {
-                    result = false;
-                    break;
-                }
-                const cond = child.condition;
-                if (cond === 'lt' && !(parentVal < childVal)) { result = false; break; }
-                if (cond === 'gt' && !(parentVal > childVal)) { result = false; break; }
-                if (cond === 'eq' && !absCmpVals(parentVal, childVal, 'eq')) { result = false; break; }
-            }
-        } else if (result && cmpChildren.length > 0 && !parentInst) {
-            // cmp children at root level — treat as 'and'
-            for (const child of cmpChildren) {
-                if (!absCanvasEvalNode2(child, allInsts, coin, secId, ticker24h)) {
-                    result = false;
-                    break;
-                }
-            }
-        }
-        return result;
+        return result === null ? true : result;
     }
-
     /* New eval node that passes the correct secData based on owner root. */
     function absCanvasEvalNode2(inst, allInsts, coin, secId, ticker24h) {
         // Find the owner root for this filter
@@ -15314,4 +15221,266 @@ function absCanvasZoomUpdateUi() {
 })();
 
 console.log('[abs-canvas] v105 — infinite canvas (origin offset), sharp re-raster zoom-to-cursor, live grid, view persistence');
+</script><script id="v106Script">
+/* ============================================================
+   v106 — «Сдвиг» в Главных фильтрах · чистый холст
+   • В каждом Главном фильтре (первом и дополнительных) есть
+     настройка «Сдвиг» — как у секций:
+       0  — окно от текущей НЕзакрытой (формирующейся) свечи;
+       1  — окно от последней закрытой свечи;
+       2+ — закрытые свечи со смещением на K−1 назад.
+     Рядом с полем — подпись текущего режима.
+   • В привязке (До/После/Внутри) поле приглушено; ввод числа
+     возвращает окно к якорю (как в секциях).
+   • Плашка «Колесо — масштаб · фон — панорама…» удалена.
+   ============================================================ */
+
+/* ---------- Подпись режима «Сдвига» ---------- */
+function absCanvasShiftModeText(s, linked) {
+    if (linked) return 'в привязке — не действует';
+    s = Math.max(0, Math.min(100, parseInt(s, 10) || 0));
+    if (s === 0) return 'от формирующейся';
+    if (s === 1) return 'от посл. закрытой';
+    return 'закрытые · −' + (s - 1);
+}
+
+function absCanvasSyncShiftMode(inputId, modeId, linked) {
+    var inp = document.getElementById(inputId),
+        md = document.getElementById(modeId);
+    if (!inp || !md) return;
+    md.textContent = absCanvasShiftModeText(inp.value, linked);
+}
+
+/* Значение + подпись «Сдвига» доп. Главного фильтра */
+function absCanvasExtraRootSyncShiftUI(rootId) {
+    var root = null;
+    try {
+        absCanvasState.extraRoots.forEach(function (r) { if (r.id === rootId) root = r; });
+    } catch (e) {}
+    var inp = document.getElementById('absExtraRootShift_' + rootId),
+        md = document.getElementById('absExtraRootShiftMode_' + rootId);
+    if (!inp && !md) return;
+    var linked = !!root && ['before', 'after', 'inside'].indexOf(root.condition || 'and') !== -1;
+    if (inp) {
+        inp.value = root ? (Math.max(0, parseInt(root.shift, 10) || 0)) : (parseInt(inp.value, 10) || 0);
+        inp.classList.toggle('abs-shift-dimmed', linked);
+    }
+    if (md) md.textContent = absCanvasShiftModeText(inp ? inp.value : 0, linked);
+}
+
+/* Пустой ввод в «Сдвиге» доп. корня — вернуть текущее значение (по blur) */
+function absCanvasBlurExtraRootShift(rootId) {
+    var inp = document.getElementById('absExtraRootShift_' + rootId);
+    if (!inp || '' !== String(inp.value).trim()) return;
+    absCanvasExtraRootSyncShiftUI(rootId);
+}
+
+/* v106: absBlurCount упоминался в разметке корня, но не был определён —
+   пустой blur «Свечей» больше не бросает ReferenceError */
+if (typeof window.absBlurCount !== 'function') {
+    window.absBlurCount = function (sid) {
+        try {
+            var el = document.getElementById('abs' + sid.toUpperCase() + 'Count');
+            if (el && '' === String(el.value).trim() && absSecs[sid]) el.value = absSecs[sid].count || 1;
+        } catch (e) {}
+    };
+}
+
+/* ---------- Убрать плашку «Колесо — масштаб · фон — панорама…» ---------- */
+(function () {
+    try {
+        var pill = document.getElementById('absZoomHint');
+        if (pill && pill.parentNode) pill.parentNode.removeChild(pill);
+    } catch (e) {}
+    /* Плашка больше не создаётся поздними инициализациями v104/v105 */
+    window.absCanvasZoomSetupHint = function () {};
+    window.absCanvasZoomUpdateUi = function () {
+        var lvl = document.getElementById('absZoomLevel');
+        if (lvl) lvl.textContent = Math.round(absCanvasZoom.level * 100) + '%';
+    };
+})();
+
+/* ---------- Подпись режима после ручного ввода «Сдвига» (s3) ---------- */
+(function () {
+    if (typeof window.__absChangeShift_orig === 'undefined' && typeof absChangeShift === 'function') {
+        window.__absChangeShift_orig = absChangeShift;
+        window.absChangeShift = function (e) {
+            var r = window.__absChangeShift_orig.apply(this, arguments);
+            try {
+                absCanvasSyncShiftMode('abs' + e.toUpperCase() + 'Shift', 'abs' + e.toUpperCase() + 'ShiftMode', false);
+                absCanvasRenderConnections();
+            } catch (err) {}
+            return r;
+        };
+    }
+    if (typeof window.__absBlurShift_orig === 'undefined' && typeof absBlurShift === 'function') {
+        window.__absBlurShift_orig = absBlurShift;
+        window.absBlurShift = function (e) {
+            var r = window.__absBlurShift_orig.apply(this, arguments);
+            try {
+                absCanvasSyncShiftMode('abs' + e.toUpperCase() + 'Shift', 'abs' + e.toUpperCase() + 'ShiftMode', false);
+            } catch (err) {}
+            return r;
+        };
+    }
+})();
+
+/* ---------- Приглушение «Сдвига» при смене привязки корней ---------- */
+(function () {
+    if (typeof window.__absRenderConn_v106 === 'undefined' && typeof absCanvasRenderConnections === 'function') {
+        window.__absRenderConn_v106 = true;
+        var __orig = absCanvasRenderConnections;
+        window.absCanvasRenderConnections = function () {
+            var r = __orig.apply(this, arguments);
+            try {
+                absCanvasState.extraRoots.forEach(function (rt) { absCanvasExtraRootSyncShiftUI(rt.id); });
+            } catch (e) {}
+            return r;
+        };
+    }
+})();
+
+/* ---------- CSS v106 ---------- */
+(function () {
+    try {
+        var st = document.createElement('style');
+        st.id = 'v106Css';
+        st.textContent = ''
+            + '.abs-canvas-root-node .abs-root-shift-mode{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;opacity:.72;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+            + '.abs-canvas-root-node .abs-root-shift-input.abs-shift-dimmed{opacity:.45}'
+            + '@media (max-width:768px){.abs-canvas-root-node .abs-root-shift-mode{font-size:8px}}';
+        document.head.appendChild(st);
+    } catch (e) {}
+})();
+
+console.log('[abs-canvas] v106 — Сдвиг (0 — формирующаяся, 1+ — закрытые) в Главных фильтрах; плашка-подсказка зума удалена');
+</script><script id="v107Script">
+/* ============================================================
+   v107 — CLEAN/FIX: исправление логики фильтров + оптимизация.
+   1. [КРИТ] Метрики фильтров, привязанных к доп. Главным фильтрам (rN),
+      считаются по окну ВЛАДЕЛЬЦА (parent-цепочка оканчивается на корне rN),
+      а не по секции-хозяину списка (s3). До v107 такие фильтры всегда
+      получали null → отбрасывали все строки («фильтры не работают»).
+   2. [КРИТ] Линейная семантика цепочки фильтров (см. новый absCanvasEvalChildren2):
+      ИЛИ спасает цепочку, НЕ инвертирует, </>/= и пересечения работают
+      на корневом уровне и во вложенных ветках.
+   3. План загрузки свечей учитывает lookback фильтров-владельцев корня.
+   4. Зеркало fi в домашнюю секцию — колонки таблицы и сортировка работают.
+   5. Пул фильтров канваса кэшируется ПО ИДЕНТИЧНОСТИ объектов (владелец
+      вычисляется на лету — кэш никогда не протухает от смены привязок).
+   ============================================================ */
+(function () {
+    'use strict';
+
+    /* Пул всех фильтров канваса (s3 + rN), кэш проверяется по идентичности
+       объектов-инстансов: смена состава/порядка → мгновенная перестройка;
+       смена parent/границ у тех же объектов видна сразу (живые ссылки).
+       ownerOf НЕ кэшируется — привязки меняются без смены состава. */
+    function absCanvasGetPool() {
+        var sids = absCanvasSids();
+        var pool = [], homeOf = new Map();
+        sids.forEach(function (sid) {
+            var sc = absSecs[sid];
+            if (!sc) return;
+            var arr = absInstsOf(sc);
+            for (var j = 0; j < arr.length; j++) { pool.push(arr[j]); homeOf.set(arr[j], sid); }
+        });
+        var c = window.__absPoolCache;
+        if (c && c.pool.length === pool.length) {
+            var same = true;
+            for (var i = 0; i < pool.length; i++) { if (c.pool[i] !== pool[i]) { same = false; break; } }
+            if (same) return c;
+        }
+        window.__absPoolCache = { pool: pool, homeOf: homeOf };
+        return window.__absPoolCache;
+    }
+    window.absCanvasGetPool = absCanvasGetPool;
+
+    /* Инстансы, чьи метрики должны считаться в окне секции secId:
+       для корней канваса (s3, rN) — фильтры-владельцы этого корня из общего пула,
+       для обычных секций — свои инстансы. Владелец — по parent-цепочке. */
+    function absAnalyzeInstsOf(secId, sec) {
+        try {
+            var isRoot = secId === ABS_CANVAS_MAIN_SEC ||
+                (/^r\d+$/.test(secId) && absCanvasState && Array.isArray(absCanvasState.extraRoots) &&
+                    absCanvasState.extraRoots.some(function (r) { return r.id === secId; }));
+            if (!isRoot) return absInstsOf(sec);
+            var info = absCanvasGetPool();
+            if (!info.pool.length) return absInstsOf(sec);
+            var out = [], memo = new Map();
+            info.pool.forEach(function (x) {
+                var own = memo.get(x);
+                if (own === undefined) {
+                    own = typeof absCanvasFindOwnerRoot === 'function'
+                        ? absCanvasFindOwnerRoot(x, info.pool) : ABS_CANVAS_MAIN_SEC;
+                    memo.set(x, own);
+                }
+                if (own === secId) out.push(x);
+            });
+            return out;
+        } catch (err) {
+            return absInstsOf(sec);
+        }
+    }
+    window.absAnalyzeInstsOf = absAnalyzeInstsOf;
+
+    /* Значения фильтров доп. корней продублировать в их ДОМАШНЕЙ секции (s3):
+       колонки таблицы и сортировка читают row[home].fi[inst.id]. */
+    function absMirrorOwnerFi(ownerSid, insts, fi, s) {
+        try {
+            if (ownerSid === ABS_CANVAS_MAIN_SEC || !insts || !fi) return;
+            var info = absCanvasGetPool();
+            insts.forEach(function (x) {
+                if (!Object.prototype.hasOwnProperty.call(fi, x.id)) return;
+                var home = info.homeOf.get(x);
+                if (!home || home === ownerSid) return;
+                var cell = s[home];
+                if (cell) {
+                    if (!cell.fi) cell.fi = {};
+                    if (!Object.prototype.hasOwnProperty.call(cell.fi, x.id)) cell.fi[x.id] = fi[x.id];
+                }
+            });
+        } catch (err) {}
+    }
+    window.absMirrorOwnerFi = absMirrorOwnerFi;
+
+    /* Индикаторный lookback секции с учётом фильтров-владельцев корня. */
+    function absIndicatorLookback2(secId, sec) {
+        try {
+            var isRoot = secId === ABS_CANVAS_MAIN_SEC ||
+                (/^r\d+$/.test(secId) && absCanvasState && Array.isArray(absCanvasState.extraRoots) &&
+                    absCanvasState.extraRoots.some(function (r) { return r.id === secId; }));
+            if (isRoot) {
+                var insts = absAnalyzeInstsOf(secId, sec);
+                var a = 0;
+                insts.forEach(function (x) {
+                    a = Math.max(a, absInstIndLookback(x));
+                    if (Number.isInteger(x.baseCandles) && x.baseCandles > 0) {
+                        a = Math.max(a, x.baseCandles + absInstIndLookback(x) + 2);
+                    }
+                });
+                return a;
+            }
+        } catch (err) {}
+        return absIndicatorLookback(sec);
+    }
+    window.absIndicatorLookback2 = absIndicatorLookback2;
+
+    /* Пересечение рядов двух фильтров (возможно, из разных корней). */
+    function absCanvasCrossPass2(coin, refInst, child, cond, rRoot, cRoot) {
+        try {
+            var s1 = absSeriesOf(coin, rRoot, refInst),
+                s2 = absSeriesOf(coin, cRoot, child);
+            if (!s1 || !s2) return false;
+            var l = ctCrossLast(s1, s2);
+            if (null == l.dir) return false;
+            return 'crossAny' === cond ? ('up' === l.dir || 'down' === l.dir) :
+                'crossUp' === cond ? 'up' === l.dir : 'down' === l.dir;
+        } catch (e) {
+            return false;
+        }
+    }
+    window.absCanvasCrossPass2 = absCanvasCrossPass2;
+})();
+console.log('[abs-canvas] v107 — фикс логики фильтров: метрики по окну владельца корня (rN), линейная семантика И/ИЛИ/НЕ/сравнений/пересечений, план данных, оптимизации');
 </script></body></html>
