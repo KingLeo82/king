@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>CryptoTerminal v146 — Super Screener | Chart Screen | Trader Clock | CryptoAI</title><!-- v146_60: ФИКС «ГРУППА НЕ РАСТЯГИВАЕТСЯ ВПРАВО» (пользователь: «Баг, при растягивании группы в право не растягивается»). Регрессия v146_48 («край группы — не правее экрана»): в ОБЕИХ точках растяжения правого края докинг-группы — (1) grip ⋮⋮ полосы вкладок (tvWsGroupGripDrag, mode=group, side=e) и (2) ресайз правого края через ручку крайнего участника (tvWsDockResizeLive, inf.x=group, dir с e) — кламп нового правого края был записан как min(wx, vw − G.x) вместо min(wx, vw). wx и rx48 — АБСОЛЮТНЫЕ мировые координаты края (z=1, x=0 с v146_43), а G.w вычислялась ниже как rx48 − G.x: вычитание G.x в клампе — двойной учёт левого края группы. Следствие: у любой группы не у левого края экрана (G.x>0) максимум правого края замораживался на vw − G.x − G.x = vw − 2·G.x; при G.x=480/vw=1600/ш=640 тяга вправо вообще не меняла ширину («не растягивается»), при G.x=700 — группа РЕЗКО УСАЖИВАЛАСЬ до минимума (640→600) при попытке потянуть вправо. Эталон семантики — tvWsGrowToViewport (v146_50): G.w = vw − G.x. Фикс: кламп rx48 = min(wx, vw) в обоих местах (правый край ≤ ширины полотна; левый/нижний края и ApplyGeom-клампы без изменений). Самотесты 268→270: v146_60(1) — grip группы при G.x>0 растягивает правый край ровно до края экрана (2200→vw), частичная тяга следует за курсором (1300), левый край от 0; v146_60(2) — ресайз правого края через ручку участника (dir e/se, inf.x=group) растягивает так же (герметично: фейковая группа + monkey-patch tvWsWsViewport, восстановление в finally). --><!-- v146_59: СВЁРНУТЫЕ ВИДЖЕТЫ ИСКЛЮЧЕНЫ ИЗ ПРИКРЕПЛЕНИЯ (пользователь: «После сворачивания активно остается прикрепление к свёрнутым виджетам, надо убрать»). v146_58 скрывает свёрнутый виджет через display:none, но модель хранит ПОЛНУЮ геометрию — и оба механизма прикрепления продолжали её видеть: (1) tvWsSnapTargets (магнитные направляющие при переносе/ресайзе) брала линии-кандидаты у ВСЕХ плиток/«Тикеров»/докинг-групп, включая невидимые — перетаскиваемое окно «прилипало» к пустому месту, где стояло убранное окно; (2) tvWsDropHit (подсветка цели объединения при переносе) ловила курсор «невидимой зоной» свёрнутого виджета — перенос в пустой угол объединял окно с невидимым соседом. Фикс: оба механизма фильтруют кандидатов через tvWsColVisualOf (свой col-флаг ИЛИ col всей группы) — свёрнутые плитки/«Тикеры» не дают магнитных линий и не становятся целью объединения; свёрнутая группа (G.col) исключена из целей магнита целиком. Зоны НЕ тронуты (tvWsZoneEnter сознательно разворачивает свёрнутые зоны на входе и возвращает col на выходе — v146_45/48). Самотесты 266→268: v146_59(1) — tvWsSnapTargets не отдаёт линий свёрнутых плитки/«Тикеров»/группы, после разворота линии возвращаются (герметично, на пустых моделях); v146_59(2) — tvWsDropHit не выбирает свёрнутый виджет целью объединения (нет tvWsDrop/подсветки), развёрнутый — выбирает (monkey-patch tvWsWidgetElOf + фейковый tvWsDrag, всё восстановлено в finally). -->
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>CryptoTerminal v146 — Super Screener | Chart Screen | Trader Clock | CryptoAI</title><!-- v146_63: ПЕРЕКРЕСТИЕ — ФИКС СКАЧКОВ МЕЖДУ ТФ + ЦВЕТ В НАСТРОЙКАХ ГРАФИКА (пользователь: «Скачет перекрестие сильно, даже на маленьком таймфрейме. Старший таймфрейм перетягивает его. И настройку сделай изменять цвет перекрестия в настройках графика»). Корень скачков: LWC setCrosshairPosition на приёмнике маппит время в ИНДЕКС БАРА с findNearest=true (бандл: Gd → gc(i,!0)) — время с младшего ТФ тянуло перекрестие старшего ТФ к СЛЕДУЮЩЕМУ бару уже на половине интервала (13:31 → бар 14:00, «старший ТФ перетягивает»), а со старшего ТФ на младший перекрестие стояло на старте бара отправителя и телепортировалось шагами старшего ТФ. (1) Приёмник: tvCxSinkBar — floor-маппинг по СВОИМ барам (_rawTimes: последний бар с временем ≤ пришедшего; двоичный поиск), приёмник показывает бар-КОНТЕЙНЕР — опережение исчезло; данных нет/время невалидно/левее начала — уходит сырое время (как раньше, тест-макеты v146_62 совместимы). (2) Отправитель: в subscribeCrosshairMove к времени бара добавляется внутри-барная доля курсора (доля по координатам бара: logicalToCoordinate(bi)/(bi+1), фолбэк options().barSpacing, кламп 0..0.99, × TV_LWC_INTERVALS[t.interval].sec) — приёмник с МЕНЬШИМ ТФ ведёт перекрестие плавно по своим барам внутри бара отправителя, а не прыжками. Обнаружено в E2E: LWC генерирует subscribeCrosshairMove и для ПРОГРАММНОГО setCrosshairPosition, причём АСИНХРОННО (следующий кадр; проба: sync=0, async=4) — приёмник ретранслировал чужую снапнутую позицию обратно (эхо) и ДЁРГАЛ перекрестие отправителя (второй корень «перетягивает»; при одинаковых ТФ эхо сходилось и не зацикливалось, на разных — уводило перекрестие отправителя на бар приёмника); фикс: tvCxArmEcho — флаг t._cxEcho держится до ПОСЛЕ следующего кадра (rAF→setTimeout(0) + токен последнего arm + 120мс-подстраховка), подписка отправителя такие события молча пропускает (магнит/pinCross транслируют явно — не задеты). Второй слой: LWC реэмитирует «залипшее» программное перекрестие приёмника на каждом тике потока — подписка транслирует только при t._cxHover (host mousemove/mouseleave: указатель реально над графиком). (3) Цвет перекрестия: tvSettings.crossColor («» = палитра темы) — новый ряд «Перекрестие» в блоке «Цвета» диалога «Настройки графиков» (tvOpenSettingsDialog: инпут цвета + кнопка «по теме», dirty/reset-протокол как у остальных цветов), применяется в tvApplySettingsToAll, tvLwcOptions и tvApplyChartTheme (не стирается сменой темы), персист tv_settings через tvSaveSettings. Самотесты 274→276: v146_63(1) tvCxSinkBar floor (ровно бар/середина бара/граница/правее конца/левее начала/без данных/невалидное время) + сквозной tvCxMove (приёмник с барами получает время бара-контейнера, без баров — сырое); v146_63(2) настройка цвета (диалог: поля есть, значение по умолчанию = палитра, input → dirty, «Применить» → crossColor + applyOptions crosshair на макете графика + tv_settings, повторное открытие подхватывает значение, «по теме» → сброс в палитру). --><!-- v146_62: СИНХРОНИЗАЦИЯ ПЕРЕКРЕСТИЯ В ЛИНК-ГРУППАХ (пользователь: «Надо сделать синхронизацию перекрестия. Отключать включать в линковке чтобы включать там где она нужна»). У каждой плитки СВОЙ выключатель в меню линковки (цепь в шапке) — строка «Синхронизация перекрестия», выкл по умолчанию. Включённый график транслирует позицию перекрестия (время+цена) другим ВКЛЮЧЁННЫМ графикам ПЕРЕСЕКАЮЩИХСЯ линк-групп и сам показывает чужое (группа «T» «Следит за кликами» в синхронизации не участвует — она про раздачу тикера). Каналы трансляции: (1) chart.subscribeCrosshairMove — обычное движение мыши и уход с графика (уход = очистка чужого перекрестия); (2) магнит (v146_51, host mousemove) — прилипшая OHLC-позиция; (3) вооружённый инструмент рисования — pinCross/unpinCross (перекрестие живёт и при инструменте); (4) tvDestroyChart — принудительная очистка получателей при закрытии/пересоздании графика. Получатель ставит перекрестие через chart.setCrosshairPosition(цена, время, своя серия) — LWC НЕ генерирует из этого crosshairMove, петли нет. Пересечение групп = tvCxGroupsOf(a)∩tvCxGroupsOf(b) (без «T»). Персист: tv_tiles cx:0/1 (tvPersist + tvTileFromStored — маппинг хранилище→модель вынесен из tvInit в функцию, точка одна). UI: tvBuildLinkMenu для плиток — секция «Перекрестие · клик — вкл/выкл» + строка data-lcx; делегат tvWireLinkMenu → tvCxToggleTile (тоггл + снятие чужого/своего вклада + тост + tvPersist). Самотесты 272→274: v146_62(1) хаб tvCxMove (пересечение групп, gate src/receiver, очистка, force), v146_62(2) tvTileFromStored (cx из хранилища) + меню (строка, тоггл, tvPersist cx:1) + проводки (tvCreateChartForTile/tvSetupDraw/tvDestroyChart содержат tvCxMove). --><!-- v146_61: ВКЛАДКИ ГРУППЫ — В ШАПКЕ ВИДЖЕТА, БЕЗ ОТДЕЛЬНОЙ ПОЛОСЫ (пользователь: «Когда вставляешь один виджет в другой по середине можно сделать так чтобы не было отдельных вкладок от шапки?»). Прежняя механика (v146_36/40): при объединении броском в ЦЕНТР создавалась группа-вкладки и над виджетами рисовалась ОТДЕЛЬНАЯ парящая полоса .tv-ws-gtabs (30px, чипы + ⋮⋮-захваты ширины), а все участники вкладок сдвигались вниз на TV_WS_TABH (тело виджета = ячейка минус полоса) — получалось ДВА ряда: полоса вкладок + родная шапка виджета. Теперь: (1) раскладка tvWsDockLayoutNode для узла «t» отдаёт листьям ВСЮ ячейку (полосы нет, +30px тела), минимум высоты вкладок tvWsDockTreeMin — максимум детей БЕЗ +TV_WS_TABH; (2) новая tvWsHeadTabsApply (вызывается из tvWsDockApplyGeom вместо tvWsDockRenderStrips) снимает все .tv-ws-headtabs группы и вшивает строку чипов .tv-ws-headtabs в шапку АКТИВНОГО участника — сразу после «хвата» (.tv-ws-grip) в .tv-tile-bar или .tv-ws-tabs-bar; чипы переезжают в шапку нового активного при переключении вкладки; заголовок чипа — tvWsWidgetTitle (тикер · ТФ / «Тикеры»), следует за сменой символа через tvWsDockChipsSync; (3) клик по чипу — тот же делегат wsWidgetClick [data-gtab], но gid берётся из data-gid чипа, а узел вкладок ищется tvWsDockTabNodeOf по uid АКТИВНОГО виджета (шапка принадлежит активному, _node-ссылки больше нет); (4) осиротевшие чипы расформированной группы снимает sweep в tvWsGroupSyncButtons; (5) CSS: .tv-ws-gtabs/.tv-ws-wgrip удалены, .tv-ws-headtabs/.tv-ws-gtab стилизованы под шапку (фон-подсветка активного вместо подчёркивания, max-width:46% + ellipsis при многих вкладках). Мёртвые ссылки на .tv-ws-gtabs в коде (панорама/подъём/переезд полосы/⋮⋮-захваты) не мешают — элементов нет. Группу целиком по-прежнему сворачивает ⌃ (col на группу), ширина группы тянется штатными ручками крайних участников (inf.x=group, v146_60-фикс). Самотесты 270→272: обновлены v146_36 (CSS-класс headtabs; вкладки отдают ячейку целиком), v146_38 (минимум вкладок без полосы), v146_47(2) (полос в DOM нет — visibility виджетов через .tv-ws-zone-off); +2 новых v146_61(1)/(2): чипы в шапке активного + переезд при переключении + tvWsDockTabNodeOf во вложенном дереве; orphan-sweep + CSS (headtabs есть, gtabs нет). --><!-- v146_60: ФИКС «ГРУППА НЕ РАСТЯГИВАЕТСЯ ВПРАВО» (пользователь: «Баг, при растягивании группы в право не растягивается»). Регрессия v146_48 («край группы — не правее экрана»): в ОБЕИХ точках растяжения правого края докинг-группы — (1) grip ⋮⋮ полосы вкладок (tvWsGroupGripDrag, mode=group, side=e) и (2) ресайз правого края через ручку крайнего участника (tvWsDockResizeLive, inf.x=group, dir с e) — кламп нового правого края был записан как min(wx, vw − G.x) вместо min(wx, vw). wx и rx48 — АБСОЛЮТНЫЕ мировые координаты края (z=1, x=0 с v146_43), а G.w вычислялась ниже как rx48 − G.x: вычитание G.x в клампе — двойной учёт левого края группы. Следствие: у любой группы не у левого края экрана (G.x>0) максимум правого края замораживался на vw − G.x − G.x = vw − 2·G.x; при G.x=480/vw=1600/ш=640 тяга вправо вообще не меняла ширину («не растягивается»), при G.x=700 — группа РЕЗКО УСАЖИВАЛАСЬ до минимума (640→600) при попытке потянуть вправо. Эталон семантики — tvWsGrowToViewport (v146_50): G.w = vw − G.x. Фикс: кламп rx48 = min(wx, vw) в обоих местах (правый край ≤ ширины полотна; левый/нижний края и ApplyGeom-клампы без изменений). Самотесты 268→270: v146_60(1) — grip группы при G.x>0 растягивает правый край ровно до края экрана (2200→vw), частичная тяга следует за курсором (1300), левый край от 0; v146_60(2) — ресайз правого края через ручку участника (dir e/se, inf.x=group) растягивает так же (герметично: фейковая группа + monkey-patch tvWsWsViewport, восстановление в finally). --><!-- v146_59: СВЁРНУТЫЕ ВИДЖЕТЫ ИСКЛЮЧЕНЫ ИЗ ПРИКРЕПЛЕНИЯ (пользователь: «После сворачивания активно остается прикрепление к свёрнутым виджетам, надо убрать»). v146_58 скрывает свёрнутый виджет через display:none, но модель хранит ПОЛНУЮ геометрию — и оба механизма прикрепления продолжали её видеть: (1) tvWsSnapTargets (магнитные направляющие при переносе/ресайзе) брала линии-кандидаты у ВСЕХ плиток/«Тикеров»/докинг-групп, включая невидимые — перетаскиваемое окно «прилипало» к пустому месту, где стояло убранное окно; (2) tvWsDropHit (подсветка цели объединения при переносе) ловила курсор «невидимой зоной» свёрнутого виджета — перенос в пустой угол объединял окно с невидимым соседом. Фикс: оба механизма фильтруют кандидатов через tvWsColVisualOf (свой col-флаг ИЛИ col всей группы) — свёрнутые плитки/«Тикеры» не дают магнитных линий и не становятся целью объединения; свёрнутая группа (G.col) исключена из целей магнита целиком. Зоны НЕ тронуты (tvWsZoneEnter сознательно разворачивает свёрнутые зоны на входе и возвращает col на выходе — v146_45/48). Самотесты 266→268: v146_59(1) — tvWsSnapTargets не отдаёт линий свёрнутых плитки/«Тикеров»/группы, после разворота линии возвращаются (герметично, на пустых моделях); v146_59(2) — tvWsDropHit не выбирает свёрнутый виджет целью объединения (нет tvWsDrop/подсветки), развёрнутый — выбирает (monkey-patch tvWsWidgetElOf + фейковый tvWsDrag, всё восстановлено в finally). -->
 <!-- v146_58: (1) СВОРАЧИВАНИЕ ВИДЖЕТОВ = ПОЛНОЕ УБРАНИЕ С ПОЛОТНА (пользователь: «Сворачивание виджетов надо чтобы полностью убирались с рабочего пространства, появлялась кнопка восстановить»): кнопка ⌃ в шапке больше не сжимает виджет в полоску-шапку 33/35px — он ПОЛНОСТЬЮ скрывается (.tv-ws-w.tv-ws-col{display:none!important}), модель (ws/x/y/w/h, прямоугольник группы) по-прежнему хранит полную геометрию, col-флаги персистятся как раньше (tv_tiles/tv_ws_side/tv_ws_dock/tv_ws_stash). Низ контента в tvWsScrollMetrics считается БЕЗ скрытых виджетов (прокрутка не ловит воздух). НОВАЯ ПАРЯЩАЯ КНОПКА «Восстановить» (#tvWsRestore, v146_58): пилюля по центру внизу полотна (золото акцента, blur, стиль .tv-ws-navbtn), появляется, когда скрыт хотя бы один виджет/группа (свёрнутая группа = одно окно, бейдж-счётчик от 2+), клик — tvWsRestoreAll возвращает ВСЁ сразу и кнопка исчезает; в зонах прячется (там свой стек стрелок), после выхода из зон возвращается; создаётся один раз в tvWsRestoreInit (вызов рядом с tvWsNavInit в tvWsWire), синк — из tvWsGroupSyncButtons (12 точек изменения состояния свёртывания + рендер + вход/выход зон). Тексты: тосты «убран с полотна — кнопка „Восстановить“ вернёт», «Восстановлено окон: N»; подсказка ⌃ «Убрать с полотна — вернёт кнопка „Восстановить“ внизу». Самотесты 263→266: v146_45(1)/(4) переписаны под новую семантику (display:none!important + opacity:1 у .on; скрытые не входят в низ контента), +3 новых v146_58 (кнопка создаётся один раз + CSS; tvWsRestoreAll возвращает всё — группа/«Тикеры»/плитка, счётчик «группа=одно окно»; синк .on/бейдж/скрытие в зонах — герметично к реальному состоянию страницы). (2) ВЫРАВНИВАНИЕ ТЕКСТА ЛИЦЕНЗИИ (пользователь: «выровнять …по отношению к названию Crypto Terminal»): базовая линия .nav-lic теперь СОВПАДАЕТ с базовой линией «CryptoTerminal» (.nav-brand align-items:baseline — было center, подпись висела на ~4px выше базовой линии имени; .nav-brand svg{align-self:center} — логотип остаётся по центру строки); попутно подпись показывается ЦЕЛИКОМ с 1600px: font-size .66→.6rem (текст 356→323px), max-width:min(360px,calc(50vw − 465px)) вместо min(355px,50vw − 480px) — на 1600 зазор до вкладок 28px без усечения (было «использовани…»), на 1536/1440/1280 показывается больше текста до многоточия (зазор ровно 16px), ≤1279px и ≤640px — скрыта как раньше. Верификация: базовые линии совпадают (имя низ 43 / подпись низ 40 при шрифтах 20/9.6px), svg центр y=30 в шапке 60px; node --check 9/9; консоль 0 ошибок; ctSelfTest 266/266 (в т.ч. автозапуск #selftest — фикс v146_57 жив); reload-персистентность скрытого состояния + кнопка; в зонах кнопка прячется/возвращается; светлая тема и мобильная колонка не задеты. -->
 <!-- v146_57: ПОЛНЫЙ АУДИТ КОДА + ФИКС. Проверено: синтаксис 9/9 inline-скриптов (node --check); CSS — 11 блоков, баланс скобок; HTML — реальных дублей id нет (tvDrawMoreBtn — паттерн «рендер-заменяет», остальные совпадения — JS-шаблоны); все getElementById-цели существуют статически, либо создаются динамически с null-guard, либо это негативные ассерты самотестов; покрытие делегатов — все 14 data-act + 4 data-wsact обрабатываются; setInterval — все 12 точек с guard/самоочисткой/сбросом; var(--text) в CSS не используется (класс бага «невидимый текст в светлых темах» вычищен); рантайм — 0 ошибок: загрузка, все 4 секции, добавление виджетов, цикл всех тем, reload-персистентность, меню ТФ/рисования, панель «Настройки», экспорт бэкапа (ver/groups/ключи). ИСПРАВЛЕН единственный найденный дефект: краш автозапуска самотестов по хэшу #selftest — «ReferenceError: absSrcPriceOfKMulti is not defined»: setTimeout(0) из script #3 срабатывал до исполнения script #7 (парсер HTML уступает event loop между блоками); теперь автопрогон ждёт window load (или идёт сразу, если документ уже complete) → «ctSelfTest: 263/263 passed ✔» в консоли без ошибок. -->
 <!-- v146_56: ПРОВЕРКА «СОХРАНЯЕТСЯ ЛИ ВСЁ В РЕЗЕРВНОЙ КОПИИ» (пользователь: настройки графиков, расположение и т.д.). Проверено: ctBackupExport собирает ВСЕ ключи localStorage с префиксами ct_/abs_/natr_/cai_/vataga_/tv_ — а ВСЕ ключи приложения используют только эти префиксы (полный скан setItem/ctSafeSetItem по коду: 44 литеральных ключа, динамических записей нет; sessionStorage/indexedDB/cookies не используются). Браузерный roundtrip: созданы виджеты графиков и «Тикеров» → экспорт-реплика 17/17 ключей → полная очистка localStorage → импорт → перезагрузка: тайлы (символ BINANCE:BTCUSDT, ТФ 60, индикаторы, линки), расположение и размеры виджетов (x,y,w,h), tv_settings (сетка/объёмы/сессии/цвета), конструктор фильтров abs_filters (20K+), активная секция — всё восстановлено. Избранное/пины/цвета (abs_favorites, abs_fav_colors), рисунки (tv_drawings), группы докинга (tv_ws_dock), сворачивание (tv_ws_stash) — те же префиксы, входят. Прозрачность: (1) в файл бэкапа добавлены ver (версия из title) и groups — разбивка количества ключей по разделам (графики/скринер/общие/часы/CryptoAI/Vataga); (2) тосты экспорта и импорта показывают эту разбивку; (3) подсказка секции «Резервная копия» перечисляет состав. Кэш сканов abs_scan_cache_v1 сознательно НЕ исключён (в отличие от пресетов v102): резервная копия = всё. -->
@@ -769,7 +769,7 @@ let tvInitialized = !1,
     tvFullscreenActive = !1,
     tvSidebarHidden = !1,
     tvDrawings = {},
-    tvSettings = { rightOffset: 5, barSpacing: 7, histLimit: 200, scaleMarginsTop: 0.08, scaleMarginsBottom: 0.18, gridVisible: !0, priceLineVisible: !0, candleTimerVisible: !0, showVolume: !0, chartBg: "", chartTextColor: "", upColor: "", dnColor: "", sessionLines: !0, sessionLineColor: "", timerColor: "", drawSync: !0 };
+    tvSettings = { rightOffset: 5, barSpacing: 7, histLimit: 200, scaleMarginsTop: 0.08, scaleMarginsBottom: 0.18, gridVisible: !0, priceLineVisible: !0, candleTimerVisible: !0, showVolume: !0, chartBg: "", chartTextColor: "", upColor: "", dnColor: "", sessionLines: !0, sessionLineColor: "", timerColor: "", drawSync: !0, crossColor: "" };
 
 const TV_FEED = {
     ws: null,
@@ -1405,7 +1405,7 @@ function tvInit() {
     tvTiles = [];
     // v146_32: ws-геометрия плитки теперь ВОССТАНАВЛИВАЕТСЯ из хранилища (в v146_31
     // терялась — после перезагрузки виджеты сбрасывались в каскад по умолчанию)
-    initialTiles.forEach((t, ti) => tvTiles.push({id: tvNextTileId++, uid: ("string" == typeof t.uid && t.uid) ? t.uid : "k" + ti, symbol: t.symbol || "BINANCE:BTCUSDT", interval: t.interval || "60", loaded: !1, el: null, ind: t.ind || null, lnk: tvLinkSanitize(t.lnk), wsg: (+t.g > 0) ? +t.g : null, col: !!t.col, ws: (t.ws && isFinite(+t.ws.x) && isFinite(+t.ws.y) && isFinite(+t.ws.w) && isFinite(+t.ws.h)) ? {x: +t.ws.x, y: +t.ws.y, w: +t.ws.w, h: +t.ws.h} : null})); // v131: линк-группы плитки из хранилища; v146_32: + позиция на полотне; v146_34: + группа виджета; v146_36: + uid (стабильный ключ докинга); v146_45: + col (свёрнут)
+    initialTiles.forEach((t, ti) => tvTiles.push(tvTileFromStored(t, ti))); // v131: линк-группы плитки из хранилища; v146_32: + позиция на полотне; v146_34: + группа виджета; v146_36: + uid (стабильный ключ докинга); v146_45: + col (свёрнут); v146_62: сборка в tvTileFromStored, + cx (синхронизация перекрестия)
     try { tvWsGroupsPrune() } catch (eG0) {} // v146_34: одиночные «группы» из хранилища растворяются
     // v146_32: плитки, усечённые сетками в прошлых версиях, ОДНОКРАТНО возвращаются
     // на полотно; в ws-only режиме сеток нет — stash дренируется, чтобы чужеродный
@@ -1456,6 +1456,7 @@ function tvApplySettingsToAll() {
                         textColor: s.chartTextColor || tt.muted
                     },
                     grid: { vertLines: { visible: s.gridVisible }, horzLines: { visible: s.gridVisible } },
+                    crosshair: { vertLine: { color: s.crossColor || tt.cross, labelBackgroundColor: tt.accent }, horzLine: { color: s.crossColor || tt.cross, labelBackgroundColor: tt.accent } }, // v146_63: пользовательский цвет перекрестия
                     timeScale: { rightOffset: s.rightOffset, barSpacing: s.barSpacing },
                     rightPriceScale: { scaleMargins: { top: s.scaleMarginsTop, bottom: s.scaleMarginsBottom } }
                 });
@@ -1520,6 +1521,7 @@ function tvOpenSettingsDialog() {
         '<div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:10px;color:var(--muted);font-weight:600">Свечи вниз</label><div style="display:flex;align-items:center;gap:6px"><input type="color" id="tvSetDnColor" value="' + (tvSettings.dnColor || tvThemeColors().dn) + '" style="width:32px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:transparent"><button type="button" id="tvSetDnReset" style="font-size:10px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer">по теме</button></div></div>' +
         '<div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:10px;color:var(--muted);font-weight:600">Начало сессии</label><div style="display:flex;align-items:center;gap:6px"><input type="color" id="tvSetSessColor" value="' + (tvSettings.sessionLineColor || tvThemeColors().cross) + '" style="width:32px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:transparent"><button type="button" id="tvSetSessReset" style="font-size:10px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer">по теме</button></div></div>' +
         '<div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:10px;color:var(--muted);font-weight:600">Таймер свечи</label><div style="display:flex;align-items:center;gap:6px"><input type="color" id="tvSetTimerColor" value="' + (tvSettings.timerColor || tvThemeColors().muted) + '" style="width:32px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:transparent"><button type="button" id="tvSetTimerReset" style="font-size:10px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer">по теме</button></div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:10px;color:var(--muted);font-weight:600">Перекрестие</label><div style="display:flex;align-items:center;gap:6px"><input type="color" id="tvSetCrossColor" value="' + (tvSettings.crossColor || tvThemeColors().cross) + '" style="width:32px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:transparent"><button type="button" id="tvSetCrossReset" style="font-size:10px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer">по теме</button></div></div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="tvSetReset" style="flex:1;height:36px;border-radius:9px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;font-family:Space Grotesk,sans-serif">Сбросить</button><button type="button" id="tvSetApply" style="flex:1.5;height:36px;border-radius:9px;background:var(--accent);color:#14181c;border:none;cursor:pointer;font-size:12px;font-weight:700;font-family:Space Grotesk,sans-serif">Применить</button></div>' +
         '<div style="font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:2px">Применяется ко всем графикам. Пустой цвет = палитра текущей темы (кнопка «по теме»). Настройки сохраняются между сессиями.</div>' +
@@ -1548,6 +1550,8 @@ function tvOpenSettingsDialog() {
         const scReset = modal.querySelector("#tvSetSessReset");
         const tmInp = modal.querySelector("#tvSetTimerColor");
         const tmReset = modal.querySelector("#tvSetTimerReset");
+        const crInp = modal.querySelector("#tvSetCrossColor");
+        const crReset = modal.querySelector("#tvSetCrossReset");
         const applyBtn = modal.querySelector("#tvSetApply");
         const resetBtn = modal.querySelector("#tvSetReset");
         // v146_16: существующие overrides помечаем «изменёнными», чтобы «Применить»
@@ -1558,6 +1562,7 @@ function tvOpenSettingsDialog() {
         if (dnInp && tvSettings.dnColor) dnInp.dataset.dirty = "1";
         if (scInp && tvSettings.sessionLineColor) scInp.dataset.dirty = "1";
         if (tmInp && tvSettings.timerColor) tmInp.dataset.dirty = "1";
+        if (crInp && tvSettings.crossColor) crInp.dataset.dirty = "1";
         roInp && roInp.addEventListener("input", () => { roVal.textContent = roInp.value });
         bsInp && bsInp.addEventListener("input", () => { bsVal.textContent = bsInp.value });
         hlInp && hlInp.addEventListener("input", () => { hlVal.textContent = hlInp.value });
@@ -1567,6 +1572,7 @@ function tvOpenSettingsDialog() {
         dnReset && dnReset.addEventListener("click", () => { dnInp.value = tvThemeColors().dn; dnInp.dataset.reset = "1" });
         scReset && scReset.addEventListener("click", () => { scInp.value = tvThemeColors().cross; scInp.dataset.reset = "1" });
         tmReset && tmReset.addEventListener("click", () => { tmInp.value = tvThemeColors().muted; tmInp.dataset.reset = "1" });
+        crReset && crReset.addEventListener("click", () => { crInp.value = tvThemeColors().cross; crInp.dataset.reset = "1" }); // v146_63
         // Ручной выбор цвета после нажатия «по теме» снимает флаг сброса —
         // иначе выбранное значение молча игнорировалось при «Применить»
         bgInp && bgInp.addEventListener("input", () => { delete bgInp.dataset.reset; bgInp.dataset.dirty = "1" });
@@ -1575,8 +1581,9 @@ function tvOpenSettingsDialog() {
         dnInp && dnInp.addEventListener("input", () => { delete dnInp.dataset.reset; dnInp.dataset.dirty = "1" });
         scInp && scInp.addEventListener("input", () => { delete scInp.dataset.reset; scInp.dataset.dirty = "1" });
         tmInp && tmInp.addEventListener("input", () => { delete tmInp.dataset.reset; tmInp.dataset.dirty = "1" });
+        crInp && crInp.addEventListener("input", () => { delete crInp.dataset.reset; crInp.dataset.dirty = "1" }); // v146_63
         resetBtn && resetBtn.addEventListener("click", () => {
-            tvSettings = { rightOffset: 5, barSpacing: 7, histLimit: 200, scaleMarginsTop: 0.08, scaleMarginsBottom: 0.18, gridVisible: !0, priceLineVisible: !0, candleTimerVisible: !0, showVolume: !0, chartBg: "", chartTextColor: "", upColor: "", dnColor: "", sessionLines: !0, sessionLineColor: "", timerColor: "", drawSync: !0 };
+            tvSettings = { rightOffset: 5, barSpacing: 7, histLimit: 200, scaleMarginsTop: 0.08, scaleMarginsBottom: 0.18, gridVisible: !0, priceLineVisible: !0, candleTimerVisible: !0, showVolume: !0, chartBg: "", chartTextColor: "", upColor: "", dnColor: "", sessionLines: !0, sessionLineColor: "", timerColor: "", drawSync: !0, crossColor: "" };
             tvSaveSettings();
             tvApplySettingsToAll();
             tvCloseModal(modal);
@@ -1599,6 +1606,7 @@ function tvOpenSettingsDialog() {
             tvSettings.sessionLines = slChk ? slChk.checked : !0;
             tvSettings.sessionLineColor = (scInp && !scInp.dataset.reset) ? (scInp.dataset.dirty ? scInp.value : "") : "";
             tvSettings.timerColor = (tmInp && !tmInp.dataset.reset) ? (tmInp.dataset.dirty ? tmInp.value : "") : "";
+            tvSettings.crossColor = (crInp && !crInp.dataset.reset) ? (crInp.dataset.dirty ? crInp.value : "") : ""; // v146_63
             tvSaveSettings();
             tvApplySettingsToAll();
             try { tvTiles.forEach(function(t) { if (t._dvd) t._dvd.scheduleRender() }) } catch (e) {}
@@ -1828,8 +1836,8 @@ function tvLwcOptions(t) {
         grid: { vertLines: { color: tt.grid, visible: s.gridVisible }, horzLines: { color: tt.grid, visible: s.gridVisible } },
         crosshair: {
             mode: 0,
-            vertLine: { color: tt.cross, labelBackgroundColor: tt.accent },
-            horzLine: { color: tt.cross, labelBackgroundColor: tt.accent },
+            vertLine: { color: s.crossColor || tt.cross, labelBackgroundColor: tt.accent }, // v146_63: пользовательский цвет перекрестия
+            horzLine: { color: s.crossColor || tt.cross, labelBackgroundColor: tt.accent },
         },
         rightPriceScale: { borderColor: tt.border, scaleMargins: { top: s.scaleMarginsTop, bottom: s.scaleMarginsBottom }, entireTextOnly: true },
         timeScale: {
@@ -1873,6 +1881,46 @@ function tvCreateChartForTile(t) {
         // без линии значений, с шильдиком на шкале)
         t._chart = chart;
         t._series = series;
+        /* v146_62: синхронизация перекрестия — обычное движение мыши по графику.
+           Уход с графика (time и point не заданы) = очистка чужого перекрестия
+           на получателях. Цена — close серии под курсором (фолбэк — coordinateToPrice). */
+        try {
+            chart.subscribeCrosshairMove(function(param) {
+                if (t._cxEcho) return; // v146_63: это событие порождено программной установкой ЧУЖОГО перекрестия (эхо) — не ретранслируем
+                if (!param || (null == param.time && !param.point)) { try { tvCxMove(t, null) } catch (eC0) {} return }
+                if (!t._cxHover) return; // v146_63: указатель не над этим графиком — его перекрестие рисуем мы программно (чужая трансляция): тик-реэмиссии LWC не ретранслируем, иначе приёмник перетягивал перекрестие отправителя на свой бар
+                let px = null;
+                try {
+                    const d = param.seriesData ? param.seriesData.get(series) : null;
+                    px = (d && null != d.close) ? d.close : (param.point ? chart.priceScale("right").coordinateToPrice(param.point.y) : null)
+                } catch (eP) {}
+                if (null == param.time || null == px || !isFinite(px)) { try { tvCxMove(t, null) } catch (eC1) {} return }
+                let cxTm = null; // v146_63: секунды + внутри-барная доля курсора — приёмник с МЕНЬШИМ ТФ ведёт перекрестие плавно по своим барам внутри бара отправителя, а не прыжками в ТФ отправителя
+                try {
+                    cxTm = tvdBarTimeToSec(param.time);
+                    if (param.point && isFinite(cxTm)) {
+                        const rtC = t._rawTimes || [], biC = rtC.indexOf(cxTm);
+                        if (biC >= 0) {
+                            const tsC = chart.timeScale();
+                            const bxC = tsC.logicalToCoordinate(biC);
+                            let spC = 0;
+                            if (null != bxC) { const bx2C = tsC.logicalToCoordinate(biC + 1); spC = null != bx2C ? (bx2C - bxC) : 0 }
+                            if (!(spC > 0)) { try { spC = tsC.options().barSpacing || 0 } catch (eO) {} }
+                            if (null != bxC && spC > 0) {
+                                let frC = (param.point.x - bxC) / spC;
+                                if (isFinite(frC)) {
+                                    frC = Math.max(0, Math.min(0.99, frC));
+                                    const dI = TV_LWC_INTERVALS[t.interval];
+                                    const isecC = (dI && dI.sec) || 0;
+                                    if (isecC > 0) cxTm = cxTm + Math.round(frC * isecC)
+                                }
+                            }
+                        }
+                    }
+                } catch (eFr) { cxTm = null }
+                try { tvCxMove(t, { time: null != cxTm && isFinite(cxTm) ? cxTm : param.time, price: px }) } catch (eC2) {}
+            })
+        } catch (eCx) {}
         try {
             const ctEl = document.createElement('div');
             ctEl.className = 'tv-candle-timer';
@@ -1919,8 +1967,8 @@ function tvApplyChartTheme(t) {
             layout: { background: { type: 'solid', color: tt.bg }, textColor: tt.muted, panes: { separatorColor: tt.paneSep, separatorHoverColor: tt.paneSepHover } },
             grid: { vertLines: { color: tt.grid }, horzLines: { color: tt.grid } },
             crosshair: {
-                vertLine: { color: tt.cross, labelBackgroundColor: tt.accent },
-                horzLine: { color: tt.cross, labelBackgroundColor: tt.accent },
+                vertLine: { color: tvSettings.crossColor || tt.cross, labelBackgroundColor: tt.accent }, // v146_63: перекрашивание темы не стирает пользовательский цвет
+                horzLine: { color: tvSettings.crossColor || tt.cross, labelBackgroundColor: tt.accent },
             },
             rightPriceScale: { borderColor: tt.border },
             timeScale: { borderColor: tt.border },
@@ -1943,7 +1991,8 @@ function tvDestroyChart(t) {
     if (t._zwrapRo) { try { t._zwrapRo.disconnect() } catch (eZr) {} t._zwrapRo = null } // v146_37
     t._zwrapFs = null; // v146_37: кэш fontSize старого графика недействителен
     if ("function" == typeof tvdDestroy) { try { tvdDestroy(t) } catch (e) {} }
-    if (t._chart) { try { t._chart.remove() } catch (e) {} t._chart = null }
+    if (t._chart) { try { t._chart.remove() } catch (e) {} t._chart = null } // v146_62: перед обнулением получателям ушла очистка (tvCxMove force ниже)
+    try { tvCxMove(t, null, !0) } catch (e) {} // v146_62: график закрыт/пересоздаётся — снять показанное нами перекрестие с других
     t._series = null;
     t._host = null;
     t._zwrap = null; // v146_37: обёртка живёт вместе с хостом (DOM пересобирается) — пересоздаст tvZwrapEnsure
@@ -3121,6 +3170,7 @@ function tvWsGroupsPrune() { // группа из одного участник�
     tvWsSide.forEach(w => { if (w.g && cnt[w.g] < 2) w.g = null })
 }
 function tvWsGroupSyncButtons() { // ✂-кнопка видима только у сгруппированных виджетов; v146_41: + кнопка разворота ГРУППЫ
+    document.querySelectorAll(".tv-ws-headtabs").forEach(rw => { const g = +rw.getAttribute("data-gid"); if (!isFinite(g) || !tvWsDockMap[g]) rw.remove() }); // v146_61: чипы расформированной группы — долой
     document.querySelectorAll(".tv-ws-w").forEach(wEl => {
         const sid = wEl.getAttribute("data-wsid");
         const id = sid ? +String(sid).slice(1) : +wEl.getAttribute("data-wstile");
@@ -3450,7 +3500,7 @@ function tvWsDockTreeMin(node, axis) { // минимум прямоугольн�
     if ("t" === node.t) {
         let m = 60;
         node.c.forEach(u => { m = Math.max(m, tvWsLeafMinOf(u, axis)) });
-        return "h" === axis ? m + TV_WS_TABH : m
+        return m // v146_61: полосы вкладок больше нет — максимум детей без +TV_WS_TABH
     }
     if ("s" === node.t) {
         const a = tvWsDockTreeMin(node.a, axis), b = tvWsDockTreeMin(node.b, axis);
@@ -3548,10 +3598,8 @@ function tvWsDockLayoutNode(node, x, y, w, h, out, strips) {
         }
         return
     }
-    if ("t" === node.t) { // вкладки: полоса сверху, все листья — в теле ячейки (виден активный)
-        strips.push({node: node, x: Math.round(x), y: Math.round(y), w: Math.round(w)});
-        const bh = Math.max(80, h - TV_WS_TABH);
-        node.c.forEach(u => { out[u] = {x: Math.round(x), y: Math.round(y + TV_WS_TABH), w: Math.round(w), h: Math.round(bh)} })
+    if ("t" === node.t) { // v146_61: вкладки БЕЗ отдельной полосы — листья занимают ВСЮ ячейку (виден активный), чипы вкладок живут в шапке активного участника
+        node.c.forEach(u => { out[u] = {x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h)} })
     }
 }
 function tvWsDockRectsOf(gid) {
@@ -3589,29 +3637,38 @@ function tvWsDockApplyGeom(gid) {
         if ("t" !== n.t) return;
         n.c.forEach((u, i) => { const k = tvWsKeyOfUid(u), el = k && tvWsWidgetElOf(k); el && (el.style.display = i === n.i ? "" : "none") })
     });
-    tvWsDockRenderStrips(gid, R)
+    tvWsHeadTabsApply(gid, R)
 }
 function tvWsDockStripRemove(gid) { document.querySelectorAll('.tv-ws-gtabs[data-gid="' + gid + '"]').forEach(el => el.remove()) }
-function tvWsDockRenderStrips(gid, R) {
-    const world = document.getElementById("tvWsWorld");
-    if (!world) return;
-    tvWsDockStripRemove(gid);
-    (R.strips || []).forEach(s => {
-        const el = document.createElement("div");
-        el.className = "tv-ws-gtabs";
-        el.setAttribute("data-gid", String(gid));
-        el._node = s.node; // узел вкладок — для кликов по чипам
-        el.style.left = Math.round(s.x) + "px"; el.style.top = Math.round(s.y) + "px"; el.style.width = Math.round(s.w) + "px";
-        el.style.zIndex = "5000";
-        // v146_40: захваты ширины (⋮⋮) по обоим краям полосы — тянут край группы или внутреннюю границу сплита (класс .tv-ws-wgrip — штатный «хват» шапки виджета называется .tv-ws-grip)
-        el.innerHTML = '<span class="tv-ws-wgrip" data-gside="w" title="Потяните — ширина группы влево (или граница сплита)"></span>' + s.node.c.map((u, i) => '<button type="button" class="tv-ws-gtab' + (i === s.node.i ? " on" : "") + '" data-gtab="' + i + '" title="Показать эту вкладку группы">' + escapeHtml(tvWsWidgetTitle(u)) + "</button>").join("") + '<span class="tv-ws-wgrip" data-gside="e" title="Потяните — ширина группы вправо (или граница сплита)"></span>';
-        world.appendChild(el)
+function tvWsDockTabNodeOf(node, uid) { // v146_61: узел вкладок, содержащий uid (чипы живут в шапке активного участника — нужен для клика по чипу)
+    if (!node) return null;
+    if ("t" === node.t) return -1 !== node.c.indexOf(uid) ? node : null;
+    if ("s" === node.t) return tvWsDockTabNodeOf(node.a, uid) || tvWsDockTabNodeOf(node.b, uid);
+    return null
+}
+function tvWsHeadTabsApply(gid, R) { // v146_61: чипы вкладок группы — В ШАПКЕ активного участника (отдельная полоса .tv-ws-gtabs упразднена)
+    document.querySelectorAll('.tv-ws-headtabs[data-gid="' + gid + '"]').forEach(el => el.remove());
+    if (!R || !R.G) return;
+    tvWsDockEachNode(R.G.root, n => {
+        if ("t" !== n.t) return;
+        const active = n.c[n.i | 0] || n.c[0];
+        if (!active) return;
+        const k = tvWsKeyOfUid(active), el = k && tvWsWidgetElOf(k);
+        if (!el) return;
+        const bar = el.querySelector(".tv-tile-bar") || el.querySelector(".tv-ws-tabs-bar");
+        if (!bar) return;
+        const row = document.createElement("span");
+        row.className = "tv-ws-headtabs";
+        row.setAttribute("data-gid", String(gid));
+        row.innerHTML = n.c.map((u, i) => '<button type="button" class="tv-ws-gtab' + (i === (n.i | 0) ? " on" : "") + '" data-gtab="' + i + '" data-gid="' + gid + '" title="Показать эту вкладку группы">' + escapeHtml(tvWsWidgetTitle(u)) + "</button>").join("");
+        const grip = bar.querySelector(".tv-ws-grip");
+        grip ? grip.insertAdjacentElement("afterend", row) : bar.insertBefore(row, bar.firstChild)
     })
 }
 function tvWsDockChipsSync(t) { // заголовок чипа следует за тикером/ТФ плитки
     if (!t || !t.uid) return;
     const gid = Object.keys(tvWsDockMap).find(g => -1 !== tvWsDockLeaves(tvWsDockMap[g].root).indexOf(t.uid));
-    if (gid) { const R = tvWsDockRectsOf(+gid); R && tvWsDockRenderStrips(+gid, R) }
+    if (gid) { const R = tvWsDockRectsOf(+gid); R && tvWsHeadTabsApply(+gid, R) }
 }
 /* --- зоны броска: сторона — половина цели, центр — вкладка --- */
 function tvWsDockZoneRect(dir, c) { // прямоугольник зоны внутри ячейки цели
@@ -5126,9 +5183,14 @@ function tvWsWire() {
         const gt = ev.target.closest("[data-gtab]");
         if (gt) {
             ev.stopPropagation();
-            const wrap = gt.closest(".tv-ws-gtabs"), gid = wrap ? +wrap.getAttribute("data-gid") : 0;
-            const G = tvWsDockMap[gid], node = wrap ? wrap._node : null;
-            if (G && node && "t" === node.t) {
+            // v146_61: чипы живут в шапке активного участника — gid из data-gid чипа, узел вкладок ищется по uid активного виджета
+            const gid = +gt.getAttribute("data-gid"), G = isFinite(gid) ? tvWsDockMap[gid] : null;
+            const wEl = gt.closest(".tv-ws-w");
+            const sid61 = wEl ? wEl.getAttribute("data-wsid") : null;
+            const key61 = wEl ? (sid61 ? "s" + String(sid61).slice(1) : "c" + wEl.getAttribute("data-wstile")) : null;
+            const uid61 = key61 ? tvWsUidOfKey(key61) : null;
+            const node = (G && uid61) ? tvWsDockTabNodeOf(G.root, uid61) : null;
+            if (G && node) {
                 node.i = Math.max(0, Math.min(node.c.length - 1, +gt.getAttribute("data-gtab") || 0));
                 tvWsDockApplyGeom(gid);
                 tvWsDockPersist()
@@ -5670,12 +5732,76 @@ function tvLinkMiniDots(groups) {
 function tvLinkSanitize(a) {
     return Array.isArray(a) ? a.filter(g => TV_LINK_GROUPS.some(x => x.id === g)) : []
 }
+/* v146_62: сборка модели плитки из записи хранилища — вынесена из tvInit в одну
+   функцию (tvInit и самотесты используют ОДНУ точку; новый флаг cx — выключатель
+   синхронизации перекрестия в меню линковки) */
+function tvTileFromStored(t, ti) {
+    return {id: tvNextTileId++, uid: ("string" == typeof t.uid && t.uid) ? t.uid : "k" + ti, symbol: t.symbol || "BINANCE:BTCUSDT", interval: t.interval || "60", loaded: !1, el: null, ind: t.ind || null, lnk: tvLinkSanitize(t.lnk), wsg: (+t.g > 0) ? +t.g : null, col: !!t.col, cx: !!t.cx, ws: (t.ws && isFinite(+t.ws.x) && isFinite(+t.ws.y) && isFinite(+t.ws.w) && isFinite(+t.ws.h)) ? {x: +t.ws.x, y: +t.ws.y, w: +t.ws.w, h: +t.ws.h} : null}
+}
 function tvLinkGroupsOfTile(t) {
     return tvLinkSanitize(t && t.lnk)
 }
 function tvLinkGroupName(g) {
     const d = TV_LINK_GROUPS.find(x => x.id === g);
     return d ? ("T" === g ? "«Следит за кликами»" : "«" + d.name + "»") : String(g)
+}
+/* v146_62: синхронизация перекрестия — графики пересекающихся линк-групп показывают
+   перекрестие друг друга. У каждого графика СВОЙ выключатель t.cx (меню линковки,
+   «Синхронизация перекрестия», выкл по умолчанию): включённый график транслирует
+   свою позицию {time, price} и сам принимает чужую. Группа «T» («Следит за
+   кликами») в синхронизации НЕ участвует — она про раздачу тикера. */
+function tvCxGroupsOf(t) { // регулярные группы плитки (без «T»)
+    return tvLinkGroupsOfTile(t).filter(g => "T" !== g)
+}
+function tvCxSinkBar(t, time) { // v146_63: нативный time бара-КОНТЕЙНЕРА приёмника (последний бар с временем ≤ пришедшего; floor по _rawTimes). LWC на приёмнике маппит время в индекс бара через findNearest=true — без floor время с младшего ТФ убегало на следующий бар старшего уже на половине интервала. null — данных нет/время невалидно/левее начала: приёмнику уйдёт сырое время (как раньше)
+    if (!t || !t._bars || !t._rawTimes || !t._bars.length || t._bars.length !== t._rawTimes.length) return null;
+    let ts = null;
+    try { ts = tvdBarTimeToSec(time) } catch (e) {}
+    if (null == ts || !isFinite(ts)) return null;
+    const rt = t._rawTimes;
+    if (ts < rt[0]) return null;
+    let lo = 0, hi = rt.length - 1, ans = rt.length - 1;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (rt[mid] <= ts) { ans = mid; lo = mid + 1 } else hi = mid - 1 }
+    return t._bars[ans] && t._bars[ans].time
+}
+function tvCxArmEcho(b) { // v146_63: глушитель эха. LWC генерирует subscribeCrosshairMove ПОСЛЕ программного set АСИНХРОННО (следующий кадр — проверено пробой: sync=0, async>0), поэтому синхронного флага мало: держим флаг до ПОСЛЕ следующего кадра (rAF → setTimeout(0)); токен — снимает только последний arm (накопившиеся rAF от прежних set не снимают флаг нового). 120мс-подстраховка — на случай фоновой вкладки (rAF стоит)
+    b._cxEcho = !0;
+    const tok = b._cxEchoTok = (b._cxEchoTok || 0) + 1;
+    const clr = function () { if (tok === b._cxEchoTok) b._cxEcho = !1 };
+    try { requestAnimationFrame(function () { setTimeout(clr, 0) }) } catch (e) { setTimeout(clr, 40) }
+    setTimeout(clr, 120)
+}
+function tvCxMove(src, pos, force) { // pos: {time, price} | null; force — игнорировать src.cx (очистка при закрытии/выключении)
+    if (!force && !(src && src.cx)) return;
+    const gs = tvCxGroupsOf(src);
+    if (!gs.length) return;
+    tvTiles.forEach(b => {
+        if (b === src || !b.cx || !b._chart || !b._series) return;
+        let hit = !1;
+        try { hit = tvCxGroupsOf(b).some(g => -1 !== gs.indexOf(g)) } catch (e) {}
+        if (!hit) return;
+        try {
+            if (pos && null != pos.time && null != pos.price && isFinite(pos.price)) {
+                const bk = tvCxSinkBar(b, pos.time); // v146_63: бар-контейнер приёмника (floor) — перекрестие не убегает к следующему бару на половине интервала старшего ТФ
+                tvCxArmEcho(b); // v146_63: эхо LWC приходит асинхронно — держим флаг до следующего кадра
+                try { b._chart.setCrosshairPosition(pos.price, null != bk ? bk : pos.time, b._series) } catch (eSet) { b._cxEcho = !1 }
+            } else {
+                tvCxArmEcho(b);
+                try { b._chart.clearCrosshairPosition() } catch (eClr) { b._cxEcho = !1 }
+            }
+        } catch (e) {}
+    })
+}
+function tvCxToggleTile(tileId) {
+    const t = tvTiles.find(x => x.id === tileId);
+    if (!t) return;
+    t.cx = !t.cx;
+    if (!t.cx) { // выключили: убрать ЧУЖОЕ перекрестие с этого графика и ЕГО вклад в другие
+        try { if (t._chart) t._chart.clearCrosshairPosition() } catch (e) {}
+        try { tvCxMove(t, null, !0) } catch (e) {}
+    }
+    showToast("Синхронизация перекрестия: " + (t.cx ? "вкл" : "выкл"));
+    tvPersist()
 }
 /* Кнопка-цепь в шапке плитки: клик — выпадающий список групп; на кнопке
    мини-точки уже выбранных групп (состояние видно без открытия списка) */
@@ -5752,6 +5878,16 @@ function tvBuildLinkMenu() {
             '<span class="nm">' + g.name + '</span>' +
             '<span class="ht" style="color:' + (on ? "#0ecb81" : "inherit") + '">' + (on ? "вкл" : "выкл") + '</span></div>'
     });
+    /* v146_62: синхронизация перекрестия — только у плиток (у «Тикеров» графика нет).
+       СВОЙ выключатель у каждого графика: включайте только там, где нужна синхронизация. */
+    if (!side) {
+        const cxOn = !!(t && t.cx);
+        html += '<div class="tv-pop-cat-h">Перекрестие · клик — вкл/выкл</div>' +
+            '<div class="tv-pop-row' + (cxOn ? " cur" : "") + '" data-lcx="1">' +
+            '<span class="gl"><span class="tv-lnk-dot" style="--lc:#2f6feb"></span></span>' +
+            '<span class="nm">Синхронизация перекрестия</span>' +
+            '<span class="ht" style="color:' + (cxOn ? "#0ecb81" : "inherit") + '">' + (cxOn ? "вкл" : "выкл") + '</span></div>'
+    }
     /* v146_41→v146_42: включатели подсветки — только в меню «Тикеров», СВОИ у каждого
        (раньше были общие на всё приложение и в меню плиток тоже — включил на одном,
        включилось везде) */
@@ -5770,7 +5906,7 @@ function tvBuildLinkMenu() {
     }
     html += '<div class="tv-pop-note">' + (side
         ? "Клик по строке этого «Тикеров» разошлёт её тикер плиткам выбранных групп (можно несколько) — группы у каждого «Тикеров» свои. «Следит за кликами» выбирается на плитках — плитка с ним принимает тикер любого клика. Включатели подсветки выше действуют ТОЛЬКО на этот виджет — у остальных свои."
-        : "Клик по этой плитке разошлёт её тикер плиткам выбранных групп (можно несколько). «Следит за кликами» — плитка принимает тикер любого клика, графика или строки «Тикеров». Подсветка строк настраивается в меню линковки каждого «Тикеров» (у плиток её нет).") + '</div>';
+        : "Клик по этой плитке разошлёт её тикер плиткам выбранных групп (можно несколько). «Следит за кликами» — плитка принимает тикер любого клика, графика или строки «Тикеров». Подсветка строк настраивается в меню линковки каждого «Тикеров» (у плиток её нет). «Синхронизация перекрестия»: график с включённым выключателем показывает перекрестие, синхронное с движением мыши на других ВКЛЮЧЁННЫХ графиках его групп, — включайте только там, где нужно.") + '</div>';
     m.innerHTML = html
 }
 function tvHlToggle(tgt, k) { // v146_42: тоггл включателя подсветки ЦЕЛЕВОГО списка (tgt — как tvLinkMenuTarget)
@@ -5800,6 +5936,16 @@ function tvWireLinkMenu() {
             const k = lhl.getAttribute("data-lhl");
             if ("row" === k || "chart" === k) {
                 tvHlToggle(tvLinkMenuTarget, k);
+                tvBuildLinkMenu()
+            }
+            return
+        }
+        /* v146_62: синхронизация перекрестия — свой выключатель каждой плитки, список не закрываем */
+        const lcx = ev.target.closest("[data-lcx]");
+        if (lcx) {
+            ev.stopPropagation();
+            if (tvLinkMenuTarget && "tile" === tvLinkMenuTarget.type) {
+                tvCxToggleTile(tvLinkMenuTarget.id);
                 tvBuildLinkMenu()
             }
             return
@@ -6354,7 +6500,7 @@ function tvUpdateStatusbar() { // v146_34: нижняя панель-стату�
 function tvPersist() {
     try {
         // v146_31: ws — геометрия плитки на полотне «Пространства» (x/y/w/h)
-        ctSafeSetJSON("tv_tiles", tvTiles.map(t => ({uid: t.uid || null, symbol: t.symbol, interval: t.interval, ind: t._ind || null, lnk: tvLinkGroupsOfTile(t), g: t.wsg || null, col: t.col ? 1 : 0, ws: (t.ws && isFinite(t.ws.x) && isFinite(t.ws.y)) ? {x: t.ws.x, y: t.ws.y, w: t.ws.w, h: t.ws.h} : null}))), // v146_36: + uid — стабильный ключ докинг-групп; v146_45: + col — свёрнут (только визуально)
+        ctSafeSetJSON("tv_tiles", tvTiles.map(t => ({uid: t.uid || null, symbol: t.symbol, interval: t.interval, ind: t._ind || null, lnk: tvLinkGroupsOfTile(t), g: t.wsg || null, col: t.col ? 1 : 0, cx: t.cx ? 1 : 0, ws: (t.ws && isFinite(t.ws.x) && isFinite(t.ws.y)) ? {x: t.ws.x, y: t.ws.y, w: t.ws.w, h: t.ws.h} : null}))), // v146_36: + uid — стабильный ключ докинг-групп; v146_45: + col — свёрнут (только визуально); v146_62: + cx — синхронизация перекрестия
         // Рисунки — через tvdPersist (очищает ран-тайм поле _p), а не сырой
         // объект: иначе tvPersist протаскивал _p в хранилище в обход очистки
         "function" == typeof tvdPersist ? tvdPersist() : ctSafeSetJSON("tv_drawings", tvDrawings),
@@ -17685,11 +17831,11 @@ setInterval(() => {
     t("ws: разворот графика на весь экран вернулся — data-act=\"max\" в шапке виджета, #tvWsMaxHost в DOM, старое правило display:none для max-кнопки удалено (v146_34)", (function () { try { if ("function" != typeof tvWsTileMaxEnter || "function" != typeof tvMaxTileRestore) return !1; const bar = tvTileBarHtml({id: 9041, symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: []}); let hidden = !1; try { for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules } catch (eC) { continue } if (!rules) continue; for (const r of rules) { if (r.selectorText && -1 !== r.selectorText.indexOf(".tv-tile-btn.max") && r.style && "none" === r.style.display) hidden = !0 } } } catch (eD) {} return -1 !== bar.indexOf('data-act="max"') && !!document.getElementById("tvWsMaxHost") && !hidden } catch (e) { return !1 } })(), !0);
     t("ws: прилипание — tvWsSnapRect магнитит движение к краю другого виджета (x,y + gx,gy), ресайз «e» растит ширину к цели, «w» двигает левый край (v146_34)", (function () { try { if ("function" != typeof tvWsSnapRect || "function" != typeof tvWsSnapTargets) return !1; const sV = {x: tvWsView.x, y: tvWsView.y, z: tvWsView.z}, sT = tvTiles.slice(), sS = tvWsSide.slice(), sM40 = JSON.stringify(tvWsDockMap); let ok = !1; try { tvWsView.x = 0; tvWsView.y = 0; tvWsView.z = 1; tvTiles.length = 0; tvWsSide.length = 0; tvWsDockMap = {}; tvTiles.push({id: 9311, symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 100, y: 100, w: 200, h: 200}}); const skip = new Set(["c9999"]), m = tvWsSnapRect({x: 104, y: 99, w: 400, h: 300}, {dir: "move", skip: skip}), re = tvWsSnapRect({x: 0, y: 0, w: 299, h: 50}, {dir: "e", skip: skip}), rw = tvWsSnapRect({x: 103, y: 0, w: 200, h: 50}, {dir: "w", skip: skip}); ok = 100 === m.x && 100 === m.y && 100 === m.gx && 100 === m.gy && 300 === re.w && 0 === re.x && 100 === rw.x && 200 === rw.w } finally { try { clearTimeout(tvWsView.geomTimer); clearTimeout(tvWsView.saveTimer) } catch (eT0) {} tvTiles.length = 0; sT.forEach(x2 => tvTiles.push(x2)); tvWsSide.length = 0; sS.forEach(x3 => tvWsSide.push(x3)); try { tvWsDockMap = JSON.parse(sM40) } catch (eM40) {} tvWsView.x = sV.x; tvWsView.y = sV.y; tvWsView.z = sV.z } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_36: докинг — бросок на боковую зону «e»: виджет ЗАПОЛНЯЕТ ПРАВУЮ ПОЛОВИНУ цели (цель жмётся влево), одна группа, дерево в tv_ws_dock", (function () { try { if ("function" != typeof tvWsDockDropApply || "function" != typeof tvWsGroupMembers || "function" != typeof tvWsDockLeaves) return !1; const sT = tvTiles.slice(), sS = tvWsSide.slice(), sG = tvWsGNext, sDock = ctSafeGetJSON("tv_ws_dock", null), sMapSnap = JSON.stringify(tvWsDockMap); let ok = !1; try { tvTiles.length = 0; tvWsSide.length = 0; const a = {id: 9321, uid: "k36a", symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 700, y: 300, w: 300, h: 200}}, b = {id: 9322, uid: "k36b", symbol: "BINANCE:ETHUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 100, y: 100, w: 400, h: 300}}; tvTiles.push(a, b); tvWsDockDropApply({dragKey: "c9321", key: "c9322", zone: "e"}); const g = b.wsg; ok = !!g && g === a.wsg && 300 === a.ws.x && 100 === a.ws.y && 200 === a.ws.w && 300 === a.ws.h && 100 === b.ws.x && 100 === b.ws.y && 200 === b.ws.w && 300 === b.ws.h && !!tvWsDockMap[g] && 2 === tvWsDockLeaves(tvWsDockMap[g].root).length && "s" === tvWsDockMap[g].root.t && 400 === tvWsDockMap[g].w && 300 === tvWsDockMap[g].h && "k36a" === tvWsDockMap[g].root.b.u } finally { try { clearTimeout(tvWsView.geomTimer); clearTimeout(tvWsView.saveTimer) } catch (eT0) {} tvTiles.length = 0; sT.forEach(x4 => tvTiles.push(x4)); tvWsSide.length = 0; sS.forEach(x5 => tvWsSide.push(x5)); tvWsGNext = sG; try { null === sDock ? ctSafeRemoveItem("tv_ws_dock") : ctSafeSetJSON("tv_ws_dock", sDock) } catch (e6) {} try { tvWsDockMap = JSON.parse(sMapSnap); tvUpdateStatusbar() } catch (e7) {} } return ok } catch (e) { return !1 } })(), !0);
-    t("ws v146_36: зоны докинга — сторона = половина ячейки цели, центр = вся ячейка; в CSS есть .tv-ws-dockzones/.tv-ws-gtabs/.tv-ws-dockprev/.tv-ws-droptgt, старых .tv-ws-dz и tvWsDockPosOf нет", (function () { try { if ("function" != typeof tvWsDockZoneRect || "function" != typeof tvWsDockZoneAt || "function" == typeof tvWsDockPosOf) return !1; const C = {x: 500, y: 300, w: 400, h: 200}, e = tvWsDockZoneRect("e", C), w2 = tvWsDockZoneRect("w", C), n = tvWsDockZoneRect("n", C), s = tvWsDockZoneRect("s", C), tb = tvWsDockZoneRect("tab", C), zC = tvWsDockZoneAt(C, C.x + C.w / 2, C.y + C.h / 2, !0), zE = tvWsDockZoneAt(C, C.x + C.w * 0.95, C.y + C.h / 2, !0); let dz = !1, pv = !1, tg = !1, zc = !1, gt = !1; try { for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules } catch (eC) { continue } if (!rules) continue; for (const r of rules) { const s2 = r.selectorText || ""; if (-1 !== s2.indexOf("tv-ws-dz")) dz = !0; if (-1 !== s2.indexOf("tv-ws-dockprev")) pv = !0; if (-1 !== s2.indexOf("tv-ws-droptgt")) tg = !0; if (-1 !== s2.indexOf("tv-ws-dockzones")) zc = !0; if (-1 !== s2.indexOf("tv-ws-gtabs")) gt = !0 } } } catch (eD) {} return 700 === e.x && 200 === e.w && 500 === w2.x && 200 === w2.w && 300 === n.y && 100 === n.h && 400 === s.y && 100 === s.h && 500 === tb.x && 400 === tb.w && "tab" === zC && "e" === zE && !dz && pv && tg && zc && gt } catch (e) { return !1 } })(), !0);
+    t("ws v146_36: зоны докинга — сторона = половина ячейки цели, центр = вся ячейка; в CSS есть .tv-ws-dockzones/.tv-ws-headtabs/.tv-ws-dockprev/.tv-ws-droptgt, старых .tv-ws-dz и tvWsDockPosOf нет", (function () { try { if ("function" != typeof tvWsDockZoneRect || "function" != typeof tvWsDockZoneAt || "function" == typeof tvWsDockPosOf) return !1; const C = {x: 500, y: 300, w: 400, h: 200}, e = tvWsDockZoneRect("e", C), w2 = tvWsDockZoneRect("w", C), n = tvWsDockZoneRect("n", C), s = tvWsDockZoneRect("s", C), tb = tvWsDockZoneRect("tab", C), zC = tvWsDockZoneAt(C, C.x + C.w / 2, C.y + C.h / 2, !0), zE = tvWsDockZoneAt(C, C.x + C.w * 0.95, C.y + C.h / 2, !0); let dz = !1, pv = !1, tg = !1, zc = !1, gt = !1; try { for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules } catch (eC) { continue } if (!rules) continue; for (const r of rules) { const s2 = r.selectorText || ""; if (-1 !== s2.indexOf("tv-ws-dz")) dz = !0; if (-1 !== s2.indexOf("tv-ws-dockprev")) pv = !0; if (-1 !== s2.indexOf("tv-ws-droptgt")) tg = !0; if (-1 !== s2.indexOf("tv-ws-dockzones")) zc = !0; if (-1 !== s2.indexOf("tv-ws-headtabs")) gt = !0 } } } catch (eD) {} return 700 === e.x && 200 === e.w && 500 === w2.x && 200 === w2.w && 300 === n.y && 100 === n.h && 400 === s.y && 100 === s.h && 500 === tb.x && 400 === tb.w && "tab" === zC && "e" === zE && !dz && pv && tg && zc && gt } catch (e) { return !1 } })(), !0);
     t("ws v146_35: первый вход без уменьшения — tvWsCenterView ставит масштаб ровно 100% и центрирует содержимое", (function () { try { if ("function" != typeof tvWsCenterView || "function" != typeof tvWsFitViewIfNeeded) return !1; const sV = {x: tvWsView.x, y: tvWsView.y, z: tvWsView.z, inited: tvWsView.inited}, sT = tvTiles.slice(), sS = tvWsSide.slice(); let ok = !1; try { tvTiles.length = 0; tvWsSide.length = 0; tvTiles.push({id: 9331, symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 0, y: 0, w: 800, h: 400}}); tvWsSide.push({id: 66, x: 900, y: 0, w: 340, h: 420, tab: "fav"}); tvWsView.inited = !1; tvWsFitViewIfNeeded(); ok = 1 === tvWsView.z && tvWsView.inited && isFinite(tvWsView.x) && isFinite(tvWsView.y) } finally { try { clearTimeout(tvWsView.geomTimer); clearTimeout(tvWsView.saveTimer) } catch (eT0) {} tvTiles.length = 0; sT.forEach(x2 => tvTiles.push(x2)); tvWsSide.length = 0; sS.forEach(x3 => tvWsSide.push(x3)); tvWsView.x = sV.x; tvWsView.y = sV.y; tvWsView.z = sV.z; tvWsView.inited = sV.inited; try { tvWsViewPersist() } catch (eP) {} } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_35: разовый сброс уменьшенного масштаба — tvWsZoomLegacyReset с флагом tv_ws_z100 забывает вид с z<100% ровно один раз (и в памяти, и в хранилище)", (function () { try { if ("function" != typeof tvWsZoomLegacyReset) return !1; const had = ctSafeGetItem("tv_ws_z100"), sV = {x: tvWsView.x, y: tvWsView.y, z: tvWsView.z, inited: tvWsView.inited}, hadV2 = ctSafeGetJSON("tv_ws_view2", null); let ok = !1; try { ctSafeRemoveItem("tv_ws_z100"); ctSafeSetJSON("tv_ws_view2", {z: 0.8, x: -100, y: -50}); tvWsView.inited = !0; tvWsView.z = 0.8; const r1 = tvWsZoomLegacyReset(), forgotten = !tvWsView.inited && 1 === tvWsView.z && null === ctSafeGetJSON("tv_ws_view2", null); ctSafeSetItem("tv_ws_z100", "1"); tvWsView.inited = !0; tvWsView.z = 1.25; const r2 = tvWsZoomLegacyReset(); ok = !0 === r1 && forgotten && !1 === r2 && tvWsView.inited } finally { had ? ctSafeSetItem("tv_ws_z100", had) : ctSafeRemoveItem("tv_ws_z100"); try { hadV2 ? ctSafeSetJSON("tv_ws_view2", hadV2) : ctSafeRemoveItem("tv_ws_view2") } catch (eV) {} tvWsView.x = sV.x; tvWsView.y = sV.y; tvWsView.z = sV.z; tvWsView.inited = sV.inited } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_36: бросок в центр — ВКЛАДКА: узел t c[2] (активна брошенная, ячейка общая); ✂ (tvWsDockDetach) вынимает — группа растворяется, сосед остаётся со своей геометрией", (function () { try { if ("function" != typeof tvWsDockDropApply || "function" != typeof tvWsDockDetach || "function" != typeof tvWsDockLeaves) return !1; const sT = tvTiles.slice(), sS = tvWsSide.slice(), sG = tvWsGNext, sDock = ctSafeGetJSON("tv_ws_dock", null), sMapSnap = JSON.stringify(tvWsDockMap); let ok = !1; try { tvTiles.length = 0; tvWsSide.length = 0; const a = {id: 9341, uid: "k37a", symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 100, y: 100, w: 400, h: 300}}, b = {id: 9342, uid: "k37b", symbol: "BINANCE:ETHUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 900, y: 500, w: 300, h: 200}}; tvTiles.push(a, b); tvWsDockDropApply({dragKey: "c9342", key: "c9341", zone: "tab"}); const g = a.wsg; const step1 = !!g && g === b.wsg && !!tvWsDockMap[g] && "t" === tvWsDockMap[g].root.t && 2 === tvWsDockMap[g].root.c.length && 1 === tvWsDockMap[g].root.i && 100 === tvWsDockMap[g].x && 400 === tvWsDockMap[g].w && 100 === b.ws.x && 400 === b.ws.w; tvWsDockDetach("k37b", !0); const step2 = null == a.wsg && null == b.wsg && null == tvWsDockMap[g] && 100 === a.ws.x && 400 === a.ws.w; ok = step1 && step2 } finally { try { clearTimeout(tvWsView.geomTimer); clearTimeout(tvWsView.saveTimer) } catch (eT0) {} tvTiles.length = 0; sT.forEach(x2 => tvTiles.push(x2)); tvWsSide.length = 0; sS.forEach(x3 => tvWsSide.push(x3)); tvWsGNext = sG; try { null === sDock ? ctSafeRemoveItem("tv_ws_dock") : ctSafeSetJSON("tv_ws_dock", sDock) } catch (e4) {} try { tvWsDockMap = JSON.parse(sMapSnap); tvUpdateStatusbar() } catch (e5) {} } return ok } catch (e) { return !1 } })(), !0);
-    t("ws v146_36: раскладка дерева чистая — split h/v режет ячейку надвое по доле r, вкладки резервируют полосу TV_WS_TABH, _r узлов совпадает с под-прямоугольниками", (function () { try { if ("function" != typeof tvWsDockLayoutNode || "function" != typeof tvWsDockRemoveLeaf) return !1; const out1 = {}, st1 = []; tvWsDockLayoutNode({t: "s", d: "h", r: 0.5, a: {t: "l", u: "A"}, b: {t: "l", u: "B"}}, 0, 0, 400, 300, out1, st1); const okH = 200 === out1.A.w && 200 === out1.B.x && 200 === out1.B.w && 300 === out1.A.h; const out2 = {}, st2 = []; tvWsDockLayoutNode({t: "s", d: "v", r: 0.25, a: {t: "l", u: "A"}, b: {t: "l", u: "B"}}, 0, 0, 400, 300, out2, st2); const okV = 75 === out2.A.h && 75 === out2.B.y && 225 === out2.B.h; const out3 = {}, st3 = []; tvWsDockLayoutNode({t: "t", c: ["A", "B"], i: 0}, 10, 20, 400, 300, out3, st3); const okT = 1 === st3.length && 400 === st3[0].w && 20 === st3[0].y && 50 === out3.A.y && 270 === out3.A.h && 50 === out3.B.y && 400 === out3.A.w; const cut = tvWsDockRemoveLeaf({t: "s", d: "h", r: 0.5, a: {t: "l", u: "A"}, b: {t: "l", u: "B"}}, "A"); const okCut = !!cut && "l" === cut.t && "B" === cut.u; const cutT = tvWsDockRemoveLeaf({t: "t", c: ["A", "B"], i: 1}, "B"); const okCutT = !!cutT && "l" === cutT.t && "A" === cutT.u; return okH && okV && okT && okCut && okCutT } catch (e) { return !1 } })(), !0);
+    t("ws v146_36: раскладка дерева чистая — split h/v режет ячейку надвое по доле r, вкладки отдают ячейку ЦЕЛИКОМ (отдельной полосы нет, v146_61), _r узлов совпадает с под-прямоугольниками", (function () { try { if ("function" != typeof tvWsDockLayoutNode || "function" != typeof tvWsDockRemoveLeaf) return !1; const out1 = {}, st1 = []; tvWsDockLayoutNode({t: "s", d: "h", r: 0.5, a: {t: "l", u: "A"}, b: {t: "l", u: "B"}}, 0, 0, 400, 300, out1, st1); const okH = 200 === out1.A.w && 200 === out1.B.x && 200 === out1.B.w && 300 === out1.A.h; const out2 = {}, st2 = []; tvWsDockLayoutNode({t: "s", d: "v", r: 0.25, a: {t: "l", u: "A"}, b: {t: "l", u: "B"}}, 0, 0, 400, 300, out2, st2); const okV = 75 === out2.A.h && 75 === out2.B.y && 225 === out2.B.h; const out3 = {}, st3 = []; tvWsDockLayoutNode({t: "t", c: ["A", "B"], i: 0}, 10, 20, 400, 300, out3, st3); const okT = 0 === st3.length && 20 === out3.A.y && 300 === out3.A.h && 400 === out3.A.w; /* v146_61: полосы нет — листья во всю ячейку */ const cut = tvWsDockRemoveLeaf({t: "s", d: "h", r: 0.5, a: {t: "l", u: "A"}, b: {t: "l", u: "B"}}, "A"); const okCut = !!cut && "l" === cut.t && "B" === cut.u; const cutT = tvWsDockRemoveLeaf({t: "t", c: ["A", "B"], i: 1}, "B"); const okCutT = !!cutT && "l" === cutT.t && "A" === cutT.u; return okH && okV && okT && okCut && okCutT } catch (e) { return !1 } })(), !0);
     t("Тикеры v146_36: закрепы стоят в самом верху «избранного» и «новых» (порядок внутри групп сохранён) и в «Алертах»", (function () { try { if ("function" != typeof tvGetListTab || "function" != typeof tvAlertEntries) return !1; const sF = absFavorites, sP = absPinned, sD = tvDrawings, sL = absAlertLog; let ok = !1; try { absFavorites = new Set(["AAAUSDT", "BBBUSDT", "CCCUSDT"]); absPinned = new Set(["BBBUSDT"]); const fav = tvGetListTab("fav"); const favOk = 3 === fav.length && "BBBUSDT" === fav[0] && "AAAUSDT" === fav[1] && "CCCUSDT" === fav[2]; absAlertLog = [{g: "coin", symbol: "DDDUSDT", ts: 1000}, {g: "coin", symbol: "BBBUSDT", ts: 2000}]; const nw = tvGetListTab("new"); const newOk = "BBBUSDT" === nw[0] && "DDDUSDT" === nw[1]; tvDrawings = {"BINANCE:XXXUSDT": [{type: "nlevel", id: 1, done: !1, created: 5000}], "BINANCE:BBBUSDT": [{type: "nlevel", id: 2, done: !1, created: 3000}]}; const al = tvAlertEntries(); const alOk = al.length >= 2 && "BINANCE:BBBUSDT" === al[0].sym; ok = favOk && newOk && alOk } finally { absFavorites = sF; absPinned = sP; tvDrawings = sD; absAlertLog = sL; try { tvRenderSidebar() } catch (e2) {} } return ok } catch (e) { return !1 } })(), !0);
     t("Тикеры v146_36: сортировка «Избранного» по цвету — как в Super Screener (золото→зелёный→красный→синий→фиолетовый, внутри — по алфавиту), «az» — по алфавиту", (function () { try { if ("function" != typeof tvSideListHtml) return !1; const sF = absFavorites, sP = absPinned, sC = absFavColors; let ok = !1; try { absFavorites = new Set(["AAAUSDT", "BBBUSDT", "CCCUSDT"]); absPinned = new Set(); absFavColors = {AAAUSDT: "red", BBBUSDT: "gold", CCCUSDT: "green"}; const hColor = tvSideListHtml("fav", "color"), p1 = hColor.indexOf('data-symbol="BBBUSDT"'), p2 = hColor.indexOf('data-symbol="CCCUSDT"'), p3 = hColor.indexOf('data-symbol="AAAUSDT"'); const colorOk = p1 >= 0 && p2 > p1 && p3 > p2; const hAz = tvSideListHtml("fav", "az"), q1 = hAz.indexOf('data-symbol="AAAUSDT"'), q2 = hAz.indexOf('data-symbol="BBBUSDT"'), q3 = hAz.indexOf('data-symbol="CCCUSDT"'); const azOk = q1 >= 0 && q2 > q1 && q3 > q2; ok = colorOk && azOk } finally { absFavorites = sF; absPinned = sP; absFavColors = sC; try { tvRenderSidebar() } catch (e2) {} } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_36: группы переживают перезагрузку — tv_ws_dock сохраняется/читается, потерянные листья удаляются с расширением соседей, g-поля синхронны", (function () { try { if ("function" != typeof tvWsDockLoad || "function" != typeof tvWsDockPersist) return !1; const sT = tvTiles.slice(), sS = tvWsSide.slice(), sG = tvWsGNext, sDock = ctSafeGetJSON("tv_ws_dock", null), sMap = tvWsDockMap, sGt = tvTiles.map(t => t.wsg || null), sGs = tvWsSide.map(w => w.g || null); let ok = !1; try { tvTiles.forEach(t => t.wsg = null); tvWsSide.forEach(w => w.g = null); tvTiles.length = 0; tvWsSide.length = 0; const a = {id: 9351, uid: "k38a", symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 0, y: 0, w: 400, h: 300}}, b = {id: 9352, uid: "k38b", symbol: "BINANCE:ETHUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 400, y: 0, w: 400, h: 300}}; tvTiles.push(a, b); tvWsDockDropApply({dragKey: "c9352", key: "c9351", zone: "e"}); const g = a.wsg; tvWsDockPersist(); const saved = ctSafeGetJSON("tv_ws_dock", null); const mine = saved ? saved.filter(d => d && +d.g === g) : []; const savedOk = 1 === mine.length && "k38a" === mine[0].root.a.u; tvWsDockMap = {}; a.wsg = null; b.wsg = null; tvWsDockLoad(); const loadOk = !!tvWsDockMap[g] && 2 === tvWsDockLeaves(tvWsDockMap[g].root).length && a.wsg === g && b.wsg === g && 200 === a.ws.w && 200 === b.ws.x; tvWsDockMap[g].root.b.u = "ghost-нет-такого"; tvWsDockPersist(); tvWsDockLoad(); const ghostOk = null == tvWsDockMap[g] && null == a.wsg && null == b.wsg; ok = savedOk && loadOk && ghostOk } finally { try { clearTimeout(tvWsView.geomTimer); clearTimeout(tvWsView.saveTimer) } catch (eT0) {} tvTiles.length = 0; sT.forEach(x2 => tvTiles.push(x2)); tvWsSide.length = 0; sS.forEach(x3 => tvWsSide.push(x3)); tvTiles.forEach((t, ti) => t.wsg = sGt[ti] || null); tvWsSide.forEach((w, wi) => w.g = sGs[wi] || null); tvWsGNext = sG; try { null === sDock ? ctSafeRemoveItem("tv_ws_dock") : ctSafeSetJSON("tv_ws_dock", sDock) } catch (e4) {} try { tvWsDockMap = JSON.parse(sMapSnap); tvUpdateStatusbar() } catch (e5) {} } return ok } catch (e) { return !1 } })(), !0);
@@ -17697,7 +17843,7 @@ setInterval(() => {
     const sZ = tvWsView.z, sL = tvLayout, sLast = tvWsZSyncLast; let ok = !1; try { tvLayout = "ws"; const t37 = {el: null, _host: host, _zwrap: wrap}; tvWsView.z = 1.5; tvZwrapSync(t37); const okZ = "600px" === wrap.style.width && "450px" === wrap.style.height && -1 !== wrap.style.transform.indexOf("scale(0.66"); tvWsView.z = 1; tvZwrapSync(t37); const ok1 = "100%" === wrap.style.width && "100%" === wrap.style.height && "none" === wrap.style.transform; tvWsView.z = 0.5; tvZwrapSync(t37); const ok05 = "200px" === wrap.style.width && "150px" === wrap.style.height; tvWsView.z = sZ; tvLayout = "non-ws37"; tvZwrapSync(t37); const okOut = "100%" === wrap.style.width && "none" === wrap.style.transform; ok = okZ && ok1 && ok05 && okOut } finally { tvWsView.z = sZ; tvLayout = sL; tvWsZSyncLast = sLast; host.remove(); try { tvWsTransformApply() } catch (eT) {} } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_37: tvLwcOptions учитывает масштаб полотна — fontSize и barSpacing ×z (в мире при z=2 шрифт 20, barSpacing ×2), вне мира — базовые 10", (function () { try { if ("function" != typeof tvLwcOptions || "function" != typeof tvWsScaleFor) return !1; const world = document.getElementById("tvWsWorld"); if (!world) return !1; const host = document.createElement("div"); host.style.cssText = "position:absolute;left:0;top:0;width:100px;height:100px"; world.appendChild(host); const sZ = tvWsView.z, sL = tvLayout; let ok = !1; try { tvLayout = "ws"; tvWsView.z = 2; const o2 = tvLwcOptions({interval: "60", _host: host}); const ok2 = 20 === o2.layout.fontSize && Math.abs(o2.timeScale.barSpacing - 2 * (+tvSettings.barSpacing || 7)) < 1e-9; tvWsView.z = 1; const o1 = tvLwcOptions({interval: "60", _host: host}); const ok1 = 10 === o1.layout.fontSize; ok = ok2 && ok1 } finally { tvWsView.z = sZ; tvLayout = sL; host.remove() } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_37: обёртка канвасов в разметке — .tv-zwrap в CSS, tvZwrapEnsure переиспользует единственную обёртку, хук зума в tvWsTransformApply на месте, канвасы сессий/рисования внутри обёртки", (function () { try { if ("function" != typeof tvZwrapEnsure) return !1; const host = document.createElement("div"); document.body.appendChild(host); let ok = !1; try { const w1 = tvZwrapEnsure(host), w2 = tvZwrapEnsure(host); const okEnsure = w1 === w2 && w1.classList.contains("tv-zwrap") && w1.parentNode === host && 1 === host.querySelectorAll(":scope > .tv-zwrap").length; const src = tvWsTransformApply.toString(); const okHook = -1 !== src.indexOf("tvWsChartSyncAllSchedule") && -1 !== src.indexOf("tvWsZSyncLast"); let css37 = !1, cssWrap = !1; try { for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules } catch (eC) { continue } if (!rules) continue; for (const r of rules) { const s2 = r.selectorText || ""; if (-1 !== s2.indexOf(".tv-zwrap")) cssWrap = !0 } } } catch (eD) {} css37 = cssWrap; ok = okEnsure && okHook && css37 } finally { host.remove() } return ok } catch (e) { return !1 } })(), !0);
-    t("ws v146_38: единые абсолютные минимумы — константы, tvWsDockTreeMin (пара графиков 300+300, график+Тикеры 540, вкладки — максимум + полоса, вложенные сплиты) и tvWsLeafMinOf для «Тикеров»", (function () { try { if ("function" != typeof tvWsDockTreeMin || "function" != typeof tvWsLeafMinOf) return !1; const okC = 300 === TV_WS_MINW_CHART && 200 === TV_WS_MINH_CHART && 240 === TV_WS_MINW_SIDE && 200 === TV_WS_MINH_SIDE && 0.02 === TV_WS_RMIN && 0.98 === TV_WS_RMAX; const leaf = u => ({t: "l", u: u}); const n1 = {t: "s", d: "h", r: 0.5, a: leaf("uX38a"), b: leaf("uX38b")}; const ok1 = 600 === tvWsDockTreeMin(n1, "w") && 200 === tvWsDockTreeMin(n1, "h"); const w38 = {id: -3838, uid: "uT38side", x: 0, y: 0, w: 240, h: 200, tab: "fav", g: null}; let ok2 = !1, ok3 = !1, ok4 = !1; tvWsSide.push(w38); try { ok2 = 240 === tvWsLeafMinOf("uT38side", "w") && 200 === tvWsLeafMinOf("uT38side", "h") && 300 === tvWsLeafMinOf("uX38a", "w"); const n2 = {t: "s", d: "h", r: 0.5, a: leaf("uX38a"), b: leaf("uT38side")}; ok2 = ok2 && 540 === tvWsDockTreeMin(n2, "w") && 200 === tvWsDockTreeMin(n2, "h"); const n3 = {t: "t", c: ["uX38a", "uT38side"], i: 0}; ok3 = 300 === tvWsDockTreeMin(n3, "w") && 230 === tvWsDockTreeMin(n3, "h"); const n4 = {t: "s", d: "h", r: 0.5, a: leaf("uX38a"), b: {t: "s", d: "v", r: 0.5, a: leaf("uX38b"), b: leaf("uT38side")}}; ok4 = 600 === tvWsDockTreeMin(n4, "w") && 400 === tvWsDockTreeMin(n4, "h") } finally { const i38 = tvWsSide.indexOf(w38); -1 !== i38 && tvWsSide.splice(i38, 1) } return okC && ok1 && ok2 && ok3 && ok4 } catch (e) { return !1 } })(), !0);
+    t("ws v146_38: единые абсолютные минимумы — константы, tvWsDockTreeMin (пара графиков 300+300, график+Тикеры 540, вкладки — максимум БЕЗ полосы, v146_61, вложенные сплиты) и tvWsLeafMinOf для «Тикеров»", (function () { try { if ("function" != typeof tvWsDockTreeMin || "function" != typeof tvWsLeafMinOf) return !1; const okC = 300 === TV_WS_MINW_CHART && 200 === TV_WS_MINH_CHART && 240 === TV_WS_MINW_SIDE && 200 === TV_WS_MINH_SIDE && 0.02 === TV_WS_RMIN && 0.98 === TV_WS_RMAX; const leaf = u => ({t: "l", u: u}); const n1 = {t: "s", d: "h", r: 0.5, a: leaf("uX38a"), b: leaf("uX38b")}; const ok1 = 600 === tvWsDockTreeMin(n1, "w") && 200 === tvWsDockTreeMin(n1, "h"); const w38 = {id: -3838, uid: "uT38side", x: 0, y: 0, w: 240, h: 200, tab: "fav", g: null}; let ok2 = !1, ok3 = !1, ok4 = !1; tvWsSide.push(w38); try { ok2 = 240 === tvWsLeafMinOf("uT38side", "w") && 200 === tvWsLeafMinOf("uT38side", "h") && 300 === tvWsLeafMinOf("uX38a", "w"); const n2 = {t: "s", d: "h", r: 0.5, a: leaf("uX38a"), b: leaf("uT38side")}; ok2 = ok2 && 540 === tvWsDockTreeMin(n2, "w") && 200 === tvWsDockTreeMin(n2, "h"); const n3 = {t: "t", c: ["uX38a", "uT38side"], i: 0}; ok3 = 300 === tvWsDockTreeMin(n3, "w") && 200 === tvWsDockTreeMin(n3, "h"); /* v146_61: без +TV_WS_TABH */ const n4 = {t: "s", d: "h", r: 0.5, a: leaf("uX38a"), b: {t: "s", d: "v", r: 0.5, a: leaf("uX38b"), b: leaf("uT38side")}}; ok4 = 600 === tvWsDockTreeMin(n4, "w") && 400 === tvWsDockTreeMin(n4, "h") } finally { const i38 = tvWsSide.indexOf(w38); -1 !== i38 && tvWsSide.splice(i38, 1) } return okC && ok1 && ok2 && ok3 && ok4 } catch (e) { return !1 } })(), !0);
     t("ws v146_38: tvWsDockTreeReclamp пережимает долю к минимумам поддеревьев (слева/справа, h и v), вырожденный случай (группа уже суммы минимумов) — доля не тронута, повторный вызов ничего не меняет", (function () { try { if ("function" != typeof tvWsDockTreeReclamp) return !1; const mk = (r, w) => ({t: "s", d: "h", r: r, a: {t: "l", u: "uA38"}, b: {t: "l", u: "uB38"}, _r: {x: 0, y: 0, w: w, h: 300}}); const n1 = mk(0.05, 1000); const c1 = tvWsDockTreeReclamp(n1); const ok1 = c1 && Math.abs(n1.r - 0.3) < 1e-9 && Math.abs(300 - Math.round(1000 * n1.r)) < 1e-6; const ok2 = !tvWsDockTreeReclamp(n1); const n2 = mk(0.05, 400); const c2 = tvWsDockTreeReclamp(n2); const ok3 = !c2 && Math.abs(n2.r - 0.05) < 1e-9; const n3 = mk(0.97, 1000); tvWsDockTreeReclamp(n3); const ok4 = Math.abs(n3.r - 0.7) < 1e-9 && Math.abs(300 - (1000 - Math.round(1000 * n3.r))) < 1e-6; const n4 = {t: "s", d: "v", r: 0.05, a: {t: "l", u: "uA38"}, b: {t: "l", u: "uB38"}, _r: {x: 0, y: 0, w: 1000, h: 1000}}; tvWsDockTreeReclamp(n4); const ok5 = Math.abs(n4.r - 0.2) < 1e-9; return ok1 && ok2 && ok3 && ok4 && ok5 } catch (e) { return !1 } })(), !0);
     t("ws v146_38: сквозной ресайз на модели — внутренняя граница зажимает лист на абсолютном минимуме (в группе любого размера), край группы не уже суммы минимумов, reclamp встроен в tvWsDockApplyGeom", (function () { try { if ("function" != typeof tvWsDockResizeLive || "function" != typeof tvWsDockDropApply || "function" != typeof tvWsDockApplyGeom) return !1; if (-1 === tvWsDockApplyGeom.toString().indexOf("tvWsDockTreeReclamp")) return !1; const sT = tvTiles.slice(), sS = tvWsSide.slice(), sG = tvWsGNext, sDock = ctSafeGetJSON("tv_ws_dock", null), sMapSnap = JSON.stringify(tvWsDockMap); let ok = !1; try { tvTiles.length = 0; tvWsSide.length = 0; const a = {id: 9361, uid: "k38r1", symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 0, y: 0, w: 400, h: 300}}, b = {id: 9362, uid: "k38r2", symbol: "BINANCE:ETHUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 400, y: 0, w: 500, h: 300}}; tvTiles.push(a, b); tvWsDockDropApply({dragKey: "c9362", key: "c9361", zone: "e"}); const g = a.wsg; const dropOk = !!g && 200 === a.ws.w && 200 === b.ws.w && 400 === tvWsDockMap[g].w; tvWsDockResizeLive(g, "k38r2", "e", 900, 150); const wideOk = 900 === tvWsDockMap[g].w && 450 === a.ws.w && 450 === b.ws.w; tvWsDockResizeLive(g, "k38r1", "e", 200, 150); const minOk = 300 === a.ws.w && 600 === b.ws.w && Math.abs(tvWsDockMap[g].root.r - 1 / 3) < 0.01; tvWsDockResizeLive(g, "k38r1", "e", 700, 150); const maxOk = 600 === a.ws.w && 300 === b.ws.w; tvWsDockResizeLive(g, "k38r2", "se", 250, 400); const grpOk = 600 === tvWsDockMap[g].w && 400 === tvWsDockMap[g].h && 300 === a.ws.w && 300 === b.ws.w && 400 === b.ws.h; ok = dropOk && wideOk && minOk && maxOk && grpOk } finally { try { clearTimeout(tvWsView.geomTimer); clearTimeout(tvWsView.saveTimer) } catch (eT0) {} tvTiles.length = 0; sT.forEach(x2 => tvTiles.push(x2)); tvWsSide.length = 0; sS.forEach(x3 => tvWsSide.push(x3)); tvWsGNext = sG; try { null === sDock ? ctSafeRemoveItem("tv_ws_dock") : ctSafeSetJSON("tv_ws_dock", sDock) } catch (e6) {} try { tvWsDockMap = JSON.parse(sMapSnap); tvUpdateStatusbar() } catch (e7) {} } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_38: кламп загрузки «Тикеров» и свободный ресайз используют единые минимумы; в tvWsDockResizeLive больше нет жёстких 420, в tvWsSideNorm — 320", (function () { try { const s1 = tvWsDockResizeLive.toString(), s3 = tvWsSideNorm.toString(); const r38 = tvWsSideNorm([{id: 38, x: 0, y: 0, w: 100, h: 100, tab: "fav"}]); return -1 !== s1.indexOf("tvWsDockTreeMin") && -1 === s1.indexOf("minW = 420") && -1 === s3.indexOf("Math.max(320") && TV_WS_MINW_SIDE === r38[0].w && TV_WS_MINH_SIDE === r38[0].h } catch (e) { return !1 } })(), !0);
@@ -18053,13 +18199,13 @@ setInterval(() => {
         const navSafe = !tvWsAuto && !a.classList.contains("on");
         return started && escStops && restarted && leftStops && navSafe
     } catch (e) { return !1 } })(), !0);
-    t("ws v146_47 (2): вход в зоны скрывает чужие группы и свободные виджеты (.tv-ws-zone-off), полоса вкладок чужой зоны скрыта, tvWsZoneSwitchIdx переключает активную зону, повторный gmax активной — выход возвращает всё", (function () { try { if ("function" != typeof tvWsZoneEnter || "function" != typeof tvWsZoneSwitchIdx || "function" != typeof tvWsZoneExit || "function" != typeof tvWsGroupMaxToggle) return !1; const prev = tvLayout; tvLayout = "ws"; const sMap = JSON.stringify(tvWsDockMap), sTilesLen = tvTiles.length, sSideLen = tvWsSide.length, sV = {x: tvWsView.x, y: tvWsView.y, z: tvWsView.z}, sDockRaw = localStorage.getItem("tv_ws_dock"); let ok = !1; const tmpEls = []; try { const sc = document.getElementById("tvWsScroll"), wsEl = document.getElementById("tvWorkspace"), secEl = document.getElementById("section-tv"), bodyEl = document.getElementById("tvBody"), world = document.getElementById("tvWsWorld"); if (!sc || !wsEl || !secEl || !bodyEl || !world) return !1; const wasHidden = wsEl.hidden, secDisp = secEl.style.display, hadWsMode = bodyEl.classList.contains("ws-mode"); wsEl.hidden = !1; secEl.style.display = "block"; if (!hadWsMode) bodyEl.classList.add("ws-mode"); const r = sc.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0)) { wsEl.hidden = wasHidden; secEl.style.display = secDisp; if (!hadWsMode) bodyEl.classList.remove("ws-mode"); return !1 } tvWsView.x = 0; tvWsView.y = 0; tvWsView.z = 1;
-    tvTiles.push({id: 90821, uid: "uT472a", symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: 40821, ws: {x: 0, y: 0, w: 400, h: 300}}); tvTiles.push({id: 90822, uid: "uT472b", symbol: "BINANCE:ETHUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: 40821, ws: {x: 400, y: 0, w: 400, h: 300}}); tvTiles.push({id: 90823, uid: "uT472c", symbol: "BINANCE:SOLUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: 40822, ws: {x: 0, y: 300, w: 400, h: 300}}); tvTiles.push({id: 90825, uid: "uT472f", symbol: "BINANCE:DOGEUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 0, y: 900, w: 400, h: 300}}); tvWsSide.push({id: 90826, uid: "uT472s", x: 0, y: 1200, w: 240, h: 200, tab: "fav", g: 40822, lnk: []}); tvWsDockMap = {40821: {x: 0, y: 0, w: 800, h: 300, root: {t: "l", u: "uT472a"}}, 40822: {x: 0, y: 300, w: 800, h: 300, root: {t: "t", c: ["uT472c", "uT472s"], i: 0}}}; // вторая группа — ВКЛАДКИ: tvWsDockApplyGeom сам создаст полосу .tv-ws-gtabs[data-gid]
+    t("ws v146_47 (2): вход в зоны скрывает чужие группы и свободные виджеты (.tv-ws-zone-off), отдельной полосы вкладок больше нет (v146_61), tvWsZoneSwitchIdx переключает активную зону, повторный gmax активной — выход возвращает всё", (function () { try { if ("function" != typeof tvWsZoneEnter || "function" != typeof tvWsZoneSwitchIdx || "function" != typeof tvWsZoneExit || "function" != typeof tvWsGroupMaxToggle) return !1; const prev = tvLayout; tvLayout = "ws"; const sMap = JSON.stringify(tvWsDockMap), sTilesLen = tvTiles.length, sSideLen = tvWsSide.length, sV = {x: tvWsView.x, y: tvWsView.y, z: tvWsView.z}, sDockRaw = localStorage.getItem("tv_ws_dock"); let ok = !1; const tmpEls = []; try { const sc = document.getElementById("tvWsScroll"), wsEl = document.getElementById("tvWorkspace"), secEl = document.getElementById("section-tv"), bodyEl = document.getElementById("tvBody"), world = document.getElementById("tvWsWorld"); if (!sc || !wsEl || !secEl || !bodyEl || !world) return !1; const wasHidden = wsEl.hidden, secDisp = secEl.style.display, hadWsMode = bodyEl.classList.contains("ws-mode"); wsEl.hidden = !1; secEl.style.display = "block"; if (!hadWsMode) bodyEl.classList.add("ws-mode"); const r = sc.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0)) { wsEl.hidden = wasHidden; secEl.style.display = secDisp; if (!hadWsMode) bodyEl.classList.remove("ws-mode"); return !1 } tvWsView.x = 0; tvWsView.y = 0; tvWsView.z = 1;
+    tvTiles.push({id: 90821, uid: "uT472a", symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: 40821, ws: {x: 0, y: 0, w: 400, h: 300}}); tvTiles.push({id: 90822, uid: "uT472b", symbol: "BINANCE:ETHUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: 40821, ws: {x: 400, y: 0, w: 400, h: 300}}); tvTiles.push({id: 90823, uid: "uT472c", symbol: "BINANCE:SOLUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: 40822, ws: {x: 0, y: 300, w: 400, h: 300}}); tvTiles.push({id: 90825, uid: "uT472f", symbol: "BINANCE:DOGEUSDT", interval: "60", loaded: !1, el: null, lnk: [], wsg: null, ws: {x: 0, y: 900, w: 400, h: 300}}); tvWsSide.push({id: 90826, uid: "uT472s", x: 0, y: 1200, w: 240, h: 200, tab: "fav", g: 40822, lnk: []}); tvWsDockMap = {40821: {x: 0, y: 0, w: 800, h: 300, root: {t: "l", u: "uT472a"}}, 40822: {x: 0, y: 300, w: 800, h: 300, root: {t: "t", c: ["uT472c", "uT472s"], i: 0}}}; // вторая группа — ВКЛАДКИ (v146_61: чипы в шапке активного, полосы нет)
     [["90821"], ["90822"], ["90823"], ["90825"]].forEach(p => { const el = document.createElement("div"); el.className = "tv-ws-w"; el.setAttribute("data-wstile", p[0]); world.appendChild(el); tmpEls.push(el) }); const sEl = document.createElement("div"); sEl.className = "tv-ws-w tv-ws-side-w"; sEl.setAttribute("data-wsid", "S90826"); world.appendChild(sEl); tmpEls.push(sEl);
     const off = id => { const el = world.querySelector('.tv-ws-w[data-wstile="' + id + '"]'); return el && el.classList.contains("tv-ws-zone-off") };
-    const gtabs22 = () => [].slice.call(world.querySelectorAll('.tv-ws-gtabs[data-gid="40822"]'));
-    tvWsGroupMaxToggle(40821); const gts1 = gtabs22(); const enterOk = !!tvWsZone && 2 === tvWsZone.gids.length && 0 === tvWsZone.idx && tvWsGroupMaxIs(40821) && !off("90821") && !off("90822") && off("90823") && off("90825") && sEl.classList.contains("tv-ws-zone-off") && gts1.length >= 1 && gts1.every(s => s.classList.contains("tv-ws-zone-off"));
-    tvWsZoneSwitchIdx(1); const gts2 = gtabs22(); const switchOk = !!tvWsZone && 1 === tvWsZone.idx && tvWsGroupMaxIs(40822) && off("90821") && off("90822") && !off("90823") && off("90825") && !sEl.classList.contains("tv-ws-zone-off") && gts2.length >= 1 && gts2.every(s => !s.classList.contains("tv-ws-zone-off"));
+    const gtabs22 = () => [].slice.call(world.querySelectorAll(".tv-ws-gtabs")); // v146_61: полос вкладок не должно быть нигде
+    tvWsGroupMaxToggle(40821); const gts1 = gtabs22(); const enterOk = !!tvWsZone && 2 === tvWsZone.gids.length && 0 === tvWsZone.idx && tvWsGroupMaxIs(40821) && !off("90821") && !off("90822") && off("90823") && off("90825") && sEl.classList.contains("tv-ws-zone-off") && 0 === gts1.length;
+    tvWsZoneSwitchIdx(1); const gts2 = gtabs22(); const switchOk = !!tvWsZone && 1 === tvWsZone.idx && tvWsGroupMaxIs(40822) && off("90821") && off("90822") && !off("90823") && off("90825") && !sEl.classList.contains("tv-ws-zone-off") && 0 === gts2.length;
     tvWsGroupMaxToggle(40822); const exitOk = !tvWsZone && !tvWsGroupMax && !world.querySelector(".tv-ws-zone-off");
     wsEl.hidden = wasHidden; secEl.style.display = secDisp; if (!hadWsMode) bodyEl.classList.remove("ws-mode"); ok = enterOk && switchOk && exitOk } finally { tmpEls.forEach(el => { try { el.remove() } catch (eR2) {} }); tvWsZone = null; tvWsGroupMax = null; tvTiles.length = sTilesLen; tvWsSide.length = sSideLen; try { tvWsDockMap = JSON.parse(sMap) } catch (eM2) {} try { null != sDockRaw ? localStorage.setItem("tv_ws_dock", sDockRaw) : localStorage.removeItem("tv_ws_dock") } catch (eL2) {} try { tvWsZoneStashClear() } catch (eS2) {} tvWsView.x = sV.x; tvWsView.y = sV.y; tvWsView.z = sV.z; try { tvWsTransformApply() } catch (eT2) {} } return ok } catch (e) { return !1 } })(), !0);
     t("ws v146_47 (3): stash зон — tvWsZoneStashRestore возвращает прежние прямоугольники/col моделей групп и стирает stash; без stash — !1", (function () { try { if ("function" != typeof tvWsZoneStashSave || "function" != typeof tvWsZoneStashRestore || "function" != typeof tvWsZoneStashClear) return !1; const sMap = JSON.stringify(tvWsDockMap), sZone = tvWsZone; let ok = !1; try { tvWsDockMap = {7481: {x: 10, y: 20, w: 300, h: 200, col: !1, root: {t: "l", u: "uT473a"}}}; tvWsZone = {gids: [7481], idx: 0, saved: {7481: {x: 1, y: 2, w: 30, h: 20, col: !0}}, viewY: -40}; tvWsZoneStashSave(); const G = tvWsDockMap[7481]; G.x = 999; G.y = 888; G.w = 700; G.h = 600; G.col = !1; const restored = tvWsZoneStashRestore(); const back = restored && 1 === G.x && 2 === G.y && 30 === G.w && 20 === G.h && !0 === G.col; const gone = !localStorage.getItem("tv_ws_zone"); const none = !0 === function () { try { return !!localStorage.getItem("tv_ws_zone") } catch (eL) { return !1 } }() ? !1 : !tvWsZoneStashRestore(); ok = back && gone && none } finally { try { tvWsDockMap = JSON.parse(sMap) } catch (eM3) {} tvWsZone = sZone; try { tvWsZoneStashClear() } catch (eS3) {} } return ok } catch (e) { return !1 } })(), !0);
@@ -18482,6 +18628,118 @@ setInterval(() => {
             try { tvWsDockStripRemove(96032) } catch (eS60b) {}
             tvTiles.length = 0; [].push.apply(tvTiles, sT); tvWsSide.length = 0; [].push.apply(tvWsSide, sS);
             try { tvWsDockMap = JSON.parse(sMap) } catch (eM60b) {}
+        }
+        return ok
+    } catch (e) { return !1 } })(), !0);
+    t("ws v146_61 (1): чипы вкладок группы — В ШАПКЕ АКТИВНОГО участника (отдельной полосы нет), переключение вкладки переносит чипы в шапку нового активного, .on у активного; tvWsDockTabNodeOf находит узел вкладок во вложенном дереве", (function () { try {
+        if ("function" != typeof tvWsHeadTabsApply || "function" != typeof tvWsDockTabNodeOf || "function" != typeof tvWsDockApplyGeom) return !1;
+        const sT = tvTiles.slice(), sS = tvWsSide.slice(), sMap = JSON.stringify(tvWsDockMap), sVP = tvWsWsViewport, sElOf = tvWsWidgetElOf;
+        const mkW = stile => { const w = document.createElement("div"); w.className = "tv-ws-w"; w.setAttribute("data-wstile", String(stile)); w.innerHTML = '<div class="tv-tile-bar"><span class="tv-ws-grip"></span><span class="tv-tile-sym">X</span></div>'; return w };
+        const wa = mkW(96111), wb = mkW(96112);
+        document.body.appendChild(wa); document.body.appendChild(wb); // в документе: tvWsHeadTabsApply чистит .tv-ws-headtabs глобально
+        let ok = !1;
+        try {
+            tvTiles.length = 0; tvWsSide.length = 0;
+            tvTiles.push({id: 96111, uid: "u6111", symbol: "BINANCE:BTCUSDT", interval: "60", loaded: !1, el: null, lnk: []});
+            tvTiles.push({id: 96112, uid: "u6112", symbol: "BINANCE:ETHUSDT", interval: "60", loaded: !1, el: null, lnk: []});
+            tvWsDockMap = {96141: {x: 100, y: 100, w: 500, h: 400, col: !1, root: {t: "t", c: ["u6111", "u6112"], i: 0}}};
+            tvWsWsViewport = function () { return {vw: 1600, vh: 900} }; // герметичность: не зависим от видимости секции
+            tvWsWidgetElOf = function (k) { return "c96111" === k ? wa : ("c96112" === k ? wb : null) };
+            tvWsDockApplyGeom(96141);
+            const ra = wa.querySelector(".tv-ws-headtabs"), rb = wb.querySelector(".tv-ws-headtabs");
+            ok = !!ra && !rb && 2 === ra.querySelectorAll(".tv-ws-gtab").length && "0" === ra.querySelector(".tv-ws-gtab.on").getAttribute("data-gtab")
+                 && 0 === document.querySelectorAll(".tv-ws-gtabs").length; // отдельной полосы нет
+            const nd = tvWsDockTabNodeOf({t: "s", d: "h", a: {t: "l", u: "z"}, b: {t: "t", c: ["q", "w"], i: 1}}, "w"); // вложенное дерево
+            ok = ok && !!nd && 2 === nd.c.length && 1 === nd.i;
+            const G = tvWsDockMap[96141]; G.root.i = 1; // переключение вкладки
+            tvWsDockApplyGeom(96141);
+            const ra2 = wa.querySelector(".tv-ws-headtabs"), rb2 = wb.querySelector(".tv-ws-headtabs");
+            ok = ok && !ra2 && !!rb2 && "1" === rb2.querySelector(".tv-ws-gtab.on").getAttribute("data-gtab");
+        } finally {
+            tvWsWsViewport = sVP; tvWsWidgetElOf = sElOf;
+            try { wa.remove() } catch (eR61a) {} try { wb.remove() } catch (eR61b) {};
+            tvTiles.length = 0; [].push.apply(tvTiles, sT); tvWsSide.length = 0; [].push.apply(tvWsSide, sS);
+            try { tvWsDockMap = JSON.parse(sMap) } catch (eM61) {}
+        }
+        return ok
+    } catch (e) { return !1 } })(), !0);
+    t("ws v146_61 (2): чипы расформированной группы снимает синк (orphan sweep), CSS: .tv-ws-headtabs/.tv-ws-gtab есть, старой полосы .tv-ws-gtabs в стилях нет", (function () { try {
+        if ("function" != typeof tvWsGroupSyncButtons) return !1;
+        let ok = !1;
+        const probe = document.createElement("div");
+        probe.className = "tv-ws-headtabs";
+        probe.setAttribute("data-gid", "987654");
+        document.body.appendChild(probe);
+        try {
+            tvWsGroupSyncButtons(); // группы 987654 в tvWsDockMap нет — чипы долой
+            ok = !document.body.contains(probe);
+            let head = !1, old = !1;
+            try { for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules } catch (eC) { continue } if (!rules) continue; for (const r of rules) { const s2 = r.selectorText || ""; if (-1 !== s2.indexOf("tv-ws-headtabs")) head = !0; if (-1 !== s2.indexOf("tv-ws-gtabs")) old = !0 } } } catch (eD) {}
+            ok = ok && head && !old;
+        } finally { try { probe.remove() } catch (eP61) {} }
+        return ok
+    } catch (e) { return !1 } })(), !0);
+    t("cx v146_62 (1): хаб tvCxMove — трансляция перекрестия только пересекающимся линк-группам с включённым выключателем (пересечение A/A и A/A·B получают, B-only, выключенный и «T»-only не получают), null = очистка у получателей, gate отправителя cx, force-очистка мимо gate, приёмник без графика не падает", (function () { try { const sTiles = tvTiles.slice(); let ok = !0; try { const mkChart = function () { const rec = { set: 0, args: null, clear: 0 }; return { _rec: rec, setCrosshairPosition: function (p, tm) { rec.set++; rec.args = [p, tm] }, clearCrosshairPosition: function () { rec.clear++ } } }; const mk = function (id, lnk, cx, withChart) { const o = { id: id, lnk: lnk, cx: !!cx, _series: withChart ? {} : null }; if (withChart) o._chart = mkChart(); return o }; const src = mk(62001, ["A"], !0, !1), rAA = mk(62002, ["A"], !0, !0), rAB = mk(62003, ["A", "B"], !0, !0), rBB = mk(62004, ["B"], !0, !0), rOff = mk(62005, ["A"], !1, !0), rT = mk(62006, ["T"], !0, !0), rNoG = mk(62007, [], !0, !0), rNoChart = mk(62008, ["A"], !0, !1); tvTiles = [src, rAA, rAB, rBB, rOff, rT, rNoG, rNoChart]; tvCxMove(src, { time: 1700000000, price: 100.5 }); ok = ok && 1 === rAA._chart._rec.set && 1 === rAB._chart._rec.set && 100.5 === rAA._chart._rec.args[0] && 1700000000 === rAA._chart._rec.args[1]; ok = ok && 0 === rBB._chart._rec.set && 0 === rOff._chart._rec.set && 0 === rT._chart._rec.set && 0 === rNoG._chart._rec.set; tvCxMove(src, null); ok = ok && 1 === rAA._chart._rec.clear && 1 === rAB._chart._rec.clear && 0 === rBB._chart._rec.clear; src.cx = !1; tvCxMove(src, { time: 1, price: 2 }); ok = ok && 1 === rAA._chart._rec.set; tvCxMove(src, null, !0); ok = ok && 2 === rAA._chart._rec.clear && 2 === rAB._chart._rec.clear; src.cx = !0; tvCxMove(src, { time: 3, price: 4 }); ok = ok && 2 === rAA._chart._rec.set && 2 === rAB._chart._rec.set && 0 === rNoG._chart._rec.set && !rNoChart._chart; const sT2 = mk(62011, ["T"], !0, !1), dT2 = mk(62012, ["T"], !0, !0); tvTiles = [sT2, dT2]; tvCxMove(sT2, { time: 5, price: 6 }); ok = ok && 0 === dT2._chart._rec.set; } finally { tvTiles = sTiles } return ok } catch (e) { return !1 } })(), !0);
+    t("cx v146_62 (2): выключатель «Синхронизация перекрестия» — строка data-lcx только в меню ПЛИТКИ, тоггл tvCxToggleTile (cx, тост, tvPersist cx:1/0), tvTileFromStored восстанавливает cx из хранилища, каналы трансляции на месте (tvCreateChartForTile/tvSetupDraw/tvDestroyChart/tvWireLinkMenu содержат tvCxMove/data-lcx)", (function () { try { const sTiles = tvTiles.slice(), sTgt = tvLinkMenuTarget; let ok = !0; try { const m1 = tvTileFromStored({ symbol: "BINANCE:BTCUSDT", interval: "60", lnk: ["A"], cx: 1 }, 0), m2 = tvTileFromStored({ symbol: "BINANCE:BTCUSDT" }, 1); ok = ok && !0 === m1.cx && !1 === m2.cx && "A" === m1.lnk[0]; const tt1 = tvTileFromStored({ symbol: "BINANCE:ETHUSDT", interval: "60", lnk: ["A"] }, 2); tvTiles = [tt1]; tvLinkMenuTarget = { type: "tile", id: tt1.id }; tvBuildLinkMenu(); const mEl = document.getElementById("tvLinkMenu"); let html = mEl ? mEl.innerHTML : ""; ok = ok && -1 !== html.indexOf("data-lcx") && -1 !== html.indexOf("Синхронизация перекрестия") && -1 !== html.indexOf("выкл"); tvCxToggleTile(tt1.id); ok = ok && !0 === tt1.cx; tvBuildLinkMenu(); html = mEl ? mEl.innerHTML : ""; ok = ok && -1 !== html.indexOf("вкл"); let stored = ctSafeGetJSON("tv_tiles", []); ok = ok && stored && 1 === stored.length && 1 === stored[0].cx; tvCxToggleTile(tt1.id); ok = ok && !1 === tt1.cx; stored = ctSafeGetJSON("tv_tiles", []); ok = ok && stored && 0 === stored[0].cx; tvLinkMenuTarget = { type: "side" }; tvBuildLinkMenu(); html = mEl ? mEl.innerHTML : ""; ok = ok && -1 === html.indexOf("data-lcx"); ok = ok && -1 !== String(tvCreateChartForTile).indexOf("tvCxMove") && -1 !== String(tvSetupDraw).indexOf("tvCxMove") && -1 !== String(tvDestroyChart).indexOf("tvCxMove") && -1 !== String(tvWireLinkMenu).indexOf("data-lcx"); } finally { tvTiles = sTiles; tvLinkMenuTarget = sTgt; try { tvPersist() } catch (eP62) {} try { tvCloseTvMenus() } catch (eM62) {} } return ok } catch (e) { return !1 } })(), !0);
+    t("cx v146_63 (1): floor-маппинг у приёмника — tvCxSinkBar отдаёт бар-КОНТЕЙНЕР (последний бар с временем ≤ пришедшего), tvCxMove передаёт приёмнику время этого бара, а не сырое время отправителя (перекрестие старшего ТФ больше не убегает к следующему бару на половине интервала); без данных/левее начала — сырое время как раньше", (function () { try {
+        const sTiles = tvTiles.slice(); let ok = !0;
+        try {
+            const sink = function (bars, rts, tm) { return tvCxSinkBar({ _bars: bars, _rawTimes: rts }, tm) };
+            const hb = [{ time: 3600 }, { time: 7200 }, { time: 10800 }], hr = [3600, 7200, 10800];
+            ok = ok && 3600 === sink(hb, hr, 3600); // ровно время бара
+            ok = ok && 3600 === sink(hb, hr, 5400); // середина часа — контейнер 3600, НЕ 7200 (v146_62: findNearest тянул перекрестие вперёд)
+            ok = ok && 3600 === sink(hb, hr, 7199);
+            ok = ok && 7200 === sink(hb, hr, 7200); // граница — уже новый бар
+            ok = ok && 10800 === sink(hb, hr, 999999); // правее конца данных — последний бар
+            ok = ok && null === sink(hb, hr, 3599); // левее начала — null (приёмнику уйдёт сырое время)
+            ok = ok && null === sink(null, null, 5400) && null === sink([], [], 5400); // данных нет
+            ok = ok && null === sink([{ time: 3600 }], [3600], "3600x"); // невалидное время — null
+            const mkChart = function () { const rec = { set: 0, args: null, clear: 0 }; return { _rec: rec, setCrosshairPosition: function (p, tm) { rec.set++; rec.args = [p, tm] }, clearCrosshairPosition: function () { rec.clear++ } } };
+            const mk = function (id, bars, rts) { const o = { id: id, lnk: ["A"], cx: !0, _series: {}, _chart: mkChart() }; if (bars) { o._bars = bars; o._rawTimes = rts } return o };
+            const src = { id: 63001, lnk: ["A"], cx: !0 };
+            const rB = mk(63002, hb, hr), rN = mk(63003, null, null);
+            tvTiles = [src, rB, rN];
+            tvCxMove(src, { time: 5400, price: 100.5 });
+            ok = ok && 1 === rB._chart._rec.set && 3600 === rB._chart._rec.args[1] && 100.5 === rB._chart._rec.args[0]; // приёмник с барами получил КОНТЕЙНЕР
+            ok = ok && 1 === rN._chart._rec.set && 5400 === rN._chart._rec.args[1]; // без баров — сырое время (совместимость с тестами v146_62)
+            tvCxMove(src, null);
+            ok = ok && 1 === rB._chart._rec.clear && 1 === rN._chart._rec.clear;
+            ok = ok && -1 !== String(tvCxMove).indexOf("tvCxArmEcho") && -1 !== String(tvCreateChartForTile).indexOf("_cxEcho") && -1 !== String(tvCreateChartForTile).indexOf("_cxHover"); // эхо-глушение + hover-гейт трансляции на месте
+        } finally { tvTiles = sTiles }
+        return ok
+    } catch (e) { return !1 } })(), !0);
+    t("cx v146_63 (2): цвет перекрестия в «Настройках графиков» — ряд «Перекрестие» (инпут + «по теме»), «Применить» пишет tvSettings.crossColor, красит перекрестие на графиках (applyOptions crosshair) и сохраняет в tv_settings; повторное открытие подхватывает значение; «по теме» возвращает палитру темы", (function () { try {
+        const sSet = tvSettings, sTiles = tvTiles.slice(); let ok = !0;
+        try {
+            tvSettings = { rightOffset: 5, barSpacing: 7, histLimit: 200, scaleMarginsTop: 0.08, scaleMarginsBottom: 0.18, gridVisible: !0, priceLineVisible: !0, candleTimerVisible: !0, showVolume: !0, chartBg: "", chartTextColor: "", upColor: "", dnColor: "", sessionLines: !0, sessionLineColor: "", timerColor: "", drawSync: !0, crossColor: "" };
+            const rec = { opts: null };
+            const tile = { id: 63011, lnk: [], cx: !1, _series: { applyOptions: function () {} }, _chart: { applyOptions: function (o) { rec.opts = o } } };
+            tvTiles = [tile];
+            tvOpenSettingsDialog();
+            let modal = document.querySelector(".tv-modal-overlay");
+            let crInp = modal ? modal.querySelector("#tvSetCrossColor") : null;
+            ok = ok && !!crInp && !!modal.querySelector("#tvSetCrossReset");
+            ok = ok && crInp.value.toLowerCase() === String(tvThemeColors().cross).toLowerCase(); // по умолчанию — палитра темы
+            crInp.value = "#ff0000";
+            crInp.dispatchEvent(new Event("input", { bubbles: !0 }));
+            ok = ok && "1" === crInp.dataset.dirty;
+            modal.querySelector("#tvSetApply").dispatchEvent(new MouseEvent("click", { bubbles: !0 })); // модалка закрывается
+            ok = ok && "#ff0000" === tvSettings.crossColor;
+            ok = ok && !!rec.opts && !!rec.opts.crosshair && "#ff0000" === rec.opts.crosshair.vertLine.color && "#ff0000" === rec.opts.crosshair.horzLine.color;
+            let stored = ctSafeGetJSON("tv_settings", null);
+            ok = ok && !!stored && "#ff0000" === stored.crossColor;
+            tvOpenSettingsDialog(); // повторное открытие — значение подхвачено как dirty
+            modal = document.querySelector(".tv-modal-overlay");
+            crInp = modal.querySelector("#tvSetCrossColor");
+            ok = ok && "#ff0000" === crInp.value.toLowerCase() && "1" === crInp.dataset.dirty;
+            modal.querySelector("#tvSetCrossReset").dispatchEvent(new MouseEvent("click", { bubbles: !0 }));
+            ok = ok && "1" === crInp.dataset.reset;
+            modal.querySelector("#tvSetApply").dispatchEvent(new MouseEvent("click", { bubbles: !0 }));
+            ok = ok && "" === tvSettings.crossColor && !!rec.opts.crosshair && tvThemeColors().cross === rec.opts.crosshair.vertLine.color;
+        } finally {
+            tvSettings = sSet; tvTiles = sTiles;
+            try { document.querySelectorAll(".tv-modal-overlay").forEach(function (m) { m.remove() }) } catch (eM63) {}
+            try { tvSaveSettings() } catch (eS63) {}
         }
         return ok
     } catch (e) { return !1 } })(), !0);
@@ -24792,11 +25050,13 @@ function tvSetupDraw(t) {
     if (!pos || pos.t == null || pos.p == null || !isFinite(pos.p)) { unpinCross(); return }
     try { chart.setCrosshairPosition(pos.p, pos.t, series) } catch (e) {}
     crossPinned = !0;
+    try { tvCxMove(t, { time: pos.t, price: pos.p }) } catch (eCx) {} // v146_62: перекрестие живёт и при вооружённом инструменте — транслируем
   }
   function unpinCross() {
     if (!crossPinned) return;
     try { chart.clearCrosshairPosition() } catch (e) {}
     crossPinned = !1;
+    try { tvCxMove(t, null) } catch (eCx) {} // v146_62: отвязка — очистка у получателей
   }
   function vwapCurve(tAnchor) {
     const bs = t._bars || [];
@@ -25556,7 +25816,10 @@ function tvSetupDraw(t) {
     try { const pw = chart.priceScale('right').width(); if (pw > 0) return pw } catch (e) {}
     return 68;
   }
+  host.addEventListener('mouseenter', function () { t._cxHover = !0 }); // v146_63: вход указателя — раньше первого crosshairMove (иначе первый транслируемый тик после входа терялся)
+  host.addEventListener('mouseleave', function () { t._cxHover = !1 }); // v146_63: указатель ушёл — перекрестием снова управляет программа (чужая трансляция)
   host.addEventListener('mousemove', ev => {
+    t._cxHover = !0; // v146_63: указатель реально над графиком — только тогда плитка транслирует СВОЁ перекрестие (у приёмника с программным перекрестием LWC реэмитирует его на каждом тике — без этого приёмник ретранслировал чужую позицию обратно)
     const r = host.getBoundingClientRect();
     const y = ev.clientY - r.top;
     pxBtn.style.display = 'flex';
@@ -25568,14 +25831,14 @@ function tvSetupDraw(t) {
     // v127: магнит — перекрестие липнет к OHLC ближайшей свечи
     if (tvdMagnet && !tool) {
       const sn = magnetSnap(ev.clientX - r.left, y);
-      if (sn) { try { chart.setCrosshairPosition(sn.p, sn.t, series) } catch (e) {} crossPinned = !0 }
-      else if (crossPinned) { try { chart.clearCrosshairPosition() } catch (e) {} crossPinned = !1 }
+      if (sn) { try { chart.setCrosshairPosition(sn.p, sn.t, series) } catch (e) {} crossPinned = !0; try { tvCxMove(t, { time: sn.t, price: sn.p }) } catch (eCx) {} } // v146_62: трансляция прилипшей позиции
+      else if (crossPinned) { try { chart.clearCrosshairPosition() } catch (e) {} crossPinned = !1; try { tvCxMove(t, null) } catch (eCx) {} } // v146_62: отлипло — очистка у получателей
     } else if (crossPinned && !tvdMagnet && !tool) { // v146_51: !tool — при вооружённом инструменте перекрестием управляет cap pointermove
-      try { chart.clearCrosshairPosition() } catch (e) {} crossPinned = !1;
+      try { chart.clearCrosshairPosition() } catch (e) {} crossPinned = !1; try { tvCxMove(t, null) } catch (eCx) {} // v146_62
     }
   }, { passive: !0 });
   host.addEventListener('mouseleave', () => {
-    if (crossPinned) { try { chart.clearCrosshairPosition() } catch (e) {} crossPinned = !1 }
+    if (crossPinned) { try { chart.clearCrosshairPosition() } catch (e) {} crossPinned = !1; try { tvCxMove(t, null) } catch (eCx) {} } // v146_62
   });
   pxBtn.addEventListener('pointerdown', ev => ev.stopPropagation());
   pxBtn.addEventListener('click', ev => {
@@ -26047,16 +26310,11 @@ html.ct-light #tvWsAutoAnchor.dn,html.ct-light #tvWsAutoAnchor.up{border-color:r
 .tv-ws-docka[data-z="e"]{right:6px;top:50%;transform:translateY(-50%)}
 .tv-ws-docka[data-z="tab"]{left:50%;top:50%;transform:translate(-50%,-50%);width:34px}
 .tv-ws-docka.on{background:var(--accent-vivid);border-color:var(--accent-vivid);color:#14181c;opacity:1;box-shadow:0 0 0 3px rgba(240,185,11,.25),0 2px 12px rgba(240,185,11,.4)}
-/* v146_36: полоса вкладок докинг-группы (мировые координаты, ставится над ячейкой) */
-.tv-ws-gtabs{position:absolute;height:30px;display:flex;align-items:stretch;gap:3px;padding:0 4px;background:var(--bg-card);border:1px solid var(--border);border-bottom:none;border-radius:10px 10px 0 0;overflow:hidden;box-shadow:0 -2px 14px rgba(0,0,0,.18)}
-/* v146_40: захваты ширины группы по краям полосы вкладок (.tv-ws-wgrip — не путать со штатным «хватом» шапки виджета .tv-ws-grip) */
-.tv-ws-wgrip{flex:0 0 11px;min-width:11px;align-self:stretch;cursor:ew-resize;position:relative;border-radius:6px}
-.tv-ws-wgrip[data-gside="e"]{margin-left:auto} /* v146_40: восточный захват — к правому краю полосы */
-.tv-ws-wgrip::before{content:"";position:absolute;top:7px;bottom:7px;left:4px;width:3px;border-radius:2px;background:repeating-linear-gradient(180deg,var(--border) 0 3px,transparent 3px 6px)}
-.tv-ws-wgrip:hover::before,.tv-ws-wgrip:active::before{background:repeating-linear-gradient(180deg,var(--accent) 0 3px,transparent 3px 6px)}
-.tv-ws-gtab{display:inline-flex;align-items:center;padding:0 10px;border:none;background:transparent;color:var(--muted);font:600 10.5px 'Space Grotesk',sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;border-bottom:2px solid transparent}
+/* v146_61: чипы вкладок группы — в шапке активного участника (отдельная полоса .tv-ws-gtabs упразднена); фон-подсветка активного вместо подчёркивания, при многих вкладках — ellipsis (max-width 46% оставляет место инструментам шапки) */
+.tv-ws-headtabs{display:flex;align-items:center;gap:2px;flex:0 1 auto;min-width:0;max-width:46%;overflow:hidden;margin:0 2px 0 -3px}
+.tv-ws-gtab{display:inline-flex;align-items:center;min-width:0;padding:2px 9px;border:none;border-radius:7px;background:transparent;color:var(--muted);font:600 10.5px 'Space Grotesk',sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tv-ws-gtab:hover{color:var(--fg);background:var(--ink05)}
-.tv-ws-gtab.on{color:var(--accent-vivid);border-bottom-color:var(--accent-vivid);background:var(--accent-dim)}
+.tv-ws-gtab.on{color:var(--accent-vivid);background:var(--accent-dim)}
 /* v146_36: кнопка сортировки «Избранного» (по цвету ↔ по алфавиту) */
 .tv-ws-favsort.on{color:var(--accent-vivid);border-color:var(--accent-bd);background:var(--accent-dim)}
 /* v146_39: золотой бейдж на кнопке сортировки — фильтр «Избранного» по цвету активен */
